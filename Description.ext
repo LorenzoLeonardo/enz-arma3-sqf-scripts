@@ -1,0 +1,582 @@
+class CfgDebriefing
+{  
+	class end1
+	{
+		title = "Mission Accomplished!";
+		subtitle = "We captured Zaros";
+		description = "";
+	};
+
+	class lose1
+	{
+		title = "Mission Failed!";
+		subtitle = "All your team are dead";
+		description = "";
+	};
+
+	class lose2
+	{
+		title = "Mission Failed!";
+		subtitle = "You have died";
+		description = "";
+	};
+};
+
+class CfgRadio
+{
+	sounds[] = {};
+	class RadioPapaBearReplyWipedOut
+	{
+		// display name
+		name	= "RadioPapaBearReplyWipedOut";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearReplyWipedOut.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Understood! additional reinforcements will be there soon. Keep your asses alive. Goodluck and God be with you!";
+	};
+	class RadioPapaBearVictory
+	{
+		// display name
+		name	= "RadioPapaBearVictory";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearVictory.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Good job everyone. Let us have some beer later.";
+	};
+	class RadioGroundToPapaBearVictory
+	{
+		// display name TOM (US)
+		name	= "RadioGroundToPapaBearVictory";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioGroundToPapaBearVictory.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Ground units to papa bear. Enemy forces have been neutralized. The city is now safe. Over?";
+	};
+	class RadioAlphaWipedOut
+	{
+		// display name  TOM(US)
+		// https://www.nuance.com/omni-channel-customer-engagement/voice-and-ivr/text-to-speech.html
+		name	= "RadioAlphaWipedOut";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioAlphaWipedOut.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear, this is alpha team. We are suffering heavy resistance and casualties in this area. Immediate assistance is required. Please send backup, we cannot hold on much longer. Please respond! Over?";
+	};
+	class RadioBravoWipedOut
+	{
+		// display name  Evan (US)
+		// https://www.nuance.com/omni-channel-customer-engagement/voice-and-ivr/text-to-speech.html
+		name	= "RadioBravoWipedOut";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioBravoWipedOut.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear, this is bravo team. We are suffering heavy resistance and casualties in this area. Immediate assistance is required. Please send backup, we cannot hold on much longer. Please respond! Over?";
+	};
+	class RadioCharlieWipedOut
+	{
+		// display name Lee (Australia)
+		// https://www.nuance.com/omni-channel-customer-engagement/voice-and-ivr/text-to-speech.html
+		name	= "RadioCharlieWipedOut";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioCharlieWipedOut.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear, this is charlie team. We are suffering heavy resistance and casualties in this area. Immediate assistance is required. Please send backup, we cannot hold on much longer. Please respond! Over?";
+	};
+	class RadioDeltaWipedOut
+	{
+		// display name Daniel (Great Britain)
+		// https://www.nuance.com/omni-channel-customer-engagement/voice-and-ivr/text-to-speech.html
+		name	= "RadioDeltaWipedOut";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioDeltaWipedOut.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear, this is delta team. We are suffering heavy resistance and casualties in this area. Immediate assistance is required. Please send backup, we cannot hold on much longer. Please respond! Over?";
+	};
+	class RadioAirbaseSupport
+	{
+		// display name Evan (US)
+		name	= "RadioAirbaseSupport";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioAirbaseSupport.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "This is November. Paratroopers are now enroute to your location. November out!";
+	};
+	class RadioAirbaseDropPackage
+	{
+		// display name Evan (US)
+		name	= "RadioAirbaseDropPackage";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioAirbaseDropPackage.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "November dropping the package. Out!";
+	};
+	class RadioAmmoSupplyRequestAlpha
+	{
+		// display name
+		name	= "RadioAmmoSupplyRequestAlpha";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioAmmoSupplyRequestAlpha.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Come in Papa Bear! This is Alpha team. We are running out of ammunitions. We're requesting an ammo supply drop in this area. Over?";	
+	}
+	class RadioPapaBearAmmoSupplyRequestReply
+	{
+		// display name
+		name	= "RadioPapaBearAmmoSupplyRequestReply";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearAmmoSupplyRequestReply.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Copy that Alpha team. November, can you send ammunitions to our guys in the area? Papa Bear out!";	
+	}
+	class RadioNovemberAmmoSupplyRequestConfirm
+	{
+		// display name
+		name	= "RadioNovemberAmmoSupplyRequestConfirm";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioNovemberAmmoSupplyRequestConfirm.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Roger that Papa Bear! November to ground units, ammunition supply coming your way. ETA 1 minute. Out!";	
+	}
+	class RadioAlphaAmmoSupplyWaiting
+	{
+		// display name
+		name	= "RadioAlphaAmmoSupplyWaiting";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioAlphaAmmoSupplyWaiting.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Copy that November! We are holding at the moment. Waiting for the ammunitions. Alpha out!";	
+	}
+	class RadioEnemySpotted
+	{
+		// display name
+		name	= "RadioEnemySpotted";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioEnemySpotted.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear, enemy spotted. We are engaging now! Alpha out!";
+	};
+	class RadioPapaBearIntroZaros
+	{
+		// display name Nolan
+		name	= "RadioPapaBearIntroZaros";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearIntroZaros.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to alpha, bravo, charlie, and delta. You must capture the town of Zaros with full force. This town is a very strategic location to strengthen our invasion in Altis. Godspeed and Goodluck to all. Papa bear Out!";
+	};
+
+	class RadioAlphaReplyIntroZaros
+	{
+		// display name Tom
+		name	= "RadioAlphaReplyIntroZaros";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioAlphaReplyIntroZaros.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Copy that papa bear, we will do our best. Out!";
+	};
+
+	class RadioPapaBearCommenceTheAssault
+	{
+		// display name Nolan
+		name	= "RadioPapaBearCommenceTheAssault";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearCommenceTheAssault.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to all units, commence the assault. Alpha, bravo, charlie, and delta, you are weapons-free, kill them all!";
+	};
+	class RadioArtilleryFiring
+	{
+		// display name Simon (UK)
+		name	= "RadioArtilleryFiring";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtilleryFiring.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Shots fired!";
+	};
+	class RadioArtilleryRoundsComplete
+	{
+		// display name NOLAN(US)
+		name	= "RadioArtilleryRoundsComplete";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtilleryRoundsComplete.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Rounds complete!";
+	};
+	class RadioArtilleryOutOfAmmo
+	{
+		// display name Simon (UK)
+		name	= "RadioArtilleryOutOfAmmo";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtilleryOutOfAmmo.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Artillery is now out of ammo!";
+	};
+	class RadioArtillerySupportAlpha
+	{
+		// display name TOM(US)
+		name	= "RadioArtillerySupportAlpha";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtillerySupportAlpha.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Alpha to Papa bear, requesting artillery fire mission in this area. Over?";	
+	}
+	class RadioArtilleryAdjustAlpha
+	{
+		// display name TOM(US)
+		name	= "RadioArtilleryAdjustAlpha";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtilleryAdjustAlpha.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Adjust coordinates!";	
+	}
+	class RadioArtillerySupportReplyAlpha
+	{
+		// display name NOLAN(US)
+		name	= "RadioArtillerySupportReplyAlpha";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtillerySupportReplyAlpha.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Roger that alpha, 10 rounds of super-charged H.E. artillery barrage. Fire for effect!";	
+	}
+	class RadioArtillerySupportReplyAlphaBusy
+	{
+		// display name NOLAN(US)
+		name	= "RadioArtillerySupportReplyAlphaBusy";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtillerySupportReplyAlphaBusy.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "That's a negative Alpha, all guns are busy at the moment. Please try again later!";	
+	}
+	class RadioArtillerySupportReplyAlphaTargetOutOfRange
+	{
+		// display name NOLAN(US)
+		name	= "RadioArtillerySupportReplyAlphaTargetOutOfRange";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioArtillerySupportReplyAlphaTargetOutOfRange.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "That's a negative Alpha, the target is out of range!";	
+	}
+
+
+
+	class RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ
+	{
+		name	= "RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Requesting fire support at the target location. Willie pete in effect how copy?";			
+	}
+	class BeAdvisedArtilleryIsUnavailableAtThisTimeOut
+	{
+		name	= "BeAdvisedArtilleryIsUnavailableAtThisTimeOut";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\BeAdvisedArtilleryIsUnavailableAtThisTimeOut.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Be advised, artillery is unavailable at this time. Out!";			
+	}
+	class CannotExecuteThatsOutsideOurFiringEnvelope
+	{
+		name	= "CannotExecuteThatsOutsideOurFiringEnvelope";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\CannotExecuteThatsOutsideOurFiringEnvelope.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Cannot execute. That's outside our firing envelope!";			
+	}
+	class WeCopyYouLoudAndClear
+	{
+		name	= "WeCopyYouLoudAndClear";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\WeCopyYouLoudAndClear.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "We copy you loud and clear!";			
+	}
+	class FiringAtTargetLocation
+	{
+		name	= "FiringAtTargetLocation";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\FiringAtTargetLocation.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Firing at target location";			
+	}
+	class RoundsComplete
+	{
+		name	= "RoundsComplete";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\RoundsComplete.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Rounds complete!";			
+	}	
+	class WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha
+	{
+		name	= "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "We linked up with the reinforcements, thanks for the support!";			
+	}	
+	class WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo
+	{
+		name	= "WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "We linked up with the reinforcements, thanks for the support!";			
+	}	
+	class WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie
+	{
+		name	= "WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "We linked up with the reinforcements, thanks for the support!";			
+	}	
+	class WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta
+	{
+		name	= "WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "We linked up with the reinforcements, thanks for the support!";			
+	}	
+	class SupportOnWayStandBy
+	{
+		name	= "SupportOnWayStandBy";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\SupportOnWayStandBy.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Support on way, standby!";			
+	}
+
+	class CharlieLandedBeach
+	{// display name Lee (Australia)
+		name	= "CharlieLandedBeach";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\CharlieLandedBeach.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear this is Charlie, we have just landed on the beach. Going to the main objective after we all disembarked.";			
+	}
+	class CharlieLandedBeachPapaBearReply
+	{
+		name	= "CharlieLandedBeachPapaBearReply";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\CharlieLandedBeachPapaBearReply.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Good to hear you Charlie, proceed immediately to the main objective. We need that town for the success of our invasion. Papa bear out!";			
+	}
+	class CharlieMovingToObjective
+	{
+		name	= "CharlieMovingToObjective";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\CharlieMovingToObjective.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Everyone, please be advised. Charlie team is now going to the main objective. Charlie out!";			
+	}
+	class DeltaLandedBeach
+	{
+		name	= "DeltaLandedBeach";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\DeltaLandedBeach.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear this is Delta, we have just landed on the beach. Going to the main objective after we all disembarked.";			
+	}
+	class DeltaLandedBeachPapaBearReply
+	{
+		name	= "DeltaLandedBeachPapaBearReply";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\DeltaLandedBeachPapaBearReply.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "We hear you loud and clear Delta, proceed immediately to the main objective. We need that town for the success of our invasion. Papa bear out!";			
+	}
+	class DeltaMovingToObjective
+	{
+		name	= "DeltaMovingToObjective";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\DeltaMovingToObjective.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Everyone, please be advised. Delta team is now moving to the main objective. Delta out!";			
+	}
+	
+	class EngagingWithEnemyAlpha
+	{
+		name	= "EngagingWithEnemyAlpha";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\EngagingWithEnemyAlpha.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Please be advised that we are now engaging with the enemy! Alpha out!";			
+	}
+
+	class EngagingWithEnemyBravo
+	{
+		name	= "EngagingWithEnemyBravo";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\EngagingWithEnemyBravo.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Please be advised that we are now engaging with the enemy! Bravo out!";			
+	}
+
+	class EngagingWithEnemyCharlie
+	{
+		name	= "EngagingWithEnemyCharlie";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\EngagingWithEnemyCharlie.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Please be advised that we are now engaging with the enemy! Charlie out!";			
+	}
+
+	class EngagingWithEnemyDelta
+	{
+		name	= "EngagingWithEnemyDelta";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\EngagingWithEnemyDelta.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Please be advised that we are now engaging with the enemy! Delta out!";			
+	}
+
+	class EnemyTanksSpotted
+	{
+		name	= "EnemyTanksSpotted";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\EnemyTanksSpotted.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Everyone, please be advised that according to our infrared signals, enemy tanks are spotted near your position. These are T90 or T70 tanks by the looks of it. Be careful, Papa bear out!";			
+	}
+
+	class LostContactWithAlphaTeam
+	{
+		name	= "LostContactWithAlphaTeam";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\monitoring\LostContactWithAlphaTeam.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to all units. Please be advised that we've lost contact with alpha team. Do your job well because we cannot afford to lose that town.";			
+	}
+
+	class LostContactWithBravoTeam
+	{
+		name	= "LostContactWithBravoTeam";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\monitoring\LostContactWithBravoTeam.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to all units. Please be advised that we've lost contact with bravo team. Do your job well because we cannot afford to lose that town.";			
+	}
+
+	class LostContactWithCharlieTeam
+	{
+		name	= "LostContactWithCharlieTeam";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\monitoring\LostContactWithCharlieTeam.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to all units. Please be advised that we've lost contact with charlie team. Do your job well because we cannot afford to lose that town.";			
+	}
+
+	class LostContactWithDeltaTeam
+	{
+		name	= "LostContactWithDeltaTeam";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\monitoring\LostContactWithDeltaTeam.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to all units. Please be advised that we've lost contact with delta team. Do your job well because we cannot afford to lose that town.";			
+	}
+};
