@@ -280,37 +280,6 @@ get_backpack =
 /*
  * Author: Lorenzo Leonardo
  * Email: enzotechcomputersolutions@gmail.com
- * This will reload back the original backpack of the unit after paradrop and hitting the ground.
- *
- * Arguments:
- * 0: _paraPlayer is a unit of the group to be given by their default back pack. <OBJECT>
- * 1: _backPack is an array of units and corresponding backpack return by set_parachute_backpack. <ARRAY>
- * Return Value:
- * The return value None.
- *
- * Example:
- * [_paraPlayer, _backPack] spawn reload_inventory_when_hit_Ground;
- *
- * Public: [Yes/No]
- */
-reload_inventory_when_hit_Ground =
-{
-    private _paraPlayer = _this select 0;
-	private _backPack = _this select 1;
-
-    waitUntil { 
-		sleep 1;
-		isTouchingGround _paraPlayer
-	};
-	unassignVehicle _paraPlayer;
-	[_paraPlayer, _backPack] call get_backpack;
-	sleep 5;
-	_paraPlayer allowDamage true;
-};
-
-/*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
  * This will eject the group/platoon from the assigned plane.
  *
  * Arguments:
@@ -335,10 +304,28 @@ eject_from_plane =
 	private _groupArray = units _groupPlatoon;
 
 	{
-		_x allowDamage false;
-		unassignvehicle _x;
-		moveOut _x;
-		[_x, _backPack] spawn reload_inventory_when_hit_Ground;
+		// Spawn this routine at the background to
+		// Eject the unit from the plane
+		// and give them parachute backpack
+		// and reload their inventory
+		// after hitting the ground.
+		[_x, _backPack] spawn {
+			private _paraPlayer = _this select 0;
+			private _backPack = _this select 1;
+
+			unassignvehicle _paraPlayer;
+			moveOut _paraPlayer;
+			_paraPlayer allowDamage false;
+
+			waitUntil {
+				sleep 1;
+				isTouchingGround _paraPlayer
+			};
+			unassignVehicle _paraPlayer;
+			[_paraPlayer, _backPack] call get_backpack;
+			sleep 5;
+			_paraPlayer allowDamage true;
+		};
 		sleep _jumpIntervalTime;
 	} foreach _groupArray;
 };
