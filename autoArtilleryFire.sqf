@@ -200,7 +200,7 @@ fnc_getArtilleryAmmoType = {
 			_ammoType = "8Rnd_82mm_Mo_shells";
 		} else {
 			if (_gun isKindOf "StaticCannon") then {
-				_ammoType = "32Rnd_155mm_Mo_shells";
+				_ammoType = "CUP_30Rnd_105mmHE_M119_M"; // default for static cannons
 			} else {
 				// if no specific match, use a generic artillery ammo type
 				_ammoType = "8Rnd_82mm_Mo_shells";
@@ -224,7 +224,7 @@ spawn {
 	_gun setVehicleAmmo 1;
 
 	while { alive _gun } do {
-		sleep 3;
+		sleep 1;
 
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
 		if (_ammoLeft <= 0) then {
@@ -249,7 +249,7 @@ spawn {
 				private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
 				if (_fired) then {
 					_fired_once = true;
-					Canon_cool_down_for_effect;
+					sleep _cool_down_for_effect;
 				};
 			};
 		} forEach _enemies;
