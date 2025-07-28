@@ -1,78 +1,108 @@
-// ============================================
-// Created by Lorenzo Leonardo
-// Email: enzotechcomputersolutions@gmail.com
-// ============================================
-
 // ==============================================================================================================
-// This script automatically fires artillery/mortar rounds at enemy clusters.
-// It detects enemy clusters within a specified radius and fires a specified number of rounds at each cluster.
-// The script can be customized with parameters such as detection distance, number of rounds, cluster radius,
-// number of enemy clusters, cooldown time, and whether to use unlimited ammo.
+// Auto Artillery fire Script
+// Author: Lorenzo Leonardo
+// Contact: enzotechcomputersolutions@gmail.com
+// ==============================================================================================================
+// 
+// Description:
+// This script automates mortar and artillery fire support by detecting enemy unit clusters
+// within a configurable range and engaging them with indirect fire. It is designed to handle
+// multiple guns, prevent redundant targeting, and support both mortars and heavy artillery.
+// 
+// Features:
+// - Automatically scans for enemy clusters within a specified detection distance.
+// - Identifies and prioritizes clusters based on unit density.
+// - Fires a customizable number of rounds with optional accuracy dispersion.
+// - Avoids duplicate strikes by coordinating with other active guns.
+// - Supports both limited and unlimited ammunition modes.
+// - Can automatically disable and redeploy gun crews when ammunition is depleted.
+// 
+// Parameters:
+//   [ _gun, _detection_distance, _rounds, _cluster_radius, _min_units_per_cluster,
+//     _cooldown_time, _unlimited_ammo, _accuracy_radius ]
+// 
+//   _gun                 - The mortar or artillery object to control.
+//   _detection_distance  - max distance (in meters) to detect enemy units (default: 800).
+//   _rounds              - Number of rounds to fire per cluster (default: 8).
+//   _cluster_radius      - Radius (in meters) to group nearby enemies into a cluster (default: 50).
+//   _min_units_per_cluster - Minimum number of units in a cluster before engaging (default: 8).
+//   _cooldown_time       - Delay (in seconds) between volleys (default: 60).
+//   _unlimited_ammo      - Boolean; true to allow infinite resupply (default: false).
+//   _accuracy_radius     - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
+// 
+// Usage Example:
+//     [this, 1000, 8, 50, 8, 60, true, 25] execVM "autoArtilleryFire.sqf";
+// 
+// This will make the assigned artillery gun:
+// - Scan for enemies within 1000m,
+// - Engage clusters of 8+ units within a 50m radius,
+// - fire 8 rounds per strike with a 25m accuracy dispersion,
+// - Pause 60 seconds between strikes,
+// - and automatically resupply its ammunition.
+// 
 // ==============================================================================================================
 
-// ======================================================================
-// Usage: [this, 1000, 8, 50, 8, 60, true, 0] execVM "autoArtilleryFire.sqf";
-// ======================================================================
-
-// Global variable to track currently targeted positions
-if (isNil "GVAR_activeTargets") then {
-	GVAR_activeTargets = [];
-};
+// =====================
+// Parameters
+// =====================
 
 // _gun = the artillery or mortar gun object
-private _gun = _this select 0;
-
+private _gun = _this param [0];
 // _detection_distance = distance to detect enemy units (default: 800 meters)
-private _detection_distance = if (count _this > 1) then {
-	_this select 1
-} else {
-	800
-};
-
+private _detection_distance = _this param [1, 800];
 // _rounds = number of rounds to fire at each cluster (default: 8)
-private _rounds = if (count _this > 2) then {
-	_this select 2
-} else {
-	8
-};
-
+private _rounds = _this param [2, 8];
 // _cluster_radius = radius to consider a cluster of enemies (default: 50 meters)
-private _cluster_radius = if (count _this > 3) then {
-	_this select 3
-} else {
-	50
-};
-
+private _cluster_radius = _this param [3, 50];
 // _min_units_per_cluster = number of enemy units in a cluster to fire at (default: 8)
-private _min_units_per_cluster = if (count _this > 4) then {
-	_this select 4
-} else {
-	8
-};
-
+private _min_units_per_cluster = _this param [4, 8];
 // _cool_down_for_effect = cooldown time between firing rounds (default: 60 seconds)
-private _cool_down_for_effect = if (count _this > 5) then {
-	_this select 5
-} else {
-	60
-};
-
-// _unlimited_ammo = whether to use unlimited ammo (default: false)
-private _unlimited_ammo = if (count _this > 6) then {
-	_this select 6
-} else {
-	false
-};
-
+private _cool_down_for_effect = _this param [5, 60];
+// _unlimited_ammo = whether to use unlimited ammo (default: qfalse)
+private _unlimited_ammo = _this param [6, false];
 // _accuracy_radius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
-private _accuracy_radius = if (count _this > 7) then {
-	_this select 7
-} else {
-	0
+private _accuracy_radius = _this param [7, 0];
+
+// =========================
+// Global Target Registry
+// =========================
+if (isNil {
+	missionNamespace getVariable "GVAR_activeTargets"
+}) then {
+	missionNamespace setVariable ["GVAR_activeTargets", []];
+};
+
+// Helper for adding/removing targets (MP-safe if needed)
+fnc_claimTarget = {
+	params ["_pos", "_gun"];
+	private _targets = missionNamespace getVariable ["GVAR_activeTargets", []];
+	_targets pushBack [_pos, _gun];
+	missionNamespace setVariable ["GVAR_activeTargets", _targets];
+};
+
+fnc_releaseTarget = {
+	params ["_gun"];
+	private _targets = missionNamespace getVariable ["GVAR_activeTargets", []];
+	_targets = _targets select {
+		(_x select 1) != _gun
+	};
+	missionNamespace setVariable ["GVAR_activeTargets", _targets];
+};
+
+fnc_isTargetClaimed = {
+	params ["_pos", "_radius"];
+	private _targets = missionNamespace getVariable ["GVAR_activeTargets", []];
+	private _claimed = false;
+	{
+		if (_pos distance2D (_x select 0) < _radius) exitWith {
+			_claimed = true
+		};
+	} forEach _targets;
+	_claimed
 };
 
 // =========================
-// Helper Functions (GLOBAL)
+// Utility Functions
 // =========================
 fnc_getAmmoCount = {
 	params ["_vehicle", "_ammoType"];
@@ -80,7 +110,7 @@ fnc_getAmmoCount = {
 	{
 		if (_x select 0 == _ammoType) exitWith {
 			_count = _x select 1
-		}
+		};
 	} forEach magazinesAmmo _vehicle;
 	_count
 };
@@ -97,9 +127,9 @@ fnc_handleGunDepletion = {
 		unassignVehicle _x;
 		_x action ["GetOut", _gun];
 	} forEach _crew;
-	sleep 3;
 
-	// Optional: Destroy the gun (comment out if not needed)
+	sleep 3;
+	// Optional (disable gun)
 	_gun setDamage 1;
 
 	private _guardPos = (getPos _gun) getPos [30 + random 20, random 360];
@@ -113,21 +143,15 @@ fnc_handleGunDepletion = {
 
 fnc_getEnemies = {
 	params ["_origin", "_distance"];
-	private _enemies = (_origin) nearEntities ["Man", _distance];
-	_enemies select {
-		alive _x && {
-			side _x == east
-		}
+	(_origin nearEntities ["Man", _distance]) select {
+		alive _x && side _x == east
 	}
 };
 
 fnc_getCluster = {
 	params ["_unit", "_radius"];
-	private _cluster = (getPos _unit) nearEntities ["Man", _radius];
-	_cluster select {
-		alive _x && {
-			side _x == east
-		}
+	(getPos _unit nearEntities ["Man", _radius]) select {
+		alive _x && side _x == east
 	}
 };
 
@@ -141,7 +165,7 @@ fnc_getClusterCenter = {
 	{
 		private _pos = getPos _x;
 		_sumX = _sumX + (_pos select 0);
-		_sumY = _sumY + (_pos select 1);
+		_sumY = _sumY + (_pos select 1)
 	} forEach _cluster;
 	[_sumX / (count _cluster), _sumY / (count _cluster), 0]
 };
@@ -153,11 +177,9 @@ fnc_fireGun = {
 	};
 
 	private _finalPos = _targetPos;
-
-	// Only add scatter if the radius is greater than zero
 	if (_accuracy_radius > 0) then {
 		private _angle = random 360;
-		        private _dist = random _accuracy_radius;  // Scatter range
+		private _dist = random _accuracy_radius;
 		_finalPos = [
 			(_targetPos select 0) + (sin _angle * _dist),
 			(_targetPos select 1) + (cos _angle * _dist),
@@ -171,74 +193,43 @@ fnc_fireGun = {
 
 fnc_getArtilleryAmmoType = {
 	params ["_gun"];
-
-	// Mapping of specific weapons to ammo types
 	private _ammoMap = [
-		        // Vanilla
-		        ["B_gun_01_F", "8Rnd_82mm_Mo_shells"], // NATO mortar
-		        ["B_G_gun_01_F", "8Rnd_82mm_Mo_shells"], // Guerrilla mortar
-		        ["B_G_Offroad_01_AT_F", "8Rnd_82mm_Mo_shells"], // Improvised/Light
-
-		        // CUP Mortars
-		        ["CUP_B_M252_US", "8Rnd_82mm_Mo_shells"], // CUP US M252 mortar
-		        ["CUP_O_2b14_82mm_RU", "8Rnd_82mm_Mo_shells"], // CUP RU 82mm mortar
-
-		        // CUP Artillery (M119, D30, etc.)
-		        ["CUP_B_M119_US", "32Rnd_155mm_Mo_shells"], // CUP M119 howitzer
-		        ["CUP_O_D30_RU", "32Rnd_155mm_Mo_shells"], // CUP D-30 howitzer
-		        ["CUP_O_D30_TK", "32Rnd_155mm_Mo_shells"], // CUP D-30 (Takistan)
-		        ["CUP_B_L119_US", "32Rnd_155mm_Mo_shells"]  // CUP L119 (UK variant)
+		["B_gun_01_F", "8Rnd_82mm_Mo_shells"],
+		["B_G_gun_01_F", "8Rnd_82mm_Mo_shells"],
+		["B_G_Offroad_01_AT_F", "8Rnd_82mm_Mo_shells"],
+		["CUP_B_M252_US", "8Rnd_82mm_Mo_shells"],
+		["CUP_O_2b14_82mm_RU", "8Rnd_82mm_Mo_shells"],
+		["CUP_B_M119_US", "32Rnd_155mm_Mo_shells"],
+		["CUP_O_D30_RU", "32Rnd_155mm_Mo_shells"],
+		["CUP_O_D30_TK", "32Rnd_155mm_Mo_shells"],
+		["CUP_B_L119_US", "32Rnd_155mm_Mo_shells"]
 	];
 
-	    // default ammo type
 	private _ammoType = "8Rnd_82mm_Mo_shells";
-
-	    // Look up specific match
 	private _index = _ammoMap findIf {
 		_gun isKindOf (_x select 0)
 	};
 	if (_index > -1) then {
 		_ammoType = _ammoMap select _index select 1;
 	} else {
-		// Fallback for any unlisted static weapons
 		if (_gun isKindOf "StaticMortar") then {
 			_ammoType = "8Rnd_82mm_Mo_shells";
 		} else {
 			if (_gun isKindOf "StaticCannon") then {
-				_ammoType = "CUP_30Rnd_105mmHE_M119_M"; // default for static cannons
-			} else {
-				// if no specific match, use a generic artillery ammo type
-				_ammoType = "8Rnd_82mm_Mo_shells";
+				_ammoType = "CUP_30Rnd_105mmHE_M119_M";
 			};
 		};
 	};
-
 	_ammoType
 };
 
-// Helper function to check if a target is already claimed
-fnc_isTargetClaimed = {
-	params ["_pos", "_radius"];
-	private _claimed = false;
-	{
-		private _targetPos = _x select 0; // cluster position
-		if (_pos distance2D _targetPos < _radius) exitWith {
-			_claimed = true;
-		};
-	} forEach GVAR_activeTargets;
-	_claimed
-};
-
 // =========================
-// Main Loop
+// Main Loop (spawned)
 // =========================
-[_gun, _detection_distance, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius]
-spawn {
+[_gun, _detection_distance, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius] spawn {
 	params ["_gun", "_detection_distance", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius"];
 
-	// Auto find the ammo type based on the mortar or cannon
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
-
 	_gun setVehicleAmmo 1;
 
 	while { alive _gun } do {
@@ -247,15 +238,15 @@ spawn {
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
 		if (_ammoLeft <= 0) then {
 			if (_unlimited_ammo) then {
-				_gun setVehicleAmmo 1;
+				_gun setVehicleAmmo 1
 			} else {
 				[_gun] call fnc_handleGunDepletion;
-				break;
+				break
 			};
 		};
 
 		private _enemies = [getPos _gun, _detection_distance] call fnc_getEnemies;
-		if (count _enemies == 0) then {
+		if (_enemies isEqualTo []) then {
 			continue
 		};
 
@@ -264,26 +255,19 @@ spawn {
 			private _cluster = [_x, _cluster_radius] call fnc_getCluster;
 			if (count _cluster >= _min_units_per_cluster) then {
 				private _centerPos = [_cluster] call fnc_getClusterCenter;
-
-				// Skip clusters we've already checked or claimed by others
 				if (_centerPos in _clustersChecked) exitWith {};
 				_clustersChecked pushBack _centerPos;
 
 				if (!([_centerPos, 200] call fnc_isTargetClaimed)) then {
-					// Claim this target for this gun only
-					GVAR_activeTargets pushBack [_centerPos, _gun];
+					[_centerPos, _gun] call fnc_claimTarget;
 
 					private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
 					if (_fired) then {
-						sleep _cool_down_for_effect;
+						sleep _cool_down_for_effect
 					};
 
-					// Release claim so other guns can use this target later
-					GVAR_activeTargets = GVAR_activeTargets select {
-						(_x select 1) != _gun
-					};
-
-					// stop after one target this cycle (so it checks again next loop)
+					[_gun] call fnc_releaseTarget;
+					// one cluster per loop
 					break;
 				};
 			};
