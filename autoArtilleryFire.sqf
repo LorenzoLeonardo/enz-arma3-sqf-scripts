@@ -14,6 +14,11 @@
 // Usage: [this, 1000, 8, 50, 8, 60, true, 0] execVM "autoArtilleryFire.sqf";
 // ======================================================================
 
+// Global variable to track currently targeted positions
+if (isNil "GVAR_activeTargets") then {
+	GVAR_activeTargets = [];
+};
+
 // _gun = the artillery or mortar gun object
 private _gun = _this select 0;
 
@@ -38,8 +43,8 @@ private _cluster_radius = if (count _this > 3) then {
 	50
 };
 
-// _number_enemy_clusters = number of enemy clusters to fire at (default: 8)
-private _number_enemy_clusters = if (count _this > 4) then {
+// _min_units_per_cluster = number of enemy units in a cluster to fire at (default: 8)
+private _min_units_per_cluster = if (count _this > 4) then {
 	_this select 4
 } else {
 	8
@@ -211,12 +216,25 @@ fnc_getArtilleryAmmoType = {
 	_ammoType
 };
 
+// Helper function to check if a target is already claimed
+fnc_isTargetClaimed = {
+	params ["_pos", "_radius"];
+	private _claimed = false;
+	{
+		private _targetPos = _x select 0; // cluster position
+		if (_pos distance2D _targetPos < _radius) exitWith {
+			_claimed = true;
+		};
+	} forEach GVAR_activeTargets;
+	_claimed
+};
+
 // =========================
 // Main Loop
 // =========================
-[_gun, _detection_distance, _rounds, _cluster_radius, _number_enemy_clusters, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius]
+[_gun, _detection_distance, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius]
 spawn {
-	params ["_gun", "_detection_distance", "_rounds", "_cluster_radius", "_number_enemy_clusters", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius"];
+	params ["_gun", "_detection_distance", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius"];
 
 	// Auto find the ammo type based on the mortar or cannon
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
@@ -241,15 +259,32 @@ spawn {
 			continue
 		};
 
-		private _fired_once = false;
+		private _clustersChecked = [];
 		{
 			private _cluster = [_x, _cluster_radius] call fnc_getCluster;
-			if (count _cluster >= _number_enemy_clusters && !_fired_once) exitWith {
+			if (count _cluster >= _min_units_per_cluster) then {
 				private _centerPos = [_cluster] call fnc_getClusterCenter;
-				private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
-				if (_fired) then {
-					_fired_once = true;
-					sleep _cool_down_for_effect;
+
+				// Skip clusters we've already checked or claimed by others
+				if (_centerPos in _clustersChecked) exitWith {};
+				_clustersChecked pushBack _centerPos;
+
+				if (!([_centerPos, 200] call fnc_isTargetClaimed)) then {
+					// Claim this target for this gun only
+					GVAR_activeTargets pushBack [_centerPos, _gun];
+
+					private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
+					if (_fired) then {
+						sleep _cool_down_for_effect;
+					};
+
+					// Release claim so other guns can use this target later
+					GVAR_activeTargets = GVAR_activeTargets select {
+						(_x select 1) != _gun
+					};
+
+					// stop after one target this cycle (so it checks again next loop)
+					break;
 				};
 			};
 		} forEach _enemies;
