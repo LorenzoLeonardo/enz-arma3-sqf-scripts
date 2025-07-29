@@ -247,6 +247,14 @@ fnc_getArtilleryAmmoType = {
 	_ammoType
 };
 
+fnc_isClusterDuplicate = {
+	params ["_centerPos", "_clustersChecked", "_mergeRadius"];
+	_clustersChecked findIf {
+		private _pos = _x;
+		_centerPos distance2D _pos < _mergeRadius
+	} > -1
+};
+
 // =========================
 // Main Loop (spawned)
 // =========================
@@ -254,9 +262,12 @@ fnc_getArtilleryAmmoType = {
 	params ["_gun", "_detection_distance", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius"];
 
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+	private _claimRadius = 200;         // distance to avoid firing if target is claimed (other guns)
+	private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
+
 	_gun setVehicleAmmo 1;
 
-	while { alive _gun && !isNull _gun } do {
+	while { !isNull _gun && alive _gun } do {
 		sleep 1;
 
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
@@ -279,10 +290,15 @@ fnc_getArtilleryAmmoType = {
 			private _cluster = [_x, _cluster_radius, _gun] call fnc_getCluster;
 			if (count _cluster >= _min_units_per_cluster) then {
 				private _centerPos = [_cluster] call fnc_getClusterCenter;
-				if (_centerPos in _clustersChecked) exitWith {};
+				private _isDuplicate = [_centerPos, _clustersChecked, _clusterMergeRadius] call fnc_isClusterDuplicate;
+
+				if (_isDuplicate) then {
+					continue
+				};
+
 				_clustersChecked pushBack _centerPos;
 
-				if (!([_centerPos, 200] call fnc_isTargetClaimed)) then {
+				if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
 					[_centerPos, _gun] call fnc_claimTarget;
 
 					private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
