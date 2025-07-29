@@ -268,7 +268,7 @@ fnc_isClusterDuplicate = {
 	_gun setVehicleAmmo 1;
 
 	while { !isNull _gun && alive _gun } do {
-		sleep 1;
+		sleep 2;
 
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
 		if (_ammoLeft <= 0) then {
