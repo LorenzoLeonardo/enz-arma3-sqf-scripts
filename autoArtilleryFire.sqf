@@ -201,8 +201,21 @@ fnc_fireGun = {
 			0
 		];
 	};
+	private _caller = gunner _gun;
+	private _grid = mapGridPosition _finalPos;
+
+	playSound "ReadoutClick";
+	_caller sideChat format ["%1: Alpha Battery, fire mission, grid [%2], over.", name _caller, _grid];
 
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
+
+	waitUntil {
+		sleep 1;
+		(currentCommand _gun) == ""
+	};
+	playSound "ReadoutClick";
+	_caller sideChat format ["%1: Shot, over!", name _caller];
+
 	true
 };
 
