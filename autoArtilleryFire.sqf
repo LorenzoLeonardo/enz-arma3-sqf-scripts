@@ -217,7 +217,8 @@ fnc_getArtilleryAmmoType = {
 	{
 		private _mag = _x;
 		{
-			if (_mag find _x > -1) exitWith {
+			private _keyword = _x;
+			if (_mag find _keyword > -1) exitWith {
 				_ammoType = _mag;
 			};
 		} forEach _preferredKeywords;
