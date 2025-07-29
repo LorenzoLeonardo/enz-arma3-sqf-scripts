@@ -66,7 +66,9 @@ private _accuracy_radius = _this param [7, 0];
 // =========================
 // Global Target Registry
 // =========================
-if (isNil "GVAR_activeTargets") then {
+if (isNil {
+	missionNamespace getVariable "GVAR_activeTargets"
+}) then {
 	missionNamespace setVariable ["GVAR_activeTargets", []];
 };
 
@@ -254,7 +256,7 @@ fnc_getArtilleryAmmoType = {
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
 	_gun setVehicleAmmo 1;
 
-	while { alive _gun } do {
+	while { alive _gun && !isNull _gun } do {
 		sleep 1;
 
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
