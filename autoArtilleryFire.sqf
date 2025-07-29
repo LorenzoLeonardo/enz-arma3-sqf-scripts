@@ -66,9 +66,7 @@ private _accuracy_radius = _this param [7, 0];
 // =========================
 // Global Target Registry
 // =========================
-if (isNil {
-	missionNamespace getVariable "GVAR_activeTargets"
-}) then {
+if (isNil "GVAR_activeTargets") then {
 	missionNamespace setVariable ["GVAR_activeTargets", []];
 };
 
