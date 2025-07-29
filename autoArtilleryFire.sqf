@@ -141,17 +141,32 @@ fnc_handleGunDepletion = {
 	_wp setWaypointCombatMode "GREEN";
 };
 
+fnc_getGunSide = {
+	params ["_gun"];
+	if (crew _gun isNotEqualTo []) exitWith {
+		side (gunner _gun)
+	};
+	side _gun
+};
+
+fnc_isHostile = {
+	params ["_unit", "_gunSide"];
+	alive _unit && ((side _unit getFriend _gunSide) < 0.6 || (_gunSide getFriend side _unit) < 0.6)
+};
+
 fnc_getEnemies = {
-	params ["_origin", "_distance"];
+	params ["_origin", "_distance", "_gun"];
+	private _gunSide = [_gun] call fnc_getGunSide;
 	(_origin nearEntities ["Man", _distance]) select {
-		alive _x && side _x == east
+		[_x, _gunSide] call fnc_isHostile
 	}
 };
 
 fnc_getCluster = {
-	params ["_unit", "_radius"];
+	params ["_unit", "_radius", "_gun"];
+	private _gunSide = [_gun] call fnc_getGunSide;
 	(getPos _unit nearEntities ["Man", _radius]) select {
-		alive _x && side _x == east
+		[_x, _gunSide] call fnc_isHostile
 	}
 };
 
@@ -245,14 +260,14 @@ fnc_getArtilleryAmmoType = {
 			};
 		};
 
-		private _enemies = [getPos _gun, _detection_distance] call fnc_getEnemies;
+		private _enemies = [getPos _gun, _detection_distance, _gun] call fnc_getEnemies;
 		if (_enemies isEqualTo []) then {
 			continue
 		};
 
 		private _clustersChecked = [];
 		{
-			private _cluster = [_x, _cluster_radius] call fnc_getCluster;
+			private _cluster = [_x, _cluster_radius, _gun] call fnc_getCluster;
 			if (count _cluster >= _min_units_per_cluster) then {
 				private _centerPos = [_cluster] call fnc_getClusterCenter;
 				if (_centerPos in _clustersChecked) exitWith {};
