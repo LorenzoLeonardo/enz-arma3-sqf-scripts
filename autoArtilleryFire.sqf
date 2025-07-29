@@ -206,33 +206,41 @@ fnc_fireGun = {
 
 fnc_getArtilleryAmmoType = {
 	params ["_gun"];
-	private _ammoMap = [
-		["B_gun_01_F", "8Rnd_82mm_Mo_shells"],
-		["B_G_gun_01_F", "8Rnd_82mm_Mo_shells"],
-		["B_G_Offroad_01_AT_F", "8Rnd_82mm_Mo_shells"],
-		["CUP_B_M252_US", "8Rnd_82mm_Mo_shells"],
-		["CUP_O_2b14_82mm_RU", "8Rnd_82mm_Mo_shells"],
-		["CUP_B_M119_US", "32Rnd_155mm_Mo_shells"],
-		["CUP_O_D30_RU", "32Rnd_155mm_Mo_shells"],
-		["CUP_O_D30_TK", "32Rnd_155mm_Mo_shells"],
-		["CUP_B_L119_US", "32Rnd_155mm_Mo_shells"]
-	];
 
-	private _ammoType = "8Rnd_82mm_Mo_shells";
-	private _index = _ammoMap findIf {
-		_gun isKindOf (_x select 0)
+	private _mags = magazines _gun;
+	private _ammoType = "";
+
+	// Prefer HE rounds specifically
+	private _preferredKeywords = ["HE", "155mm", "105mm", "82mm", "shell", "Mo_shells"];
+
+	// Look for HE first
+	{
+		private _mag = _x;
+		{
+			if (_mag find _x > -1) exitWith {
+				_ammoType = _mag;
+			};
+		} forEach _preferredKeywords;
+
+		if (_ammoType != "") exitWith {};
+	} forEach _mags;
+
+	// Fallback to first mag if no HE found
+	if (_ammoType == "" && {
+		count _mags > 0
+	}) then {
+		_ammoType = _mags select 0;
 	};
-	if (_index > -1) then {
-		_ammoType = _ammoMap select _index select 1;
-	} else {
+
+	// Final fallback if gun has no mags at all
+	if (_ammoType == "") then {
 		if (_gun isKindOf "StaticMortar") then {
 			_ammoType = "8Rnd_82mm_Mo_shells";
 		} else {
-			if (_gun isKindOf "StaticCannon") then {
-				_ammoType = "CUP_30Rnd_105mmHE_M119_M";
-			};
+			_ammoType = "CUP_30Rnd_105mmHE_M119_M";  // default cannon HE
 		};
 	};
+
 	_ammoType
 };
 
