@@ -31,7 +31,7 @@
 //   _accuracy_radius       - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
 // 
 // Usage Example:
-//     [this, scoutGroup, 8, 50, 8, 60, true, 25] execVM "autoArtilleryFire.sqf";
+//     [this, scoutGroup, 8, 50, 8, 60, true, 25] execVM "scoutArtilleryFire.sqf";
 // 
 // This will make the assigned artillery gun:
 // - Wait for the designated scout group's leader to see enemies.
@@ -58,7 +58,7 @@ private _cluster_radius = _this param [3, 50];
 private _min_units_per_cluster = _this param [4, 8];
 // _cool_down_for_effect = cooldown time between firing rounds (default: 60 seconds)
 private _cool_down_for_effect = _this param [5, 60];
-// _unlimited_ammo = whether to use unlimited ammo (default: qfalse)
+// _unlimited_ammo = whether to use unlimited ammo (default: false)
 private _unlimited_ammo = _this param [6, false];
 // _accuracy_radius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
 private _accuracy_radius = _this param [7, 0];
