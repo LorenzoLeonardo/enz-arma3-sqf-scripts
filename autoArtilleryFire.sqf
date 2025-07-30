@@ -212,6 +212,14 @@ fnc_fireGun = {
 	};
 	private _grid = mapGridPosition _finalPos;
 
+	// Create temporary "X" marker
+	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
+	private _marker = createMarker [_markerId, _centerPos];
+	_marker setMarkerShape "ICON";
+	_marker setMarkerType "mil_end";
+	_marker setMarkerColor "ColorBlue";
+	_marker setMarkerText "FIRE MISSION";
+
 	// --- 1. Standby call ---
 	playSound "ReadoutClick";
 	_caller sideChat format [
@@ -253,6 +261,7 @@ fnc_fireGun = {
 	playSound "ReadoutClick";
 	_caller sideChat format ["%1: Rounds complete!", name _caller];
 
+	deleteMarker _marker;
 	true
 };
 
@@ -351,17 +360,9 @@ fnc_isClusterDuplicate = {
 				if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
 					[_centerPos, _gun] call fnc_claimTarget;
 
-					// Create temporary "X" marker
-					private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-					private _marker = createMarker [_markerId, _centerPos];
-					_marker setMarkerShape "ICON";
-					_marker setMarkerType "mil_end";
-					_marker setMarkerColor "ColorBlue";
-					_marker setMarkerText "FIRE MISSION";
 					private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
 					if (_fired) then {
 						sleep _cool_down_for_effect;
-						deleteMarker _marker;
 					};
 
 					[_gun] call fnc_releaseTarget;
