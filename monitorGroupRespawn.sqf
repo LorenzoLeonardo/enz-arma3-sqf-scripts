@@ -1,12 +1,12 @@
 // Usage: [enemyGrp1] execVM "monitorGroupRespawn.sqf";
 
-params ["_group"];
+params ["_group", "_groupVarName"];
 
-private _groupVarName = "enemyGrp1"; // Must match the editor variable
 private _spawnPos = getPos leader _group;
 private _side = side _group;
 private _minSurvivors = 1;
 private _respawnDelay = 15;
+_group setGroupId [_groupVarName];
 
 // Backup unit types
 private _unitTypes = [];
@@ -15,9 +15,7 @@ private _unitTypes = [];
 } forEach units _group;
 
 // Backup group callsign
-private _groupId = groupId _group;  // e.g., "Alpha 1-4"
-private _prefix = _groupId splitString " ";  // ["Alpha", "1-4"]
-private _groupName = _prefix select 0;       // "Alpha"
+private _groupLabel = (str _group splitString " ") select 1;
 
 // Backup waypoints
 private _waypoints = [];
@@ -49,7 +47,7 @@ while { true } do {
 	};
 
 	if (count _aliveUnits <= _minSurvivors) then {
-		hint format ["Group '%1' mostly dead. Respawning in %2 seconds...", _groupName, _respawnDelay];
+		hint format ["Group '%1' mostly dead. Respawning in %2 seconds...", _groupLabel, _respawnDelay];
 
 		sleep _respawnDelay;
 
@@ -61,7 +59,7 @@ while { true } do {
 
 		// Respawn group
 		private _newGroup = createGroup _side;
-		_newGroup setGroupId [_groupName];
+		_newGroup setGroupId [_groupLabel];
 
 		{
 			_newGroup createUnit [_x, _spawnPos, [], 3, "FORM"];
