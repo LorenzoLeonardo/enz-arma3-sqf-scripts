@@ -201,20 +201,57 @@ fnc_fireGun = {
 			0
 		];
 	};
-	private _caller = gunner _gun;
+	// Choose a caller (gunner or commander)
+	private _caller = if (!isNull (gunner _gun)) then {
+		gunner _gun
+	} else {
+		commander _gun
+	};
+	if (isNull _caller) exitWith {
+		false
+	};
 	private _grid = mapGridPosition _finalPos;
 
+	// --- 1. Standby call ---
 	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Alpha Battery, fire mission, grid [%2], over.", name _caller, _grid];
+	_caller sideChat format [
+		"%1: Alpha Battery, fire mission, grid %2, standby, over.",
+		name _caller, _grid
+	];
 
+	sleep 3;  // small delay before firing
+
+	// --- 2. fire the artillery ---
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
+	// --- 3. Shot call ---
+	playSound "ReadoutClick";
+	_caller sideChat format ["%1: Shot, over!", name _caller];
+
+	// --- Wait until the gun finishes firing ---
 	waitUntil {
 		sleep 1;
 		(currentCommand _gun) == ""
 	};
+
+	// Estimate shell flight time based on distance
+	private _distance = _gun distance2D _finalPos;
+	private _shellSpeed = 300;  // Average for mortars; use ~400 for howitzers
+	private _flightTime = _distance / _shellSpeed;
+
+	 // --- 4. Splash call (always) ---
+	private _wait = 0.5;
+	if (_flightTime > 5) then {
+		_wait = _flightTime - 5;
+	};
+	sleep _wait;
 	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Shot, over!", name _caller];
+	_caller sideChat format ["%1: Splash, out!", name _caller];
+
+	// --- 5. Rounds Complete (after impact) ---
+	sleep 5;
+	playSound "ReadoutClick";
+	_caller sideChat format ["%1: Rounds complete!", name _caller];
 
 	true
 };
