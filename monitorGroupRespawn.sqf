@@ -78,9 +78,6 @@ while { true } do {
 			_wp setWaypointStatements [_statements select 0, _statements select 1];
 		} forEach _waypoints;
 
-		// Reassign global var
-		missionNamespace setVariable [_groupVarName, _newGroup];
-
 		// continue loop with new group
 		_group = _newGroup;
 	};
