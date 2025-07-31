@@ -1,23 +1,23 @@
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will create dynamic way points for your units/groups
- *
- * Arguments:
- * 0: _group this is a group or unit object <OBJECT>
- * 1: _destinationPosition is a [x,y,z] coordinates of the destination <ARRAY>
- * 2: _wayPointSpeed this could be "FULL" "LIMITED" "NORMAL" <STRING>
- * 3: _wayPointType this is a waypont type "MOVE" "SAD" <STRING>
- * 4: _wayPointFormation this is a waypoint formation "LINE "DIAMOND" <STRING>
- * 5: _wayPointBehaviour this is a behaviour of the units "AWARE" "CARELESS" "DANGER" <STRING>
- * 6: _wayPointNumber this is the waypoint number, you can set from 0 to n waypoints <INTEGER>
- * Return Value:
- * The return value Array format Waypoint - [Group, index]
- *
- * Example:
- * _wayPoint = [_group, [0,0,0], "LIMITED", "MOVE", "DIAMOND", "AWARE",  0] call create_waypoint;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will create dynamic way points for your units/groups
+	 *
+	 * Arguments:
+	 * 0: _group this is a group or unit object <OBJECT>
+	 * 1: _destinationPosition is a [x, y, z] coordinates of the destination <ARRAY>
+	 * 2: _wayPointSpeed this could be "FULL" "LIMITED" "NORMAL" <STRING>
+	 * 3: _wayPointType this is a waypont type "MOVE" "SAD" <STRING>
+	 * 4: _wayPointFormation this is a waypoint formation "LINE "DIAMOND" <STRING>
+	 * 5: _wayPointBehaviour this is a behaviour of the units "AWARE" "CARELESS" "DANGER" <STRING>
+	 * 6: _wayPointNumber this is the waypoint number, you can set from 0 to n waypoints <INTEGER>
+	 * Return Value:
+	 * The return value Array format Waypoint - [group, index]
+	 *
+	 * Example:
+	 * _wayPoint = [_group, [0, 0, 0], "LIMITED", "MOVE", "DIAMOND", "AWARE", 0] call create_waypoint;
+	 *
+	 * Public: [Yes/No]
  */
 create_waypoint =
 {
@@ -30,7 +30,7 @@ create_waypoint =
 	private _wayPointNumber = _this select 6;
 	private _teamWP = _group addWaypoint [_destinationPosition, _wayPointNumber];
 	_teamWP setWaypointSpeed _wayPointSpeed;
-	_teamWP setWaypointType _wayPointType; 
+	_teamWP setWaypointType _wayPointType;
 	_teamWP setWaypointFormation _wayPointFormation;
 	_teamWP setWaypointBehaviour _wayPointBehaviour;
 
@@ -38,27 +38,27 @@ create_waypoint =
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will delete the plane and its crew members.
- *
- * Arguments:
- * 0: _plane is the plane's object <OBJECT>
- * Return Value:
- * The return value None
- *
- * Example:
- * [_plane] call uninitialize_plane;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will delete the plane and its crew members.
+	 *
+	 * Arguments:
+	 * 0: _plane is the plane's object <OBJECT>
+	 * Return Value:
+	 * The return value None
+	 *
+	 * Example:
+	 * [_plane] call uninitialize_plane;
+	 *
+	 * Public: [Yes/No]
  */
 uninitialize_plane =
-{	
+{
 	private _plane = _this select 0;
 	// Delete plane and pilots
 	{
 		deleteVehicle _x;
-	} foreach crew _plane;
+	} forEach crew _plane;
 	deleteVehicle _plane;
 };
 
@@ -74,98 +74,98 @@ set_plane_way_points =
 	private _planeAltitude = _initLocation select 2;
 	// initialize plane in the right altitude
 	_plane flyInHeightASL [(_initLocation select 2), (_initLocation select 2), (_initLocation select 2)];
-	_plane setVelocity [( sin (direction _plane) * _planeSpeed),( cos (direction _plane) * _planeSpeed),0];
-	//set plane waypoint yDistance ahead of the dropzone position.
-	_planeWPPos =  [ _dropPosition select 0, (_dropPosition select 1) - _slowDownPlaneAtDistance, _planeAltitude];
+	_plane setVelocity [(sin (direction _plane) * _planeSpeed), ( cos (direction _plane) * _planeSpeed), 0];
+	// set plane waypoint yDistance ahead of the dropzone position.
+	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) - _slowDownPlaneAtDistance, _planeAltitude];
 	[_group, _planeWPPos, "FULL", "MOVE", "DIAMOND", "CARELESS", 0] call create_waypoint;
-	//[_plane, _destinationPos, _distanceFromDestination] call wait_until_reach_dropzone;
+	// [_plane, _destinationPos, _distanceFromDestination] call wait_until_reach_dropzone;
 
-	_planeWPPos =  [ _dropPosition select 0, (_dropPosition select 1) + 1000, _dropPosition select 2];
+	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) + 1000, _dropPosition select 2];
 	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 1] call create_waypoint;
-	//_plane setVelocity [( sin (direction _plane) * _planeSpeed),( cos (direction _plane) * _planeSpeed),0];
+	// _plane setVelocity [(sin (direction _plane) * _planeSpeed), ( cos (direction _plane) * _planeSpeed), 0];
 
-	//Change plane course back to the starting location
+	// Change plane course back to the starting location
 	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", 2] call create_waypoint;
 
 	waitUntil {
 		sleep 1;
-		_distance = sqrt(abs((_initLocation select 1) - (getpos _plane select 1))^2 + abs ((_initLocation select 0) - (getpos _plane select 0))^2);
-		_distance <= 100 
+		_distance = sqrt(abs((_initLocation select 1) - (getPos _plane select 1))^2 + abs ((_initLocation select 0) - (getPos _plane select 0))^2);
+		_distance <= 100
 	};
 	[_plane] call uninitialize_plane;
 };
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will initialize the plane to use for paradrop.
- *
- * Arguments:
- * 0: _planeModel mode of the plane. Example: "CUP_B_C47_USA" <STRING>
- * 1: _dropPosition is a [x,y,z] coordinates of the paradrop destination <ARRAY>
- * 2: _initLocation is a [x,y,z] coordinates of the plane's initial position <ARRAY>
- * 3: _planeSpeed is the speed of the plan <INTEGER>
- * 4: _planeGroupName is the name of the plane group <STRING>
- * Return Value:
- * The return value Object
- *
- * Example:
- * _plane = ["CUP_B_C47_USA", [0,0,0], [0,0,0], 100, "November"] call initialize_plane;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will initialize the plane to use for paradrop.
+	 *
+	 * Arguments:
+	 * 0: _planeModel mode of the plane. Example: "CUP_B_C47_USA" <STRING>
+	 * 1: _dropPosition is a [x, y, z] coordinates of the paradrop destination <ARRAY>
+	 * 2: _initLocation is a [x, y, z] coordinates of the plane's initial position <ARRAY>
+	 * 3: _planeSpeed is the speed of the plan <INTEGER>
+	 * 4: _planeGroupName is the name of the plane group <STRING>
+	 * Return Value:
+	 * The return value Object
+	 *
+	 * Example:
+	 * _plane = ["CUP_B_C47_USA", [0, 0, 0], [0, 0, 0], 100, "November"] call initialize_plane;
+	 *
+	 * Public: [Yes/No]
  */
 initialize_plane =
-{	
+{
 	private _planeModel = _this select 0;
 	private _dropPosition = _this select 1;
 	private _initLocation = _this select 2;
 	private _planeSpeed = _this select 3;
 	private _planeGroupName = _this select 4;
 
-	//create a group of the plane
+	// create a group of the plane
 	private _groupC130J = createGroup west;
-	//create C130
+	// create C130
 	private _returnPlane = createVehicle [_planeModel, _initLocation, [], 0, "FLY"];
-	//create Pilot
+	// create Pilot
 	private _pilot = _groupC130J createUnit ["CUP_B_US_Pilot", _initLocation, [], 0, "CARGO"];
 	private _copilot = _groupC130J createUnit ["CUP_B_US_Pilot", _initLocation, [], 0, "CARGO"];
 	_returnPlane setPosASL [(_initLocation select 0), (_initLocation select 1), (_initLocation select 2)];
-	//move Pilot as plane driver
-	_pilot moveInDriver _returnPlane; //move pilot as driver of the plane
+	// move Pilot as plane driver
+	_pilot moveInDriver _returnPlane;// move pilot as driver of the plane
 	_copilot moveInAny _returnPlane;
 	addSwitchableUnit _copilot;
-	_groupC130J setGroupID [_planeGroupName];
+	_groupC130J setGroupId [_planeGroupName];
 
 	// change speed when almost reach drop zone
-    [_returnPlane, _groupC130J, _initLocation, _dropPosition, _planeSpeed] spawn set_plane_way_points;
+	[_returnPlane, _groupC130J, _initLocation, _dropPosition, _planeSpeed] spawn set_plane_way_points;
 	_returnPlane
 };
 
-
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will initialize the group/troops inside the plane for paradrop.
- *
- * Arguments:
- * 0: _groupName is a group or platoon name assignment <OBJECT>
- * 1: _initLocation is a [x,y,z] initial location of the group/unit <ARRAY>
- * 2: _plane is a plane object where the group/platoon will be loaded <OBJECT>
- * Return Value:
- * The return value Group object
- *
- * Example:
- * _groupPlatoon = [_groupName, _initLocation, _plane] call initialize_group_to_plane;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will initialize the group/troops inside the plane for paradrop.
+	 *
+	 * Arguments:
+	 * 0: _groupName is a group or platoon name assignment <OBJECT>
+	 * 1: _initLocation is a [x, y, z] initial location of the group/unit <ARRAY>
+	 * 2: _plane is a plane object where the group/platoon will be loaded <OBJECT>
+	 * Return Value:
+	 * The return value group object
+	 *
+	 * Example:
+	 * _groupPlatoon = [_groupName, _initLocation, _plane] call initialize_group_to_plane;
+	 *
+	 * Public: [Yes/No]
  */
 initialize_group_to_plane =
 {
 	private _groupName = _this select 0;
 	private _initLocation = _this select 1;
 	private _plane = _this select 2;
-	private _groupPlatoon = createGroup west; 
-	private _initializeMen = "this moveInCargo _plane;";
-	
+	private _groupPlatoon = createGroup west;
+	private _initializeMen = "this moveInCargo _plane;
+	";
+
 	_groupPlatoon setGroupId [_groupName];
 	"CUP_B_US_Soldier_TL_OCP" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "LIEUTENANT"];
 	"CUP_B_US_Soldier_Marksman_OCP" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "SERGEANT"];
@@ -183,24 +183,24 @@ initialize_group_to_plane =
 	"CUP_B_US_Medic_OCP" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 
 	addSwitchableUnit ((units _groupPlatoon) select ((count (units _groupPlatoon)) - 1));
-	 _groupPlatoon
+	_groupPlatoon
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will initialize the player to join the group for paradrop missions.
- *
- * Arguments:
- * 0: _plane is a plane object where the group/platoon will be loaded <OBJECT>
- * 1: _groupPlatoon is a group where player will join. <OBJECT>
- * Return Value:
- * The return value none
- *
- * Example:
- * [_plane, _groupPlatoon] call initialize_player;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will initialize the player to join the group for paradrop missions.
+	 *
+	 * Arguments:
+	 * 0: _plane is a plane object where the group/platoon will be loaded <OBJECT>
+	 * 1: _groupPlatoon is a group where player will join. <OBJECT>
+	 * Return Value:
+	 * The return value none
+	 *
+	 * Example:
+	 * [_plane, _groupPlatoon] call initialize_player;
+	 *
+	 * Public: [Yes/No]
  */
 initialize_player =
 {
@@ -212,21 +212,21 @@ initialize_player =
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will give each units of the group with parachute bag and save its
- * default bag so that we could switch it back later after paradrop.
- *
- * Arguments:
- * 0: _groupPlatoon is a group object where we add a parachute bag. <OBJECT>
- * Return Value:
- * The return value ARRAY of unit object and its corresponding loadout to save
- * so that we could switch back later after using the parachute.
- *
- * Example:
- * _defaultBackpacks = [_groupPlatoon] call set_parachute_backpack;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will give each units of the group with parachute bag and save its
+	 * default bag so that we could switch it back later after paradrop.
+	 *
+	 * Arguments:
+	 * 0: _groupPlatoon is a group object where we add a parachute bag. <OBJECT>
+	 * Return Value:
+	 * The return value ARRAY of unit object and its corresponding loadout to save
+	 * so that we could switch back later after using the parachute.
+	 *
+	 * Example:
+	 * _defaultBackpacks = [_groupPlatoon] call set_parachute_backpack;
+	 *
+	 * Public: [Yes/No]
  */
 set_parachute_backpack =
 {
@@ -235,26 +235,26 @@ set_parachute_backpack =
 	{
 		_oldbackPack pushBack [_x, getUnitLoadout _x];
 		_x addBackpack "B_parachute";
-	} foreach units _groupPlatoon;
+	} forEach units _groupPlatoon;
 
 	_oldbackPack
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will retrieve the default back pack of the units after paradrop.
- *
- * Arguments:
- * 0: _unit is a unit of the group to be given by their default back pack. <OBJECT>
- * 1: _backPack is an array of units and corresponding backpack return by set_parachute_backpack. <ARRAY>
- * Return Value:
- * The return value None.
- *
- * Example:
- * _defaultBackpacks = [_groupPlatoon] call set_parachute_backpack;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will retrieve the default back pack of the units after paradrop.
+	 *
+	 * Arguments:
+	 * 0: _unit is a unit of the group to be given by their default back pack. <OBJECT>
+	 * 1: _backPack is an array of units and corresponding backpack return by set_parachute_backpack. <ARRAY>
+	 * Return Value:
+	 * The return value None.
+	 *
+	 * Example:
+	 * _defaultBackpacks = [_groupPlatoon] call set_parachute_backpack;
+	 *
+	 * Public: [Yes/No]
  */
 get_backpack =
 {
@@ -264,26 +264,57 @@ get_backpack =
 		if (_x select 0 == _unit) then {
 			_unit setUnitLoadout (_x select 1);
 		};
-	} foreach _backPack;
+	} forEach _backPack;
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will eject the group/platoon from the assigned plane.
- *
- * Arguments:
- * 0: _groupPlatoon is a unit of the group to be given by their default back pack. <OBJECT>
- * 1: _plane is a plane object where the group/platoon will be ejected <OBJECT>
- * 2: _backPack is an array of units and corresponding backpack return by set_parachute_backpack. <ARRAY>
- * 3: _jumpIntervalTime is the delay in seconds between each unit when jumping from the plane. <FLOAT>
- * Return Value:
- * The return value None.
- *
- * Example:
- * [_groupPlatoon, _plane, _defaultBackpacks] call eject_from_plane;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will reload back the original backpack of the unit after paradrop and hitting the ground.
+	 *
+	 * Arguments:
+	 * 0: _paraPlayer is a unit of the group to be given by their default back pack. <OBJECT>
+	 * 1: _backPack is an array of units and corresponding backpack return by set_parachute_backpack. <ARRAY>
+	 * Return Value:
+	 * The return value None.
+	 *
+	 * Example:
+	 * [_paraPlayer, _backPack] spawn reload_inventory_when_hit_Ground;
+	 *
+	 * Public: [Yes/No]
+ */
+reload_inventory_when_hit_Ground =
+{
+	private _paraPlayer = _this select 0;
+	private _backPack = _this select 1;
+
+	waitUntil {
+		sleep 1;
+		isTouchingGround _paraPlayer
+	};
+	unassignVehicle _paraPlayer;
+	[_paraPlayer, _backPack] call get_backpack;
+	sleep 5;
+	_paraPlayer allowDamage true;
+};
+
+/*
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will eject the group/platoon from the assigned plane.
+	 *
+	 * Arguments:
+	 * 0: _groupPlatoon is a unit of the group to be given by their default back pack. <OBJECT>
+	 * 1: _plane is a plane object where the group/platoon will be ejected <OBJECT>
+	 * 2: _backPack is an array of units and corresponding backpack return by set_parachute_backpack. <ARRAY>
+	 * 3: _jumpIntervalTime is the delay in seconds between each unit when jumping from the plane. <FLOAT>
+	 * Return Value:
+	 * The return value None.
+	 *
+	 * Example:
+	 * [_groupPlatoon, _plane, _defaultBackpacks] call eject_from_plane;
+	 *
+	 * Public: [Yes/No]
  */
 eject_from_plane =
 {
@@ -294,47 +325,29 @@ eject_from_plane =
 	private _groupArray = units _groupPlatoon;
 
 	{
-		// Spawn this routine at the background to
-		// Eject the unit from the plane
-		// and give them parachute backpack
-		// and reload their inventory
-		// after hitting the ground.
-		[_x, _backPack] spawn {
-			private _paraPlayer = _this select 0;
-			private _backPack = _this select 1;
-
-			unassignvehicle _paraPlayer;
-			moveOut _paraPlayer;
-			_paraPlayer allowDamage false;
-
-			waitUntil {
-				sleep 1;
-				isTouchingGround _paraPlayer
-			};
-			unassignVehicle _paraPlayer;
-			[_paraPlayer, _backPack] call get_backpack;
-			sleep 5;
-			_paraPlayer allowDamage true;
-		};
+		_x allowDamage false;
+		unassignVehicle _x;
+		moveOut _x;
+		[_x, _backPack] spawn reload_inventory_when_hit_Ground;
 		sleep _jumpIntervalTime;
-	} foreach _groupArray;
+	} forEach _groupArray;
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will be used when naming for specific plane name of a specific group that needs
- * reinforcements.
- *
- * Arguments:
- * 0: _teamName is a team name of the group that need support/reinforcements <STRING>
- * Return Value:
- * The return value <STRING> name of the plane group.
- *
- * Example:
- * ["ALPHA"] call get_assigned_plane;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will be used when naming for specific plane name of a specific group that needs
+	 * reinforcements.
+	 *
+	 * Arguments:
+	 * 0: _teamName is a team name of the group that need support/reinforcements <STRING>
+	 * Return Value:
+	 * The return value <STRING> name of the plane group.
+	 *
+	 * Example:
+	 * ["ALPHA"] call get_assigned_plane;
+	 *
+	 * Public: [Yes/No]
  */
 get_assigned_plane =
 {
@@ -361,23 +374,23 @@ get_assigned_plane =
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will wait before executing eject_from_plane function to eject the units
- * at the target dropzone location.
- *
- * Arguments:
- * 0: _plane is a plane object where the group/platoon will be ejected <OBJECT>
- * 1: _dropPosition is a [x,y,z] coordinates of the marker where the units will be paradropped <ARRAY>
- * 2: _droppingRadius is a distance between _dropPosition center to the horizontal position of the plane. <NUMBER>
- *
- * Return Value:
- * The return value <STRING> name of the plane group.
- *
- * Example:
- * [_plane, [0,0,0], 300] call wait_until_reach_dropzone;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will wait before executing eject_from_plane function to eject the units
+	 * at the target dropzone location.
+	 *
+	 * Arguments:
+	 * 0: _plane is a plane object where the group/platoon will be ejected <OBJECT>
+	 * 1: _dropPosition is a [x, y, z] coordinates of the marker where the units will be paradropped <ARRAY>
+	 * 2: _droppingRadius is a distance between _dropPosition center to the horizontal position of the plane. <NUMBER>
+	 *
+	 * Return Value:
+	 * The return value <STRING> name of the plane group.
+	 *
+	 * Example:
+	 * [_plane, [0, 0, 0], 300] call wait_until_reach_dropzone;
+	 *
+	 * Public: [Yes/No]
  */
 wait_until_reach_dropzone =
 {
@@ -387,30 +400,30 @@ wait_until_reach_dropzone =
 
 	waitUntil {
 		sleep 1;
-		_distance = sqrt(abs((_dropPosition select 1) - (getpos _plane select 1))^2 + abs ((_dropPosition select 0) - (getpos _plane select 0))^2);
-		_distance <= _droppingRadius 
+		_distance = sqrt(abs((_dropPosition select 1) - (getPos _plane select 1))^2 + abs ((_dropPosition select 0) - (getPos _plane select 0))^2);
+		_distance <= _droppingRadius
 	};
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will help the AI artillery/mortar fire at the specified destination.
-
- *
- * Arguments:
- * 0: _gun is a unit/mortar/artillery object <OBJECT>
- * 1: _targetPos is a marker target position in [x,y,z] cooridnates <ARRAY>
- * 2: _ammoIndex is a index of the muzzle used <INTEGER>
- * 3: _rounds is the number of rounds per call <INTEGER>
- *
- * Return Value:
- * The return value None
- *
- * Example:
- * [_gun, [0,0,0], 0, 10] call fire_artillery;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will help the AI artillery/mortar fire at the specified destination.
+	
+	 *
+	 * Arguments:
+	 * 0: _gun is a unit/mortar/artillery object <OBJECT>
+	 * 1: _targetPos is a marker target position in [x, y, z] cooridnates <ARRAY>
+	 * 2: _ammoIndex is a index of the muzzle used <INTEGER>
+	 * 3: _rounds is the number of rounds per call <INTEGER>
+	 *
+	 * Return Value:
+	 * The return value None
+	 *
+	 * Example:
+	 * [_gun, [0, 0, 0], 0, 10] call fire_artillery;
+	 *
+	 * Public: [Yes/No]
  */
 fire_artillery =
 {
@@ -420,30 +433,30 @@ fire_artillery =
 	private _rounds = _this select 3;
 
 	if (alive _gun) then {
-		private _ammo = getArtilleryAmmo [_gun] select _ammoIndex; 
+		private _ammo = getArtilleryAmmo [_gun] select _ammoIndex;
 		_gun doArtilleryFire[ _targetPos, _ammo, _rounds];
 		_gun setVehicleAmmo 1;
 	};
 };
 
 /*
- * Author: Lorenzo Leonardo
- * Email: enzotechcomputersolutions@gmail.com
- * This will check if artillery target is in range.
-
- *
- * Arguments:
- * 0: _group is a group of mortar/artillery object <OBJECT>
- * 1: _targetPos is a marker target position in [x,y,z] cooridnates <ARRAY>
- * 2: _ammoIndex is a index of the muzzle used <INTEGER>
-*
- * Return Value:
- * The return value true/false if can hit the target or not
- *
- * Example:
- * [group gun, [0,0,0], 0, 10] call is_artillery_target_in_range;
- *
- * Public: [Yes/No]
+	 * Author: Lorenzo Leonardo
+	 * Email: enzotechcomputersolutions@gmail.com
+	 * This will check if artillery target is in range.
+	
+	 *
+	 * Arguments:
+	 * 0: _group is a group of mortar/artillery object <OBJECT>
+	 * 1: _targetPos is a marker target position in [x, y, z] cooridnates <ARRAY>
+	 * 2: _ammoIndex is a index of the muzzle used <INTEGER>
+	*
+	 * Return Value:
+	 * The return value true/false if can hit the target or not
+	 *
+	 * Example:
+	 * [group gun, [0, 0, 0], 0, 10] call is_artillery_target_in_range;
+	 *
+	 * Public: [Yes/No]
  */
 is_artillery_target_in_range =
 {
@@ -454,17 +467,17 @@ is_artillery_target_in_range =
 	private _maxArtilleryRange = 12000;
 	private _minArtilleryRange = 500;
 	{
-		if ( _theLeader != _x) then {
+		if (_theLeader != _x) then {
 			private _gun = vehicle _x;
 			private _thisGunPos = getPos _gun;
-			private _distance = sqrt(abs((_targetPos select 0) - (_thisGunPos select 0))^2 + 
-									abs((_targetPos select 1) - (_thisGunPos select 1))^2);
+			private _distance = sqrt(abs((_targetPos select 0) - (_thisGunPos select 0))^2 +
+			abs((_targetPos select 1) - (_thisGunPos select 1))^2);
 			if ((_maxArtilleryRange < _distance) || (_minArtilleryRange > _distance)) then {
 				_isInRange = false;
 				break;
 			};
 		}
-	} foreach units _group;
+	} forEach units _group;
 
 	_isInRange
 };
@@ -479,7 +492,7 @@ is_artillery_available =
 			_isReady = false;
 			break;
 		};
-	} foreach units _group;
+	} forEach units _group;
 
 	_isReady
 };
@@ -492,7 +505,7 @@ call_artillery_fire_mission =
 	private _ammoIndex = _this select 3;
 	private _callerTexMarker = str format["Requesting Artillery Fire Mission: %1", groupId (group _caller)];
 	private _callerMarker = createMarkerLocal[_callerTexMarker, _pos];
-	_callerMarker setMarkerSizeLocal[1,1];
+	_callerMarker setMarkerSizeLocal[1, 1];
 	_callerMarker setMarkerShapeLocal "ICON";
 	_callerMarker setMarkerTypeLocal "mil_destroy";
 	_callerMarker setMarkerDirLocal 45;
@@ -515,17 +528,17 @@ call_artillery_fire_mission =
 			sleep 1;
 			[west, "Base"] sideRadio "FiringAtTargetLocation";
 			{
-				if ( _theLeader != _x) then {
+				if (_theLeader != _x) then {
 					[vehicle _x, _pos, _ammoIndex, _rounds] call fire_artillery;
 				};
 				sleep _fireInterval;
-			} foreach units _group;
+			} forEach units _group;
 			{
 				waitUntil {
 					sleep 1;
 					unitReady _x;
 				};
-			} foreach units _group;
+			} forEach units _group;
 			[west, "Base"] sideRadio "RoundsComplete";
 		} else {
 			[west, "Base"] sideRadio "CannotExecuteThatsOutsideOurFiringEnvelope";
@@ -545,21 +558,25 @@ start_monitoring_mission_status =
 			case "lose1": {
 				waitUntil {
 					sleep 10;
-					({(side _x) == west} count allUnits) <= 1
+					({
+						(side _x) == west
+					} count allUnits) <= 1
 				};
 				["lose1", false, true] call BIS_fnc_endMission;
 			};
 			case "lose2": {
-				waitUntil { 
+				waitUntil {
 					sleep 10;
 					(alive player) == false
 				};
-				["lose2", false, true] call BIS_fnc_endMission;	 
+				["lose2", false, true] call BIS_fnc_endMission;
 			};
 			case "end1": {
 				waitUntil {
 					sleep 10;
-					({(side _x) == east} count allUnits) == 0
+					({
+						(side _x) == east
+					} count allUnits) == 0
 				};
 				(leader (group player)) sideRadio "RadioGroundToPapaBearVictory";
 				sleep 10;
@@ -567,7 +584,9 @@ start_monitoring_mission_status =
 				sleep 10;
 				["end1", false, true] call BIS_fnc_endMission;
 			};
-			default { hint "default" };
+			default {
+				hint "default"
+			};
 		};
 	};
 };
@@ -585,7 +604,7 @@ start_monitoring_killed_units =
 				deleteVehicle (_this select 0);
 			};
 		}];
-	} foreach allUnits;
+	} forEach allUnits;
 };
 
 start_monitoring_killed_units_group =
@@ -602,46 +621,51 @@ start_monitoring_killed_units_group =
 				deleteVehicle (_this select 0);
 			};
 		}];
-	} foreach units _group;
+	} forEach units _group;
 };
 
 turn_off_city_lights=
 {
 	private _types = ["Lamps_Base_F",
-					"Land_LampAirport_F",
-					"Land_LampSolar_F",
-					"Land_LampStreet_F",
-					"Land_LampStreet_small_F",
-					"PowerLines_base_F",
-					"Land_LampDecor_F",
-					"Land_LampHalogen_F",
-					"Land_LampHarbour_F",
-					"Land_LampShabby_F",
-					"Land_PowerPoleWooden_L_F",
-					"Land_NavigLight",
-					"Land_runway_edgelight",
-					"Land_runway_edgelight_blue_F",
-					"Land_Flush_Light_green_F",
-					"Land_Flush_Light_red_F",
-					"Land_Flush_Light_yellow_F",
-					"Land_Runway_PAPI",
-					"Land_Runway_PAPI_2",
-					"Land_Runway_PAPI_3",
-					"Land_Runway_PAPI_4",
-					"Land_fs_roof_F",
-					"Land_fs_sign_F"];
+		"Land_LampAirport_F",
+		"Land_LampSolar_F",
+		"Land_LampStreet_F",
+		"Land_LampStreet_small_F",
+		"PowerLines_base_F",
+		"Land_LampDecor_F",
+		"Land_LampHalogen_F",
+		"Land_LampHarbour_F",
+		"Land_LampShabby_F",
+		"Land_PowerPoleWooden_L_F",
+		"Land_NavigLight",
+		"Land_runway_edgelight",
+		"Land_runway_edgelight_blue_F",
+		"Land_Flush_Light_green_F",
+		"Land_Flush_Light_red_F",
+		"Land_Flush_Light_yellow_F",
+		"Land_Runway_PAPI",
+		"Land_Runway_PAPI_2",
+		"Land_Runway_PAPI_3",
+		"Land_Runway_PAPI_4",
+		"Land_fs_roof_F",
+	"Land_fs_sign_F"];
 
 	private _onoff = 0.95;
 	private _markerPos = getMarkerPos (_this select 0);
 	private _radiusFromMarker = _this select 1;
 
-	for [{_i=0},{_i < (count _types)},{_i=_i+1}] do
+	for [{
+		_i=0
+	}, {
+		_i < (count _types)
+	}, {
+		_i=_i+1
+	}] do
 	{
 		private _lamps = _markerPos nearObjects [_types select _i, _radiusFromMarker];
 		{
 			_x setDamage _onoff;
 		} forEach _lamps;
-
 	}
 };
 
@@ -656,7 +680,6 @@ attach_unlimited_fire=
 
 	_smoker = "test_EmptyObjectForFireBig" createVehicle position _vehicle;
 	_smoker attachTo [_vehicle, [0, 1.5, 0]];
-
 };
 
 initialize_landing_craft =
@@ -667,24 +690,23 @@ initialize_landing_craft =
 	private _dropPosition = _this select 2;
 	private _craftSpeed = _this select 3;
 	private _craftGroupName = _this select 4;
-	//create a group of the boat
+	// create a group of the boat
 	private _groupLandingCraft = createGroup west;
-	//create C130
+	// create C130
 	private _returnLandingCraft = createVehicle [_vehicleModel, _initLocation, [], 0, "CARGO"];
-	//create Pilot
+	// create Pilot
 	private _driver = _groupLandingCraft createUnit ["CUP_B_USMC_Crew", _initLocation, [], 0, "CARGO"];
 	_returnLandingCraft setPosASL [(_initLocation select 0), (_initLocation select 1), (_initLocation select 2)];
-	//move crew as boat driver
-	_driver moveInDriver _returnLandingCraft; //move pilot as driver of the plane
+	// move crew as boat driver
+	_driver moveInDriver _returnLandingCraft;// move pilot as driver of the plane
 
-	_groupLandingCraft setGroupID [_craftGroupName];
+	_groupLandingCraft setGroupId [_craftGroupName];
 
-	//_returnLandingCraft setVelocity [( sin (direction _returnLandingCraft) * _craftSpeed),( cos (direction _returnLandingCraft) * _craftSpeed),0];
+	// _returnLandingCraft setVelocity [(sin (direction _returnLandingCraft) * _craftSpeed), ( cos (direction _returnLandingCraft) * _craftSpeed), 0];
 
 	[_groupLandingCraft, _dropPosition, "FULL", "TR UNLOAD", "DIAMOND", "AWARE", 0] call create_waypoint;
 
 	_returnLandingCraft
-
 };
 
 initialize_group_to_landing_craft =
@@ -692,35 +714,36 @@ initialize_group_to_landing_craft =
 	private _groupName = _this select 0;
 	private _initLocation = _this select 1;
 	private _boat = _this select 2;
-	private _groupPlatoon = createGroup west; 
-	private _initializeMen = "this moveInCargo _boat;";
-	
+	private _groupPlatoon = createGroup west;
+	private _initializeMen = "this moveInCargo _boat;
+	";
+
 	_groupPlatoon setGroupId [_groupName];
 	"CUP_B_USMC_Officer_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "MAJOR"];
-	//"CUP_B_USMC_Soldier_TL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "LIEUTENANT"];
-	//"CUP_B_USMC_Soldier_TL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "LIEUTENANT"];
+	// "CUP_B_USMC_Soldier_TL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "LIEUTENANT"];
+	// "CUP_B_USMC_Soldier_TL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "LIEUTENANT"];
 	"CUP_B_USMC_Soldier_TL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "LIEUTENANT"];
-	//"CUP_B_USMC_Soldier_SL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "SERGEANT"];
-	//"CUP_B_USMC_Soldier_SL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "SERGEANT"];
+	// "CUP_B_USMC_Soldier_SL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "SERGEANT"];
+	// "CUP_B_USMC_Soldier_SL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "SERGEANT"];
 	"CUP_B_USMC_Soldier_SL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "SERGEANT"];
 	"CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_MG_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Medic_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
-	//"CUP_B_USMC_Medic_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Soldier_GL_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Medic_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
+	// "CUP_B_USMC_Medic_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Medic_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Medic_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "CORPORAL"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
@@ -729,26 +752,26 @@ initialize_group_to_landing_craft =
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
 	"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
 	"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
 	"CUP_B_USMC_Soldier_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	//"CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
-	
+	// "CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+	// "CUP_B_USMC_Soldier_AT_des" createUnit [_initLocation, _groupPlatoon, _initializeMen, 1, "PRIVATE"];
+
 	addSwitchableUnit ((units _groupPlatoon) select ((count (units _groupPlatoon)) - 1));
-	 _groupPlatoon
+	_groupPlatoon
 };
 
 get_assigned_landing_craft =
@@ -781,7 +804,9 @@ monitor_group_status =
 	private _groupID = groupId _group;
 	waitUntil {
 		sleep 1;
-		{alive _x } count units _group == 0
+		{
+			alive _x
+		} count units _group == 0
 	};
 
 	switch (_teamName) do {
@@ -801,5 +826,4 @@ monitor_group_status =
 			hint format["%1 is not a valid squad name. Please use Alpha, Bravo, Charlie, Delta", _teamName];
 		};
 	};
-
 };
