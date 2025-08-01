@@ -1,7 +1,16 @@
 #include "commonFunctions.sqf"
 
 params ["_group", "_grpName"];
+
+// Save original unit types and loadouts
+private _originalLoadouts = [];
+{
+	_originalLoadouts pushBack [typeOf _x, getUnitLoadout _x];
+} forEach units _group;
+
 _group setGroupId [_grpName];
+private _totalUnits = count units _group;
+private _supportCalled = false;
 
 wait_until_group_on_ground = {
 	params ["_grp"];
@@ -14,22 +23,72 @@ wait_until_group_on_ground = {
 	};
 };
 
+create_group_from_template = {
+	params ["_side", "_spawnPos", "_plane", "_template"];
+	private _group = createGroup _side;
+	{
+		private _type = _x select 0;
+		private _loadout = _x select 1;
+		private _unit = _group createUnit [_type, _spawnPos, [], 0, "NONE"];
+		_unit setUnitLoadout _loadout;
+		_unit moveInCargo _plane;
+	} forEach _template;
+	_group
+};
+
+// Helper: set marker and radio message
+set_support_marker_and_radio = {
+	params ["_unit", "_grpName"];
+	private _markerName = format ["marker_%1", toLower _grpName];
+	private _markerText = format ["Requesting Paradrop Support (%1)", _grpName];
+	deleteMarkerLocal _markerName;
+	private _marker = createMarkerLocal [_markerName, position _unit];
+	_marker setMarkerSizeLocal [1, 1];
+	_marker setMarkerShapeLocal "ICON";
+	_marker setMarkerTypeLocal "mil_objective";
+	_marker setMarkerDirLocal 0;
+	_marker setMarkerTextLocal _markerText;
+
+	switch (toLower _grpName) do {
+		case "alpha": {
+			_marker setMarkerColorLocal "ColorBlue";
+			_unit sideRadio "RadioAlphaWipedOut";
+		};
+		case "bravo": {
+			_marker setMarkerColorLocal "ColorRed";
+			_unit sideRadio "RadioBravoWipedOut";
+		};
+		case "charlie":{
+			_marker setMarkerColorLocal "ColorYellow";
+			_unit sideRadio "RadioCharlieWipedOut";
+		};
+		case "delta": {
+			_marker setMarkerColorLocal "ColorOrange";
+			_unit sideRadio "RadioDeltaWipedOut";
+		};
+		default {
+			_marker setMarkerColorLocal "ColorWhite";
+			_unit sideRadio "RadioUnknownGroupWipedOut";
+		};
+	};
+	_markerName
+};
+
 fnc_callSupportTeam = {
-	params ["_caller", "_planeAltitude", "_planeSpeed", "_yDistance", "_yDroppingRadius", "_seizeMarkerName"];
+	params ["_caller", "_planeAltitude", "_planeSpeed", "_yDistance", "_yDroppingRadius", "_seizeMarkerName", "_savedLoadouts"];
 
 	private _groupCaller = group _caller;
 	private _callerPosition = getMarkerPos _seizeMarkerName;
 	private _planeGroupName = [groupId _groupCaller] call get_assigned_plane;
 	private _initLocation = [_callerPosition select 0, (_callerPosition select 1) - _yDistance, _planeAltitude];
 	private _plane = ["CUP_B_C47_USA", _callerPosition, _initLocation, _planeSpeed, _planeGroupName] call initialize_plane;
-	private _groupPlatoon = ["Support", _initLocation, _plane] call initialize_group_to_plane;
+	private _groupPlatoon = [west, _initLocation, _plane, _savedLoadouts] call create_group_from_template;
 	private _backPack = [_groupPlatoon] call set_parachute_backpack;
 	private _groupBeforeJoin = units _groupPlatoon;
 	private _groupCallerID = groupId _groupCaller;
 
 	hint format ["Requesting Reinforcements: %1", groupId _groupCaller];
 	((crew _plane) select 0) sideRadio "SupportOnWayStandBy";
-
 	_groupPlatoon copyWaypoints _groupCaller;
 
 	// Wait until plane reaches drop zone
@@ -39,7 +98,9 @@ fnc_callSupportTeam = {
 	((crew _plane) select 0) sideRadio "RadioAirbaseDropPackage";
 	[_groupPlatoon, _plane, _backPack, 0.5] call eject_from_plane;
 
-	// join or rename support group
+	// Optional: Add timeout here to verify drop success
+
+	// join or rename group
 	if (({
 		alive _x
 	} count units _groupCaller) == 0) then {
@@ -66,20 +127,10 @@ fnc_callSupportTeam = {
 	};
 
 	deleteMarkerLocal _seizeMarkerName;
-
-	// Wait until most units are on ground (alt < 3 meters)
 	[_groupPlatoon] call wait_until_group_on_ground;
 };
 
-while {
-	{
-		alive _x
-	} count units _group > 0
-} do {
-	private _totalUnits = count units _group;
-	if (_totalUnits == 0) exitWith {};
-
-	// Wait until only 1/3 remain
+while { true } do {
 	waitUntil {
 		sleep 2;
 		private _aliveCount = {
@@ -88,47 +139,20 @@ while {
 		_aliveCount <= (_totalUnits / 3)
 	};
 
+	if (_supportCalled) then {
+		continue;
+	};
+
 	private _aliveUnits = units _group select {
 		alive _x
 	};
-	if (count _aliveUnits == 0) exitWith {};
+
+	if (count _aliveUnits == 0) then {
+		continue;
+	};
 
 	private _radioUnit = _aliveUnits select 0;
-
-	// Create marker
-	private _callerMarkerName = format ["marker_%1", toLower _grpName];
-	private _callerMarkerText = format ["Requesting Paradrop Support (%1)", _grpName];
-	deleteMarkerLocal _callerMarkerName;
-	private _callerMarker = createMarkerLocal [_callerMarkerName, position _radioUnit];
-	_callerMarker setMarkerSizeLocal [1, 1];
-	_callerMarker setMarkerShapeLocal "ICON";
-	_callerMarker setMarkerTypeLocal "mil_objective";
-	_callerMarker setMarkerDirLocal 0;
-	_callerMarker setMarkerTextLocal _callerMarkerText;
-
-	// Radio messages and color
-	switch (toLower _grpName) do {
-		case "alpha": {
-			_callerMarker setMarkerColorLocal "ColorBlue";
-			_radioUnit sideRadio "RadioAlphaWipedOut";
-		};
-		case "bravo": {
-			_callerMarker setMarkerColorLocal "ColorRed";
-			_radioUnit sideRadio "RadioBravoWipedOut";
-		};
-		case "charlie": {
-			_callerMarker setMarkerColorLocal "ColorYellow";
-			_radioUnit sideRadio "RadioCharlieWipedOut";
-		};
-		case "delta": {
-			_callerMarker setMarkerColorLocal "ColorOrange";
-			_radioUnit sideRadio "RadioDeltaWipedOut";
-		};
-		default {
-			_callerMarker setMarkerColorLocal "ColorWhite";
-			_radioUnit sideRadio "RadioUnknownGroupWipedOut";
-		};
-	};
+	private _markerName = [_radioUnit, _grpName] call set_support_marker_and_radio;
 
 	// Signal: Flare & Smoke
 	private _flrObj = "F_40mm_Red" createVehicle (_radioUnit modelToWorld [0, 0, 200]);
@@ -136,7 +160,7 @@ while {
 	"SmokeShellRed" createVehicle (position _radioUnit);
 
 	// call support
-	[_radioUnit, 350, 300, 8000, 400, _callerMarkerName] call fnc_callSupportTeam;
+	[_radioUnit, 350, 300, 8000, 400, _markerName, _originalLoadouts] call fnc_callSupportTeam;
 
-	sleep 60;  // Delay before next monitoring cycle (ensures no stacking of requests)
+	_supportCalled = true;
 };
