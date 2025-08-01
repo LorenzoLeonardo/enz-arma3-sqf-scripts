@@ -1,91 +1,58 @@
-/*
-	    fn_manageGunCrew.sqf
-	    Parameters:
-	        0: OBJECT - The .50 cal weapon (turret/gun vehicle)
-	        1: group - The AI group that can crew the weapon
-	        2: (Optional) NUMBER - max retries when no crew can be found (default: 10)
-	
-	    Description:
-	        Assigns an AI gunner to the specified weapon if the current one is killed.
-	        Ensures infinite ammo. Skips players and already-assigned units.
-	
-	Example:
-	[this, group this, 10, false] execVM "manageGunCrew.sqf";
-*/
+params ["_gun", "_group"];
 
-params [
-	["_gun", objNull, [objNull]],
-	["_group", grpNull, [grpNull]],
-	["_maxRetries", 10, [0]],
-	["_makeInvincible", false, [true]]
-];
+_gun allowDamage false;
 
-if (isNull _gun || isNull _group) exitWith {
-	diag_log "[manageGunCrew] Invalid parameters.";
-};
-
-_gun allowDamage !_makeInvincible;
-
-// Refill ammo continuously
 [_gun] spawn {
 	params ["_gun"];
 	while { alive _gun } do {
 		_gun setVehicleAmmo 1;
-		sleep 10;
+		sleep 1;
 	};
 };
 
-private _retryCount = 0;
-private _startIndex = 1;  // <-- Skip team leader
+private _newStartIndex = 1;
 
+// Monitor group and reassign gunner if necessary
 while {
 	({
 		alive _x
-	} count units _group) > 1 &&
-	_retryCount < _maxRetries &&
-	alive _gun
+	} count units _group) > 1
 } do {
+	// Check if gun is unmanned
 	if ({
 		alive _x
-	} count crew _gun == 0) then {
-		private _units = units _group;
-		private _index = _startIndex;
-		private _candidate = objNull;
+	} count crew _gun <= 0) then {
+		private _groupArray = units _group;
+		private _index = _newStartIndex;
+		private _groupmember = objNull;
 
-		while { _index < count _units } do {
-			private _unit = _units select _index;
-			private _alreadyAssigned = vehicle _unit != _unit;  // true if unit is in any vehicle
+		// find suitable replacement
+		while { _index < count _groupArray } do {
+			private _candidate = _groupArray select _index;
+			private _isUnassigned = isNull assignedVehicle _candidate;
 
-			if (alive _unit && !_alreadyAssigned && !(_unit in _gun) && !isPlayer _unit) exitWith {
-				_candidate = _unit;
+			if ((alive _candidate) && (_candidate != player) &&	_isUnassigned && !(_candidate in _gun)) then {
+				_groupmember = _candidate;
+				break;
 			};
 
 			_index = _index + 1;
 		};
 
-		if (!isNull _candidate) then {
-			_candidate assignAsGunner _gun;
-			[_candidate] orderGetIn true;
-
+		// Assign to gun if a valid unit was found
+		if (!isNull _groupmember) then {
+			_groupmember assignAsGunner _gun;
+			[_groupmember] orderGetIn true;
 			waitUntil {
-				sleep 0.5;
 				({
 					alive _x
-				} count crew _gun) > 0 || !alive _candidate
-			};
-
-			if (!alive _candidate) then {
-				_retryCount = _retryCount + 1;
+				} count crew _gun) > 0
 			};
 		} else {
-			_retryCount = _retryCount + 1;
-			_startIndex = _startIndex + 1;
+			// No valid member found, increment starting index to avoid retrying dead/unavailable units
+			_newStartIndex = _newStartIndex + 1;
 		};
+	} else {
+		sleep 1;
 	};
-
-	sleep 1;
-};
-
-if (_retryCount >= _maxRetries) then {
-	diag_log format ["[manageGunCrew] Max retries reached for gun: %1", _gun];
 };
