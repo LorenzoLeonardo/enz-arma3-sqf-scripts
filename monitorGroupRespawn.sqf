@@ -1,11 +1,13 @@
-// Usage: [enemyGrp1] execVM "monitorGroupRespawn.sqf";
+// Usage: [enemyGrp1, "Alpha", 3] execVM "monitorGroupRespawn.sqf";
 
-params ["_group", "_groupVarName"];
+params ["_group", "_groupVarName", "_maxRespawns"];
 
 private _spawnPos = getPos leader _group;
 private _side = side _group;
 private _minSurvivors = 1;
 private _respawnDelay = 15;
+private _respawnCount = 0;
+
 _group setGroupId [_groupVarName];
 
 // Backup unit types
@@ -41,7 +43,7 @@ for "_i" from 0 to (count waypoints _group - 1) do {
 	];
 };
 
-while { true } do {
+while { _respawnCount < _maxRespawns } do {
 	private _aliveUnits = units _group select {
 		alive _x
 	};
@@ -80,6 +82,7 @@ while { true } do {
 
 		// continue loop with new group
 		_group = _newGroup;
+		_respawnCount = _respawnCount + 1;
 	};
 
 	sleep 5;
