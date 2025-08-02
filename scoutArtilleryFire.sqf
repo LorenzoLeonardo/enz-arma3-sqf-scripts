@@ -186,7 +186,7 @@ fnc_getClusterCenter = {
 };
 
 fnc_fireGun = {
-	params ["_gun", "_targetPos", "_accuracy_radius", "_ammoType", "_rounds"];
+	params ["_caller", "_gun", "_targetPos", "_accuracy_radius", "_ammoType", "_rounds"];
 	if (!canFire _gun) exitWith {
 		false
 	};
@@ -201,13 +201,13 @@ fnc_fireGun = {
 			0
 		];
 	};
-	// Choose a caller (gunner or commander)
-	private _caller = if (!isNull (gunner _gun)) then {
+	// Choose a responder (gunner or commander)
+	private _base = if (!isNull (gunner _gun)) then {
 		gunner _gun
 	} else {
 		commander _gun
 	};
-	if (isNull _caller) exitWith {
+	if (isNull _base) exitWith {
 		false
 	};
 	private _grid = mapGridPosition _finalPos;
@@ -221,20 +221,15 @@ fnc_fireGun = {
 	_marker setMarkerText "FIRE MISSION";
 
 	// --- 1. Standby call ---
-	playSound "ReadoutClick";
-	_caller sideChat format [
-		"%1: Alpha Battery, fire mission, grid %2, standby, over.",
-		name _caller, _grid
-	];
-
+	_caller sideRadio "RadioArtilleryRequest"; // plays sound
+	_caller sideChat format ["Request immediate artillery at the designated coordinates grid [%1]. Over!", _grid];
 	sleep 3;  // small delay before firing
 
 	// --- 2. fire the artillery ---
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
-	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Shot, over!", name _caller];
+	_base sideRadio "RadioArtilleryResponse";
 
 	// --- Wait until the gun finishes firing ---
 	waitUntil {
@@ -253,13 +248,11 @@ fnc_fireGun = {
 		_wait = _flightTime - 5;
 	};
 	sleep _wait;
-	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Splash, out!", name _caller];
+	_base sideRadio "RadioArtillerySplash";
 
 	// --- 5. Rounds Complete (after impact) ---
 	sleep 5;
-	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Rounds complete!", name _caller];
+	_base sideRadio "RadioArtilleryRoundsComplete";
 
 	deleteMarker _marker;
 	true
@@ -312,6 +305,31 @@ fnc_isClusterDuplicate = {
 		private _pos = _x;
 		_centerPos distance2D _pos < _mergeRadius
 	} > -1
+};
+
+fnc_getQuietUnit = {
+	params ["_group"];
+
+	private _leader = leader _group;
+	private _quietUnit = objNull;
+
+	{
+		if (
+		alive _x &&
+		!isPlayer _x &&
+		_x != _leader &&
+		{
+			assignedTeam _x == "MAIN"
+		} &&   // not RED/BLUE/GREEN team leaders
+		{
+			!(_x getVariable ["isRadioBusy", false])
+		} // custom flag for radio usage
+		) exitWith {
+			_quietUnit = _x;
+		};
+	} forEach (units _group);
+
+	_quietUnit
 };
 
 // =========================
@@ -372,7 +390,8 @@ fnc_isClusterDuplicate = {
 				if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
 					[_centerPos, _gun] call fnc_claimTarget;
 
-					private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
+					private _quiet_unit = [group _scoutLeader] call fnc_getQuietUnit;
+					private _fired = [_quiet_unit, _gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
 					if (_fired) then {
 						sleep _cool_down_for_effect;
 					};
