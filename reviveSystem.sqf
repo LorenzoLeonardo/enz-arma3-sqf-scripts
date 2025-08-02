@@ -14,16 +14,35 @@ params ["_group"];
 
 		if (_newDamage >= 1) then {
 			// Roll for instant death
-			if (random 1 < _deathChance) exitWith {
+			/*
+				if (random 1 < _deathChance) exitWith {
 				_unit setDamage 1;   // Dead instantly
-			};
-			    // Make unit unconscious
+				};
+			*/
+
+			// Make unit unconscious
 			_unit setDamage 0.9;
 			_unit setUnconscious true;
 			_unit disableAI "MOVE";
 			_unit disableAI "ANIM";
 			_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
 			_unit setCaptive true;
+
+			// Bleeding out timer
+			[_unit] spawn {
+				params ["_injured"];
+				private _elapsed = 0;
+				private _bleedOutTime = 120; // 2 minutes to revive
+
+				while { alive _injured && !(_injured getVariable ["revived", false]) && _elapsed < _bleedOutTime } do {
+					sleep 1;
+					_elapsed = _elapsed + 1;
+				};
+
+				if (alive _injured && !(_injured getVariable ["revived", false])) then {
+					_injured setDamage 1; // Bleed out and die
+				};
+			};
 
 			// Revive logic
 			[_unit] spawn {
