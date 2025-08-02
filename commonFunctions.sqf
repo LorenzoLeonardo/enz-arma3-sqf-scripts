@@ -353,17 +353,17 @@ get_assigned_plane =
 {
 	private _teamName = _this select 0;
 	private _planeAssigned="";
-	switch (_teamName) do {
-		case "Alpha": {
+	switch (toLower _teamName) do {
+		case "alpha": {
 			_planeAssigned = "November 1";
 		};
-		case "Bravo": {
+		case "bravo": {
 			_planeAssigned = "November 2";
 		};
-		case "Charlie": {
+		case "charlie": {
 			_planeAssigned = "November 3";
 		};
-		case "Delta": {
+		case "delta": {
 			_planeAssigned = "November 4";
 		};
 		default {
@@ -869,7 +869,6 @@ set_support_marker_and_radio = {
 	params ["_unit", "_grpName"];
 	private _markerName = format ["marker_%1", toLower _grpName];
 	private _markerText = format ["Requesting Paradrop Support (%1)", _grpName];
-	deleteMarkerLocal _markerName;
 	private _marker = createMarkerLocal [_markerName, position _unit];
 	_marker setMarkerSizeLocal [1, 1];
 	_marker setMarkerShapeLocal "ICON";
@@ -956,4 +955,19 @@ call_support_team = {
 
 	[_groupPlatoon] call wait_until_group_on_ground;
 	deleteMarkerLocal _seizeMarkerName;
+};
+
+get_quiet_unit = {
+	params ["_group"];
+
+	private _leader = leader _group;
+	private _quietUnit = objNull;
+
+	{
+		if ((alive _x) && !isPlayer _x && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
+			_quietUnit = _x;
+		};
+	} forEach (units _group);
+
+	_quietUnit
 };

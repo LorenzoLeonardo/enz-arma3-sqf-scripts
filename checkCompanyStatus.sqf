@@ -22,15 +22,7 @@ while { true } do {
 		continue;
 	};
 
-	private _aliveUnits = units _group select {
-		alive _x
-	};
-
-	if (count _aliveUnits == 0) then {
-		continue;
-	};
-
-	private _radioUnit = _aliveUnits select 0;
+	private _radioUnit = [_group] call get_quiet_unit;
 	private _markerName = [_radioUnit, _grpName] call set_support_marker_and_radio;
 
 	// Signal: Flare & Smoke
