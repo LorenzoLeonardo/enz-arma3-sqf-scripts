@@ -11,6 +11,12 @@ params ["_group"];
 		params ["_unit", "_selection", "_damage", "_source", "_projectile"];
 		private _newDamage = (_damage + damage _unit);
 
+		// if the head is hit and damage is lethal, kill instantly
+		if (_selection == "head" && _damage > 0.5) exitWith {
+			_unit setDamage 1;  // Immediate death
+			1                   // Prevent further damage handling
+		};
+
 		if (_newDamage >= 1) then {
 			// Make unit unconscious
 			_unit setDamage 0.9;
