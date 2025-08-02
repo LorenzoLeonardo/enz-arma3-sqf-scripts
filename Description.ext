@@ -3,7 +3,7 @@ class CfgDebriefing
 	class end1
 	{
 		title = "Mission Accomplished!";
-		subtitle = "We captured Zaros";
+		subtitle = "We successfully defended Athira";
 		description = "";
 	};
 
@@ -229,17 +229,7 @@ class CfgRadio
 		// radio caption
 		title	= "Shots fired!";
 	};
-	class RadioArtilleryRoundsComplete
-	{
-		// display name NOLAN(US)
-		name	= "RadioArtilleryRoundsComplete";
 
-		// filename, volume, pitch
-		sound[]	= { "\sounds\RadioArtilleryRoundsComplete.ogg", db + 100, 1.0 };
-
-		// radio caption
-		title	= "Rounds complete!";
-	};
 	class RadioArtilleryOutOfAmmo
 	{
 		// display name Simon (UK)
@@ -578,5 +568,60 @@ class CfgRadio
 
 		// radio caption
 		title	= "Papa bear to all units. Please be advised that we've lost contact with delta team. Do your job well because we cannot afford to lose that town.";			
+	}
+
+	class RadioPapaBearDefendTheCityWithArtillerySupport
+	{
+		name	= "RadioPapaBearDefendTheCityWithArtillerySupport";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearDefendTheCityWithArtillerySupport.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa bear to all units, please defend the city at all cost. You can use our artillery to get rid of the invaders. Papa Bear out!";
+	}
+
+	class RadioArtilleryRequest
+	{
+		name	= "RadioArtilleryRequest";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\artillery_request.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "";
+	}
+
+	class RadioArtilleryResponse
+	{
+		name	= "RadioArtilleryResponse";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\artillery_acknowledged.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Target location received, order is inbound. Out!";
+	}
+
+	class RadioArtillerySplash
+	{
+		name	= "RadioArtillerySplash";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\artillery_accomplished.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Splash. Out!";
+	}
+
+	class RadioArtilleryRoundsComplete
+	{
+		name	= "RadioArtillerySplash";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\artillery\artillery_rounds_complete.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Rounds complete. Out!";
 	}
 };

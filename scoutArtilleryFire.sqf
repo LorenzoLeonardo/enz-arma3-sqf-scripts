@@ -314,17 +314,7 @@ fnc_getQuietUnit = {
 	private _quietUnit = objNull;
 
 	{
-		if (
-		alive _x &&
-		!isPlayer _x &&
-		_x != _leader &&
-		{
-			assignedTeam _x == "MAIN"
-		} &&   // not RED/BLUE/GREEN team leaders
-		{
-			!(_x getVariable ["isRadioBusy", false])
-		} // custom flag for radio usage
-		) exitWith {
+		if ((alive _x) && !isPlayer _x && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
 			_quietUnit = _x;
 		};
 	} forEach (units _group);
