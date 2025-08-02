@@ -5,85 +5,67 @@
 
 params ["_group"];
 
-// Add unconscious handling for all units in the group
 {
 	_x addEventHandler ["HandleDamage", {
 		params ["_unit", "_selection", "_damage", "_source", "_projectile"];
 
-		if ((_damage + damage _unit) >= 1) then {
-			// Prevent death
-			_unit setDamage 0.9;
-			_unit setVariable ["isUnconscious", true, true];
+		private _newDamage = (_damage + damage _unit);
+		private _deathChance = 0.1;      // 10% chance unit dies instantly
 
-			// Disable all AI behavior
+		if (_newDamage >= 1) then {
+			// Roll for instant death
+			if (random 1 < _deathChance) exitWith {
+				_unit setDamage 1;   // Dead instantly
+			};
+			    // Make unit unconscious
+			_unit setDamage 0.9;
+			_unit setUnconscious true;
 			_unit disableAI "MOVE";
 			_unit disableAI "ANIM";
-			_unit disableAI "TARGET";
-			_unit disableAI "AUTOTARGET";
+			_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
 			_unit setCaptive true;
 
-			// Force injured prone animation (looping)
+			// Revive logic
 			[_unit] spawn {
-				params ["_injuredUnit"];
-				while { _injuredUnit getVariable ["isUnconscious", false] && alive _injuredUnit } do {
-					_injuredUnit playMoveNow "AinjPpneMstpSnonWnonDnon"; // Injured prone
-					sleep 5; // refresh to keep animation
-				};
-			};
+				private _injured = _this select 0;
+				private _chance = 1;
 
-			// Prevent further damage
-			0.9
-		} else {
-			_damage
-		}
-	}];
-} forEach units _group;
-
-// Main revive loop
-while { true } do {
-	{
-		if (_x getVariable ["isUnconscious", false]) then {
-			private _reviver = objNull;
-			private _dist = 9999;
-
-			// find nearest alive teammate
-			{
-				if (alive _x && {
-					!(_x getVariable ["isUnconscious", false])
-				}) then {
-					private _d = _x distance _x;
-					if (_d < _dist) then {
-						_dist = _d;
-						_reviver = _x;
+				while { alive _injured && (_injured getVariable ["revived", false]) isEqualTo false } do {
+					sleep 3;
+					// find a nearby friendly (not unconscious)
+					private _medic = objNull;
+					{
+						if (_x != _injured && alive _x && !(_x getVariable ["reviving", false])) exitWith {
+							_medic = _x;
+						};
+					} forEach allUnits;
+					if (!isNull _medic) then {
+						_medic setVariable ["reviving", true];
+						// move to injured
+						_medic doMove (position _injured);
+						waitUntil {
+							sleep 1;
+							(_medic distance _injured) < 3 || !alive _medic
+						};
+						if (alive _medic && alive _injured) then {
+							// Roll revive chance
+							if (random 1 < _chance) then {
+								_injured setUnconscious false;
+								_injured enableAI "MOVE";
+								_injured enableAI "ANIM";
+								_injured setCaptive false;
+								_injured setDamage 0.5;
+								_injured setVariable ["revived", true, true];
+								_injured playMoveNow "AmovPknlMstpSrasWrflDnon"; // Kneeling with rifle
+							};
+						};
+						_medic setVariable ["reviving", false];
 					};
 				};
-			} forEach units _group;
-
-			if (!isNull _reviver) then {
-				_reviver doMove (getPosATL _x);
-
-				waitUntil {
-					sleep 1;
-					(_reviver distance _x) < 3 || !alive _reviver
-				};
-
-				if (alive _reviver) then {
-					_reviver playMove "AinvPknlMstpSnonWnonDnon_medic";
-					sleep 6;
-
-					// Revive
-					_x setDamage 0.3;
-					_x setVariable ["isUnconscious", false, true];
-					_x enableAI "MOVE";
-					_x enableAI "ANIM";
-					_x enableAI "TARGET";
-					_x enableAI "AUTOTARGET";
-					_x setCaptive false;
-					                    _x playMoveNow "AmovPpneMstpSnonWnonDnon"; // prone idle
-				};
 			};
+			0
+		} else {
+			_damage
 		};
-	} forEach units _group;
-
-	sleep 1;
-};
+	}];
+} forEach units _group;
