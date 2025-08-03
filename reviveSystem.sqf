@@ -36,7 +36,7 @@ fnc_getBestMedic = {
 			(_x != _injured)
 			&& (alive _x)
 			&& !(_x getVariable ["reviving", false])
-			&& ( _x getUnitTrait "Medic")
+			&& (_x getUnitTrait "Medic")
 		};
 
 		// if still no medic, fallback to any alive unit from the same side
@@ -104,16 +104,23 @@ fnc_getBestMedic = {
 			// AI revive logic
 			[_unit] spawn {
 				params ["_injured"];
+				private _loopTimeout = time + 180; // max 3 minutes to try reviving
 
-				while { (alive _injured) && !(_injured getVariable ["revived", false]) } do {
+				while { (alive _injured) && !(_injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
 					sleep 3;
 					private _medic = [_injured] call fnc_getBestMedic;
 
 					if (!isNull _medic) then {
 						doStop _medic;
+
+						// Disable combat distractions during revive
 						_medic disableAI "AUTOCOMBAT";
 						_medic disableAI "TARGET";
 						_medic disableAI "SUPPRESSION";
+
+						// Optional: Set safe behavior while reviving
+						_medic setBehaviour "AWARE";
+						_medic setUnitPos "MIDDLE";
 
 						_medic setVariable ["reviving", true];
 						_medic commandMove (position _injured);
@@ -124,13 +131,32 @@ fnc_getBestMedic = {
 							((_medic distance _injured) < 3) || (!alive _medic) || (time > _timeout)
 						};
 
+						// Re-enable AI capabilities after move attempt
 						_medic enableAI "AUTOCOMBAT";
 						_medic enableAI "TARGET";
 						_medic enableAI "SUPPRESSION";
+						_medic setBehaviour "AWARE";
+						_medic setUnitPos "AUTO";
+
 						if (alive _medic && alive _injured && (_medic distance _injured) < 3) then {
-							// _medic playAction "medic";
+							// Ensure medic stops moving before animation
+							waitUntil {
+								sleep 0.5;
+								speed _medic < 0.5
+							};
+
+							// try playing animation reliably
 							_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
+							// Ensure animation starts (check current anim)
+							private _animStartTime = time;
+							waitUntil {
+								sleep 0.1;
+								(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
+								|| (time - _animStartTime > 2)
+							};
+							// Give extra time for anim to complete
 							sleep 5;
+
 							// Revive and FULL heal
 							_injured setUnconscious false;
 							_injured enableAI "MOVE";
