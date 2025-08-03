@@ -106,7 +106,7 @@ fnc_getBestMedic = {
 			[_unit] spawn {
 				params ["_injured"];
 				private _elapsed = 0;
-				private _bleedOutTime = 120;
+				private _bleedOutTime = 300; // 5 minutes
 				private _startTime = time;
 				waitUntil {
 					sleep 1;
@@ -123,15 +123,13 @@ fnc_getBestMedic = {
 			// AI revive logic
 			[_unit] spawn {
 				params ["_injured"];
-				private _loopTimeout = time + 180; // max 3 minutes to try reviving
+				private _loopTimeout = time + 300; // max 5 minutes to try reviving
 
 				while { (alive _injured) && !(_injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
 					sleep 3;
 					private _medic = [_injured] call fnc_getBestMedic;
 
 					if (!isNull _medic) then {
-						doStop _medic;
-
 						// Disable combat distractions during revive
 						_medic disableAI "AUTOCOMBAT";
 						_medic disableAI "TARGET";
@@ -152,14 +150,10 @@ fnc_getBestMedic = {
 						_medic enableAI "SUPPRESSION";
 
 						if (alive _medic && alive _injured && (_medic distance _injured) < 3) then {
-							// Ensure medic stops moving before animation
-							private _stopTimeout = time + 5; // max 5 seconds to wait for medic to stop
-							waitUntil {
-								sleep 0.5;
-								(speed _medic < 0.5) || (time > _stopTimeout)
-							};
-
-							// try playing animation reliably
+							// Prevent any movement during revive
+							doStop _medic;
+							_medic disableAI "MOVE";
+							// Try playing animation reliably
 							_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
 							// Ensure animation starts (check current anim)
 							private _animStartTime = time;
@@ -170,7 +164,8 @@ fnc_getBestMedic = {
 							};
 							// Give extra time for anim to complete
 							sleep 5;
-
+							_medic enableAI "MOVE";
+							_medic doFollow (leader _medic);
 							// Revive and FULL heal
 							_injured setUnconscious false;
 							_injured enableAI "MOVE";
