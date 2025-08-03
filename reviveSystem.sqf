@@ -153,6 +153,7 @@ fnc_getBestMedic = {
 							// Prevent any movement during revive
 							doStop _medic;
 							_medic disableAI "MOVE";
+							_medic disableAI "PATH";
 							// Try playing animation reliably
 							_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
 							// Ensure animation starts (check current anim)
@@ -165,6 +166,7 @@ fnc_getBestMedic = {
 							// Give extra time for anim to complete
 							sleep 5;
 							_medic enableAI "MOVE";
+							_medic enableAI "PATH";
 							_medic doFollow (leader _medic);
 							// Revive and FULL heal
 							_injured setUnconscious false;
