@@ -171,6 +171,13 @@ fnc_getBestMedic = {
 							|| (time > _timeout)
 						};
 
+						// Unlock immediately if failed
+						if (!alive _medic || lifeState _medic == "INCAPACITATED" || (time > _timeout)) then {
+							_injured setVariable ["beingRevived", false, true];
+							_medic setVariable ["reviving", false, true];
+							continue; // skip to next loop iteration
+						};
+
 						if (alive _medic && alive _injured && ((_medic distance _injured) < REVIVE_RANGE) && (lifeState _medic != "INCAPACITATED")) then {
 							// stop and animate revive
 							doStop _medic;
