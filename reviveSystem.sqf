@@ -5,62 +5,81 @@
 
 params ["_group"];
 
+if (isNil "GVAR_medicCache") then {
+	GVAR_medicCache = createHashMap;
+};
+
+// Function to refresh medic cache every X seconds
+fnc_refreshMedicCache = {
+	private _cacheLifetime = 10; // seconds
+	private _now = time;
+
+	{
+		private _side = _x;
+		        private _cacheData = GVAR_medicCache getOrDefault [_side, [[], 0]]; // [units, lastUpdate]
+		private _lastUpdate = _cacheData select 1;
+
+		if ((_now - _lastUpdate) > _cacheLifetime) then {
+			private _sideUnits = allUnits select {
+				side _x == _side && alive _x
+			};
+			GVAR_medicCache set [_side, [_sideUnits, _now]];
+		};
+	} forEach [west, east, independent, civilian];
+};
+
 // Function to find the best medic candidate, fallback to other groups if needed
 fnc_getBestMedic = {
 	params ["_injured"];
 	private _groupUnits = units group _injured;
 
-	// step 1: Check same group first (prioritize real medics)
+	// step 1: Check same group first for medics
 	private _candidates = _groupUnits select {
-		(_x != _injured)
-		&& (alive _x)
-		&& !(_x getVariable ["reviving", false])
-		&& (_x getUnitTrait "Medic")
+		(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic")
 	};
 
-	// if no medics in the same group, allow any soldier in the same group
-	if (count _candidates == 0) then {
+	// step 2: Fallback to any same group unit
+	if (_candidates isEqualTo []) then {
 		_candidates = _groupUnits select {
-			(_x != _injured)
-			&& (alive _x)
-			&& !(_x getVariable ["reviving", false])
+			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false])
 		};
 	};
 
-	// step 2: if no one in the same group, search ALL units of the same side
-	if (count _candidates == 0) then {
-		private _allUnits = allUnits select {
-			side _x == side _injured
-		};
-		_candidates = _allUnits select {
-			(_x != _injured)
-			&& (alive _x)
-			&& !(_x getVariable ["reviving", false])
-			&& (_x getUnitTrait "Medic")
+	// step 3: if still empty, use cached side units
+	if (_candidates isEqualTo []) then {
+		call fnc_refreshMedicCache;
+
+		private _sideCache = GVAR_medicCache get (side _injured);
+		private _sideUnits = if (!isNil "_sideCache") then {
+			_sideCache select 0
+		} else {
+			[]
 		};
 
-		// if still no medic, fallback to any alive unit from the same side
-		if (count _candidates == 0) then {
-			_candidates = _allUnits select {
-				(_x != _injured)
-				&& (alive _x)
-				&& !(_x getVariable ["reviving", false])
+		// Prioritize medics in side cache
+		_candidates = _sideUnits select {
+			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic")
+		};
+
+		// Fallback to any alive unit from same side
+		if (_candidates isEqualTo []) then {
+			_candidates = _sideUnits select {
+				(_x != _injured) && alive _x && !(_x getVariable ["reviving", false])
 			};
 		};
 	};
 
-	// if none at all, return objNull
-	if (count _candidates == 0) exitWith {
+	if (_candidates isEqualTo []) exitWith {
 		objNull
 	};
 
-	// sort by distance from injured (closest first)
+	    // sort by distance
 	_candidates = [_candidates, [], {
 		_x distance _injured
 	}, "ASCEND"] call BIS_fnc_sortBy;
-
 	_candidates select 0
 };
+
 {
 	// Handle damage (unconscious system)
 	_x addEventHandler ["HandleDamage", {
@@ -118,10 +137,6 @@ fnc_getBestMedic = {
 						_medic disableAI "TARGET";
 						_medic disableAI "SUPPRESSION";
 
-						// Optional: Set safe behavior while reviving
-						_medic setBehaviour "AWARE";
-						_medic setUnitPos "MIDDLE";
-
 						_medic setVariable ["reviving", true];
 						_medic commandMove (position _injured);
 
@@ -135,14 +150,13 @@ fnc_getBestMedic = {
 						_medic enableAI "AUTOCOMBAT";
 						_medic enableAI "TARGET";
 						_medic enableAI "SUPPRESSION";
-						_medic setBehaviour "AWARE";
-						_medic setUnitPos "AUTO";
 
 						if (alive _medic && alive _injured && (_medic distance _injured) < 3) then {
 							// Ensure medic stops moving before animation
+							private _stopTimeout = time + 5; // max 5 seconds to wait for medic to stop
 							waitUntil {
 								sleep 0.5;
-								speed _medic < 0.5
+								(speed _medic < 0.5) || (time > _stopTimeout)
 							};
 
 							// try playing animation reliably
