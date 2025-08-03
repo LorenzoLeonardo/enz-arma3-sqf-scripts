@@ -32,12 +32,14 @@ params ["_group"];
 				params ["_injured"];
 				private _elapsed = 0;
 				private _bleedOutTime = 120;
-
-				while { (alive _injured) && !(_injured getVariable ["revived", false]) && ((lifeState _injured) == "INCAPACITATED") && (_elapsed < _bleedOutTime) } do {
+				private _startTime = time;
+				waitUntil {
 					sleep 1;
-					_elapsed = _elapsed + 1;
+					!alive _injured                                    // Dead
+					|| (_injured getVariable ["revived", false])       // Revived
+					|| (lifeState _injured != "INCAPACITATED")         // No longer incapacitated
+					|| ((time - _startTime) >= _bleedOutTime)          // Timer expired
 				};
-
 				if ((alive _injured) && !(_injured getVariable ["revived", false]) && ((lifeState _injured) == "INCAPACITATED")) then {
 					_injured setDamage 1; // Bleed out
 				};
@@ -64,7 +66,7 @@ params ["_group"];
 						_medic disableAI "SUPPRESSION";
 
 						_medic setVariable ["reviving", true];
-						_medic doMove (position _injured);
+						_medic commandMove (position _injured);
 
 						private _timeout = time + 120; // 120 sec to reach
 						waitUntil {
@@ -76,6 +78,9 @@ params ["_group"];
 						_medic enableAI "TARGET";
 						_medic enableAI "SUPPRESSION";
 						if (alive _medic && alive _injured && (_medic distance _injured) < 3) then {
+							//_medic playAction "medic";
+							_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
+							sleep 5;
 							// Revive and FULL heal
 							_injured setUnconscious false;
 							_injured enableAI "MOVE";
