@@ -2,6 +2,8 @@
 	    reviveSystem.sqf
 	    Usage: [group this] execVM "reviveSystem.sqf";
 */
+#define BLEEDOUT_TIME 300 // 5 minutes
+#define REVIVE_RANGE 3 // 3 meters
 
 params ["_group"];
 
@@ -110,14 +112,13 @@ fnc_getBestMedic = {
 			[_unit] spawn {
 				params ["_injured"];
 				private _elapsed = 0;
-				private _bleedOutTime = 300; // 5 minutes
 				private _startTime = time;
 				waitUntil {
 					sleep 1;
 					!alive _injured                                    // Dead
 					|| (_injured getVariable ["revived", false])       // Revived
 					|| (lifeState _injured != "INCAPACITATED")         // No longer incapacitated
-					|| ((time - _startTime) >= _bleedOutTime)          // Timer expired
+					|| ((time - _startTime) >= BLEEDOUT_TIME)          // Timer expired
 				};
 				if ((alive _injured) && !(_injured getVariable ["revived", false]) && ((lifeState _injured) == "INCAPACITATED")) then {
 					_injured setDamage 1; // Bleed out
@@ -127,7 +128,7 @@ fnc_getBestMedic = {
 			// AI revive logic
 			[_unit] spawn {
 				params ["_injured"];
-				private _loopTimeout = time + 300; // max 5 minutes to try reviving
+				private _loopTimeout = time + BLEEDOUT_TIME; // max 5 minutes to try reviving
 
 				while { (alive _injured) && !(_injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
 					sleep 3;
@@ -142,10 +143,10 @@ fnc_getBestMedic = {
 						_medic setVariable ["reviving", true];
 						_medic commandMove (position _injured);
 
-						private _timeout = time + 120; // 120 sec to reach
+						private _timeout = time + BLEEDOUT_TIME;
 						waitUntil {
 							sleep 1;
-							((_medic distance _injured) < 3) || (!alive _medic) || (time > _timeout)
+							((_medic distance _injured) < REVIVE_RANGE) || (!alive _medic) || (time > _timeout)
 						};
 
 						// Re-enable AI capabilities after move attempt
@@ -153,7 +154,7 @@ fnc_getBestMedic = {
 						_medic enableAI "TARGET";
 						_medic enableAI "SUPPRESSION";
 
-						if (alive _medic && alive _injured && (_medic distance _injured) < 3) then {
+						if (alive _medic && alive _injured && (_medic distance _injured) < REVIVE_RANGE) then {
 							// Prevent any movement during revive
 							doStop _medic;
 							_medic disableAI "MOVE";
