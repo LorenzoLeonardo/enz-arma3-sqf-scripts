@@ -214,7 +214,7 @@ fnc_fireGun = {
 
 	// Create temporary "X" marker
 	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-	private _marker = createMarker [_markerId, _centerPos];
+	private _marker = createMarker [_markerId, _finalPos];
 	_marker setMarkerShape "ICON";
 	_marker setMarkerType "mil_end";
 	_marker setMarkerColor "ColorBlue";
@@ -229,6 +229,7 @@ fnc_fireGun = {
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
+	sleep 2;
 	_base sideRadio "RadioArtilleryResponse";
 
 	// --- Wait until the gun finishes firing ---
@@ -251,7 +252,7 @@ fnc_fireGun = {
 	_base sideRadio "RadioArtillerySplash";
 
 	// --- 5. Rounds Complete (after impact) ---
-	sleep 5;
+	sleep (_flightTime + 2);
 	_base sideRadio "RadioArtilleryRoundsComplete";
 
 	deleteMarker _marker;
