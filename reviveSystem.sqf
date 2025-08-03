@@ -132,8 +132,9 @@ fnc_getBestMedic = {
 				params ["_injured"];
 				private _loopTimeout = time + BLEEDOUT_TIME; // max 5 minutes to try reviving
 				private _medic = objNull;
-
-				while { (alive _injured) && !( _injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
+				private _attempts = 0;
+				private _MAX_ATTEMPTS = 3;
+				while { (alive _injured) && !( _injured getVariable ["revived", false]) && (time < _loopTimeout) && (_attempts < _MAX_ATTEMPTS) } do {
 					sleep 3;
 
 					// Skip if already being revived
@@ -143,6 +144,11 @@ fnc_getBestMedic = {
 
 					// find best medic
 					_medic = [_injured] call fnc_getBestMedic;
+					if (isNull _medic) then {
+						continue
+					};
+
+					_attempts = _attempts + 1;
 
 					if (!isNull _medic) then {
 						// lock injured and medic
