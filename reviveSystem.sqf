@@ -5,6 +5,62 @@
 
 params ["_group"];
 
+// Function to find the best medic candidate, fallback to other groups if needed
+fnc_getBestMedic = {
+	params ["_injured"];
+	private _groupUnits = units group _injured;
+
+	// step 1: Check same group first (prioritize real medics)
+	private _candidates = _groupUnits select {
+		(_x != _injured)
+		&& (alive _x)
+		&& !(_x getVariable ["reviving", false])
+		&& (_x getUnitTrait "Medic")
+	};
+
+	// if no medics in the same group, allow any soldier in the same group
+	if (count _candidates == 0) then {
+		_candidates = _groupUnits select {
+			(_x != _injured)
+			&& (alive _x)
+			&& !(_x getVariable ["reviving", false])
+		};
+	};
+
+	// step 2: if no one in the same group, search ALL units of the same side
+	if (count _candidates == 0) then {
+		private _allUnits = allUnits select {
+			side _x == side _injured
+		};
+		_candidates = _allUnits select {
+			(_x != _injured)
+			&& (alive _x)
+			&& !(_x getVariable ["reviving", false])
+			&& ( _x getUnitTrait "Medic")
+		};
+
+		// if still no medic, fallback to any alive unit from the same side
+		if (count _candidates == 0) then {
+			_candidates = _allUnits select {
+				(_x != _injured)
+				&& (alive _x)
+				&& !(_x getVariable ["reviving", false])
+			};
+		};
+	};
+
+	// if none at all, return objNull
+	if (count _candidates == 0) exitWith {
+		objNull
+	};
+
+	// sort by distance from injured (closest first)
+	_candidates = [_candidates, [], {
+		_x distance _injured
+	}, "ASCEND"] call BIS_fnc_sortBy;
+
+	_candidates select 0
+};
 {
 	// Handle damage (unconscious system)
 	_x addEventHandler ["HandleDamage", {
@@ -51,13 +107,7 @@ params ["_group"];
 
 				while { (alive _injured) && !(_injured getVariable ["revived", false]) } do {
 					sleep 3;
-					private _medic = objNull;
-
-					{
-						if ((_x != _injured) && (alive _x) && !(_x getVariable ["reviving", false])) exitWith {
-							_medic = _x;
-						};
-					} forEach units group _injured;
+					private _medic = [_injured] call fnc_getBestMedic;
 
 					if (!isNull _medic) then {
 						doStop _medic;
@@ -78,7 +128,7 @@ params ["_group"];
 						_medic enableAI "TARGET";
 						_medic enableAI "SUPPRESSION";
 						if (alive _medic && alive _injured && (_medic distance _injured) < 3) then {
-							//_medic playAction "medic";
+							// _medic playAction "medic";
 							_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
 							sleep 5;
 							// Revive and FULL heal
