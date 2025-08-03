@@ -93,6 +93,10 @@ fnc_getBestMedic = {
 		};
 
 		if (_newDamage >= 1) then {
+			// If the injured is in a vehicle or static weapon, remove them
+			if (!isNull objectParent _unit) then {
+				moveOut _unit;
+			};
 			// Make unit unconscious
 			_unit setDamage 0.9;
 			_unit setUnconscious true;
