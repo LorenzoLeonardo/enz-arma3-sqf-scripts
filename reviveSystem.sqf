@@ -18,7 +18,7 @@ fnc_refreshMedicCache = {
 
 	{
 		private _side = _x;
-		        private _cacheData = GVAR_medicCache getOrDefault [_side, [[], 0]]; // [units, lastUpdate]
+		private _cacheData = GVAR_medicCache getOrDefault [_side, [[], 0]]; // [units, lastUpdate]
 		private _lastUpdate = _cacheData select 1;
 
 		if ((_now - _lastUpdate) > _cacheLifetime) then {
