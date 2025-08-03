@@ -37,13 +37,13 @@ fnc_getBestMedic = {
 
 	// step 1: Check same group first for medics
 	private _candidates = _groupUnits select {
-		(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic")
+		(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic") && (lifeState _x != "INCAPACITATED")
 	};
 
 	// step 2: Fallback to any same group unit
 	if (_candidates isEqualTo []) then {
 		_candidates = _groupUnits select {
-			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false])
+			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (lifeState _x != "INCAPACITATED")
 		};
 	};
 
@@ -60,13 +60,13 @@ fnc_getBestMedic = {
 
 		// Prioritize medics in side cache
 		_candidates = _sideUnits select {
-			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic")
+			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic") && (lifeState _x != "INCAPACITATED")
 		};
 
 		// Fallback to any alive unit from same side
 		if (_candidates isEqualTo []) then {
 			_candidates = _sideUnits select {
-				(_x != _injured) && alive _x && !(_x getVariable ["reviving", false])
+				(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (lifeState _x != "INCAPACITATED")
 			};
 		};
 	};
@@ -91,11 +91,11 @@ fnc_getBestMedic = {
 		// if the head is hit and damage is lethal, kill instantly
 		if (_selection == "head" && _damage > 0.5) exitWith {
 			_unit setDamage 1;  // Immediate death
-			1                   // Prevent further damage handling
+			0                   // Prevent further damage handling
 		};
 
 		if (_newDamage >= 1) then {
-			// If the injured is in a vehicle or static weapon, remove them
+			// if the injured is in a vehicle or static weapon, remove them
 			if (!isNull objectParent _unit) then {
 				moveOut _unit;
 			};
@@ -132,59 +132,63 @@ fnc_getBestMedic = {
 
 				while { (alive _injured) && !(_injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
 					sleep 3;
-					private _medic = [_injured] call fnc_getBestMedic;
+					if (!(_injured getVariable ["beingRevived", false])) then {
+						private _medic = [_injured] call fnc_getBestMedic;
 
-					if (!isNull _medic) then {
-						// Disable combat distractions during revive
-						_medic disableAI "AUTOCOMBAT";
-						_medic disableAI "TARGET";
-						_medic disableAI "SUPPRESSION";
+						if (!isNull _medic) then {
+							_medic setVariable ["reviving", true];
+							_injured setVariable ["beingRevived", true, true]; // lock this injured
 
-						_medic setVariable ["reviving", true];
-						_medic commandMove (position _injured);
+							// Disable combat distractions during revive
+							_medic disableAI "AUTOCOMBAT";
+							_medic disableAI "TARGET";
+							_medic disableAI "SUPPRESSION";
 
-						private _timeout = time + BLEEDOUT_TIME;
-						waitUntil {
-							sleep 1;
-							((_medic distance _injured) < REVIVE_RANGE) || (!alive _medic) || (time > _timeout)
-						};
+							_medic commandMove (position _injured);
 
-						// Re-enable AI capabilities after move attempt
-						_medic enableAI "AUTOCOMBAT";
-						_medic enableAI "TARGET";
-						_medic enableAI "SUPPRESSION";
-
-						if (alive _medic && alive _injured && (_medic distance _injured) < REVIVE_RANGE) then {
-							// Prevent any movement during revive
-							doStop _medic;
-							_medic disableAI "MOVE";
-							_medic disableAI "PATH";
-							// Try playing animation reliably
-							_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
-							// Ensure animation starts (check current anim)
-							private _animStartTime = time;
+							private _timeout = time + BLEEDOUT_TIME;
 							waitUntil {
-								sleep 0.1;
-								(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
-								|| (time - _animStartTime > 2)
+								sleep 1;
+								((_medic distance _injured) < REVIVE_RANGE) || (!alive _medic) || (time > _timeout) || (lifeState _medic == "INCAPACITATED")
 							};
-							// Give extra time for anim to complete
-							sleep 5;
-							_medic enableAI "MOVE";
-							_medic enableAI "PATH";
-							_medic doFollow (leader _medic);
-							// Revive and FULL heal
-							_injured setUnconscious false;
-							_injured enableAI "MOVE";
-							_injured enableAI "ANIM";
-							_injured setCaptive false;
-							_injured setDamage 0; // FULL heal
-							_injured setVariable ["revived", true, true];
-							_injured setUnitPos "AUTO"; // Reset stance
-							_injured playMoveNow "AmovPknlMstpSrasWrflDnon"; // Kneel briefly
-						};
 
+							// Re-enable AI capabilities after move attempt
+							_medic enableAI "AUTOCOMBAT";
+							_medic enableAI "TARGET";
+							_medic enableAI "SUPPRESSION";
+
+							if (alive _medic && alive _injured && ((_medic distance _injured) < REVIVE_RANGE) && (lifeState _medic != "INCAPACITATED")) then {
+								// Prevent any movement during revive
+								doStop _medic;
+								_medic disableAI "MOVE";
+								_medic disableAI "PATH";
+								// try playing animation reliably
+								_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
+								// Ensure animation starts (check current anim)
+								private _animStartTime = time;
+								waitUntil {
+									sleep 0.1;
+									(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
+									|| (time - _animStartTime > 2)
+								};
+								// Give extra time for anim to complete
+								sleep 5;
+								_medic enableAI "MOVE";
+								_medic enableAI "PATH";
+								_medic doFollow (leader _medic);
+								// Revive and FULL heal
+								_injured setUnconscious false;
+								_injured enableAI "MOVE";
+								_injured enableAI "ANIM";
+								_injured setCaptive false;
+								_injured setDamage 0; // FULL heal
+								_injured setVariable ["revived", true, true];
+								_injured setUnitPos "AUTO"; // Reset stance
+								_injured playMoveNow "AmovPknlMstpSrasWrflDnon"; // Kneel briefly
+							};
+						};
 						_medic setVariable ["reviving", false];
+						_injured setVariable ["beingRevived", false, true];
 					};
 				};
 			};
