@@ -171,8 +171,18 @@ fnc_reviveLoop = {
 
 			// Unlock immediately if failed
 			if (!alive _medic || lifeState _medic == "INCAPACITATED" || (time > _timeout)) then {
-				_injured setVariable ["beingRevived", false, true];
+				// Restore medic's normal behavior
+				_medic enableAI "MOVE";
+				_medic enableAI "PATH";
+				_medic enableAI "AUTOCOMBAT";
+				_medic enableAI "TARGET";
+				_medic enableAI "SUPPRESSION";
 				_medic setVariable ["reviving", false, true];
+
+				// Unlock injured ONLY if not revived
+				if (!(_injured getVariable ["revived", false])) then {
+					_injured setVariable ["beingRevived", false, true];
+				};
 				continue; // skip to next loop iteration
 			};
 
