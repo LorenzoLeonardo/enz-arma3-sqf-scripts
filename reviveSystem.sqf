@@ -170,7 +170,7 @@ fnc_reviveLoop = {
 			};
 
 			// Unlock immediately if failed
-			if (!alive _medic || lifeState _medic == "INCAPACITATED" || (time > _timeout)) then {
+			if (!alive _medic || lifeState _medic == "INCAPACITATED") then {
 				// Restore medic's normal behavior
 				_medic enableAI "MOVE";
 				_medic enableAI "PATH";
