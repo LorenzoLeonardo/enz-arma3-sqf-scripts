@@ -273,10 +273,22 @@ fnc_handleDamage = {
 		_unit setVariable ["beingRevived", false, true];
 		_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
 
-		// Bleeding out timer
-		[_unit] spawn fnc_bleedoutTimer;
-		// AI revive logic
-		[_unit] spawn fnc_reviveLoop;
+		// Prevent multiple revive loops from stacking
+		if (!(_unit getVariable ["isInReviveProcess", false])) then {
+			_unit setVariable ["isInReviveProcess", true, true];
+
+			// Bleeding out timer
+			[_unit] spawn fnc_bleedoutTimer;
+
+			// AI revive logic
+			[_unit] spawn {
+				params ["_injured"];
+				[_injured] call fnc_reviveLoop;
+
+				// Reset the process flag after loop ends
+				_injured setVariable ["isInReviveProcess", false, true];
+			};
+		};
 
 		0
 	} else {
