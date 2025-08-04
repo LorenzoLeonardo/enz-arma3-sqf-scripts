@@ -12,8 +12,8 @@ params ["_group"];
 // ===============================
 // GLOBAL CACHE INITIALIZATION
 // ===============================
-if (isNil "GVAR_medicCache") then {
-	GVAR_medicCache = createHashMap;
+if (isNil "revive_medicCache") then {
+	revive_medicCache = createHashMap;
 };
 
 // ===============================
@@ -25,14 +25,14 @@ fnc_refreshMedicCache = {
 
 	{
 		private _side = _x;
-		private _cacheData = GVAR_medicCache getOrDefault [_side, [[], 0]]; // [units, lastUpdate]
+		private _cacheData = revive_medicCache getOrDefault [_side, [[], 0]]; // [units, lastUpdate]
 		private _lastUpdate = _cacheData select 1;
 
 		if ((_now - _lastUpdate) > _cacheLifetime) then {
 			private _sideUnits = allUnits select {
 				side _x == _side && alive _x
 			};
-			GVAR_medicCache set [_side, [_sideUnits, _now]];
+			revive_medicCache set [_side, [_sideUnits, _now]];
 		};
 	} forEach [west, east, independent, civilian];
 };
@@ -60,7 +60,7 @@ fnc_getBestMedic = {
 	if (_candidates isEqualTo []) then {
 		call fnc_refreshMedicCache;
 
-		private _sideCache = GVAR_medicCache get (side _injured);
+		private _sideCache = revive_medicCache get (side _injured);
 		private _sideUnits = if (!isNil "_sideCache") then {
 			_sideCache select 0
 		} else {
@@ -106,7 +106,10 @@ fnc_bleedoutTimer = {
 		|| ((time - _startTime) >= BLEEDOUT_TIME)          // Timer expired
 	};
 	if ((alive _injured) && !(_injured getVariable ["revived", false]) && ((lifeState _injured) == "INCAPACITATED")) then {
-		_injured setDamage 1; // Bleed out
+		if (!(_injured getVariable ["beingRevived", false])) then {
+			_injured setVariable ["isInReviveProcess", false, true];
+			_injured setDamage 1; // Bleed out
+		};
 	};
 };
 
@@ -142,7 +145,7 @@ fnc_reviveLoop = {
 
 		// find best medic
 		_medic = [_injured] call fnc_getBestMedic;
-		if (isNull _medic) then {
+		if (isNull _medic || !alive _medic) then {
 			continue
 		};
 
@@ -158,7 +161,7 @@ fnc_reviveLoop = {
 			_medic disableAI "TARGET";
 			_medic disableAI "SUPPRESSION";
 
-			_medic commandMove (position _injured);
+			_medic doMove (position _injured);
 
 			private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
 			waitUntil {
@@ -168,7 +171,9 @@ fnc_reviveLoop = {
 				|| (lifeState _medic == "INCAPACITATED")
 				|| (time > _timeout)
 			};
-
+			if ((time > _timeout) && !(_injured getVariable ["revived", false])) then {
+				_injured setVariable ["beingRevived", false, true];
+			};
 			// Unlock immediately if failed
 			if (!alive _medic || lifeState _medic == "INCAPACITATED") then {
 				// Restore medic's normal behavior
@@ -177,6 +182,7 @@ fnc_reviveLoop = {
 				_medic enableAI "AUTOCOMBAT";
 				_medic enableAI "TARGET";
 				_medic enableAI "SUPPRESSION";
+				_medic doFollow (leader _medic);
 				_medic setVariable ["reviving", false, true];
 
 				// Unlock injured ONLY if not revived
@@ -332,4 +338,10 @@ fnc_handleHeal = {
 	_x addEventHandler ["HandleHeal", {
 		_this call fnc_handleHeal
 	}];
+	_x addEventHandler ["Killed", {
+		params ["_unit"];
+		_unit setVariable ["isInReviveProcess", false];
+		_unit setVariable ["beingRevived", false];
+		_unit setVariable ["reviving", false];
+	}]
 } forEach units _group;
