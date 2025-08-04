@@ -171,7 +171,7 @@ fnc_reviveLoop = {
 				|| (lifeState _medic == "INCAPACITATED")
 				|| (time > _timeout)
 			};
-			if ((time > _timeout) && !(_injured getVariable ["revived", false])) then {
+			if ((time > _timeout) || !alive _medic || (lifeState _medic == "INCAPACITATED")) then {
 				_injured setVariable ["beingRevived", false, true];
 			};
 			// Unlock immediately if failed
