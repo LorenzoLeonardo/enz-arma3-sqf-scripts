@@ -10,34 +10,6 @@
 params ["_group"];
 
 // ===============================
-// GLOBAL CACHE INITIALIZATION
-// ===============================
-if (isNil "revive_medicCache") then {
-	revive_medicCache = createHashMap;
-};
-
-// ===============================
-// FUNCTION: Refresh Medic Cache
-// ===============================
-fnc_refreshMedicCache = {
-	private _cacheLifetime = CACHE_LIFETIME; // seconds
-	private _now = time;
-
-	{
-		private _side = _x;
-		private _cacheData = revive_medicCache getOrDefault [_side, [[], 0]]; // [units, lastUpdate]
-		private _lastUpdate = _cacheData select 1;
-
-		if ((_now - _lastUpdate) > _cacheLifetime) then {
-			private _sideUnits = allUnits select {
-				side _x == _side && alive _x
-			};
-			revive_medicCache set [_side, [_sideUnits, _now]];
-		};
-	} forEach [west, east, independent, civilian];
-};
-
-// ===============================
 // FUNCTION: get Best Medic
 // ===============================
 fnc_getBestMedic = {
@@ -46,37 +18,31 @@ fnc_getBestMedic = {
 
 	// step 1: Check same group first for medics
 	private _candidates = _groupUnits select {
-		(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic") && (lifeState _x != "INCAPACITATED")
+			(_x != _injured) &&
+			alive _x &&
+			!(_x getVariable ["reviving", false])
+			&& (_x getUnitTrait "Medic") &&
+			(lifeState _x != "INCAPACITATED")
 	};
 
 	// step 2: Fallback to any same group unit
 	if (_candidates isEqualTo []) then {
 		_candidates = _groupUnits select {
-			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (lifeState _x != "INCAPACITATED")
+			(_x != _injured) &&
+			alive _x &&
+			!(_x getVariable ["reviving", false]) &&
+			(lifeState _x != "INCAPACITATED")
 		};
 	};
 
-	// step 3: if still empty, use cached side units
+	// step 3: if still empty, use other side units
 	if (_candidates isEqualTo []) then {
-		call fnc_refreshMedicCache;
-
-		private _sideCache = revive_medicCache get (side _injured);
-		private _sideUnits = if (!isNil "_sideCache") then {
-			_sideCache select 0
-		} else {
-			[]
-		};
-
-		// Prioritize medics in side cache
-		_candidates = _sideUnits select {
-			(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (_x getUnitTrait "Medic") && (lifeState _x != "INCAPACITATED")
-		};
-
-		// Fallback to any alive unit from same side
-		if (_candidates isEqualTo []) then {
-			_candidates = _sideUnits select {
-				(_x != _injured) && alive _x && !(_x getVariable ["reviving", false]) && (lifeState _x != "INCAPACITATED")
-			};
+		_candidates = allUnits select {
+			(_x != _injured) &&
+			alive _x &&
+			!(_x getVariable ["reviving", false]) &&
+			(lifeState _x != "INCAPACITATED") &&
+			(side _x == side(group _injured))
 		};
 	};
 
