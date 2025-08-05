@@ -127,6 +127,29 @@ fnc_getDynamicTimeout = {
 };
 
 // ===============================
+// FUNCTION: Reset Revive State
+// ===============================
+fnc_resetReviveState = {
+	params ["_medic", "_injured"];
+
+	if (!isNull _medic) then {
+		_medic enableAI "MOVE";
+		_medic enableAI "PATH";
+		_medic enableAI "AUTOCOMBAT";
+		_medic enableAI "TARGET";
+		_medic enableAI "SUPPRESSION";
+		_medic doFollow (leader _medic);
+		_medic setVariable ["reviving", false, true];
+	};
+
+	if (!isNull _injured) then {
+		if (!(_injured getVariable ["revived", false])) then {
+			_injured setVariable ["beingRevived", false, true];
+		};
+	};
+};
+
+// ===============================
 // FUNCTION: Revive Loop (AI logic)
 // ===============================
 fnc_reviveLoop = {
@@ -135,7 +158,7 @@ fnc_reviveLoop = {
 	private _medic = objNull;
 	private _attempts = 0;
 	private _MAX_ATTEMPTS = 3;
-	while { (alive _injured) && !( _injured getVariable ["revived", false]) && (time < _loopTimeout) && (_attempts < _MAX_ATTEMPTS) } do {
+	while { (alive _injured) && !( _injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
 		sleep 3;
 
 		// Skip if already being revived
@@ -149,97 +172,61 @@ fnc_reviveLoop = {
 			continue
 		};
 
-		_attempts = _attempts + 1;
+		// lock injured and medic
+		_injured setVariable ["beingRevived", true, true];
+		_medic setVariable ["reviving", true, true];
 
-		if (!isNull _medic) then {
-			// lock injured and medic
-			_injured setVariable ["beingRevived", true, true];
-			_medic setVariable ["reviving", true, true];
+		// Disable combat distractions
+		_medic disableAI "AUTOCOMBAT";
+		_medic disableAI "TARGET";
+		_medic disableAI "SUPPRESSION";
 
-			// Disable combat distractions
-			_medic disableAI "AUTOCOMBAT";
-			_medic disableAI "TARGET";
-			_medic disableAI "SUPPRESSION";
+		_medic doMove (position _injured);
 
-			_medic doMove (position _injured);
-
-			private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
-			waitUntil {
-				sleep 1;
-				((_medic distance _injured) < REVIVE_RANGE)
-				|| (!alive _medic)
-				|| (lifeState _medic == "INCAPACITATED")
-				|| (time > _timeout)
-			};
-			if ((time > _timeout) || !alive _medic || (lifeState _medic == "INCAPACITATED")) then {
-				_injured setVariable ["beingRevived", false, true];
-			};
-			// Unlock immediately if failed
-			if (!alive _medic || lifeState _medic == "INCAPACITATED") then {
-				// Restore medic's normal behavior
-				_medic enableAI "MOVE";
-				_medic enableAI "PATH";
-				_medic enableAI "AUTOCOMBAT";
-				_medic enableAI "TARGET";
-				_medic enableAI "SUPPRESSION";
-				_medic doFollow (leader _medic);
-				_medic setVariable ["reviving", false, true];
-
-				// Unlock injured ONLY if not revived
-				if (!(_injured getVariable ["revived", false])) then {
-					_injured setVariable ["beingRevived", false, true];
-				};
-				continue; // skip to next loop iteration
-			};
-
-			if (alive _medic && alive _injured && ((_medic distance _injured) < REVIVE_RANGE) && (lifeState _medic != "INCAPACITATED")) then {
-				// stop and animate revive
-				doStop _medic;
-				_medic disableAI "MOVE";
-				_medic disableAI "PATH";
-
-				_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
-
-				// Wait until anim starts or timeout
-				private _animStartTime = time;
-				waitUntil {
-					sleep 0.1;
-					(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
-					|| ((time - _animStartTime) > 2)
-				};
-
-				sleep 5; // Allow time for animation
-
-				// SUCCESS: Revive and heal
-				_injured setUnconscious false;
-				_injured enableAI "MOVE";
-				_injured enableAI "ANIM";
-				_injured setCaptive false;
-				_injured setDamage 0; // FULL heal
-				_injured setUnitPos "AUTO";
-				_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
-
-				_injured setVariable ["revived", true, true];
-			};
-
-			// Restore medic state
-			_medic enableAI "MOVE";
-			_medic enableAI "PATH";
-			_medic enableAI "AUTOCOMBAT";
-			_medic enableAI "TARGET";
-			_medic enableAI "SUPPRESSION";
-			_medic doFollow (leader _medic);
-
-			// Unlock medic
-			_medic setVariable ["reviving", false, true];
-
-			// Unlock injured ONLY if not revived
-			if (!(_injured getVariable ["revived", false])) then {
-				_injured setVariable ["beingRevived", false, true];
-			};
+		private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
+		waitUntil {
+			sleep 1;
+			((_medic distance _injured) < REVIVE_RANGE)
+			|| (!alive _medic)
+			|| (lifeState _medic == "INCAPACITATED")
+			|| (time > _timeout)
 		};
-	};
+		if ((time > _timeout) || !alive _medic || (lifeState _medic == "INCAPACITATED")) then {
+			[_medic, _injured] call fnc_resetReviveState;
+			continue;
+		};
+		if (alive _medic && alive _injured && ((_medic distance _injured) < REVIVE_RANGE) && (lifeState _medic != "INCAPACITATED")) then {
+			// stop and animate revive
+			doStop _medic;
+			_medic disableAI "MOVE";
+			_medic disableAI "PATH";
 
+			_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
+
+			// Wait until anim starts or timeout
+			private _animStartTime = time;
+			waitUntil {
+				sleep 0.1;
+				(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
+				|| ((time - _animStartTime) > 2)
+			};
+
+			sleep 5; // Allow time for animation
+
+			// SUCCESS: Revive and heal
+			_injured setUnconscious false;
+			_injured enableAI "MOVE";
+			_injured enableAI "ANIM";
+			_injured setCaptive false;
+			_injured setDamage 0; // FULL heal
+			_injured setUnitPos "AUTO";
+			_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
+
+			_injured setVariable ["revived", true, true];
+		};
+		// Always reset states after attempt
+		[_medic, _injured] call fnc_resetReviveState;
+	};
 	// if time runs out and still not revived, unlock
 	if (!(_injured getVariable ["revived", false])) then {
 		_injured setVariable ["beingRevived", false, true];
