@@ -18,11 +18,11 @@ fnc_getBestMedic = {
 
 	// step 1: Check same group first for medics
 	private _candidates = _groupUnits select {
-			(_x != _injured) &&
-			alive _x &&
-			!(_x getVariable ["reviving", false])
-			&& (_x getUnitTrait "Medic") &&
-			(lifeState _x != "INCAPACITATED")
+		(_x != _injured) &&
+		alive _x &&
+		!(_x getVariable ["reviving", false])
+		&& (_x getUnitTrait "Medic") &&
+		(lifeState _x != "INCAPACITATED")
 	};
 
 	// step 2: Fallback to any same group unit
@@ -73,15 +73,12 @@ fnc_bleedoutTimer = {
 	};
 
 	// exit if revived or dead
-	if (!alive _injured) exitWith {};
-	if (_injured getVariable ["revived", false]) exitWith {};
+	if (!alive _injured || (_injured getVariable ["revived", false])) exitWith {};
 
 	// if still incapacitated after bleedout time, kill them
-	if ((lifeState _injured) == "INCAPACITATED") then {
-		if (!(_injured getVariable ["beingRevived", false])) then {
-			_injured setVariable ["isInReviveProcess", false, true];
-			_injured setDamage 1; // Bleed out
-		};
+	if (lifeState _injured == "INCAPACITATED" && !(_injured getVariable ["beingRevived", false])) then {
+		_injured setVariable ["isInReviveProcess", false, true];
+		_injured setDamage 1; // Bleed out
 	};
 };
 
@@ -91,11 +88,10 @@ fnc_bleedoutTimer = {
 fnc_getDynamicTimeout = {
 	params ["_medic", "_injured"];
 
-	private _pathDist = (_medic distance _injured);
+	private _pathDist = _medic distance _injured;
 
-	// 10 sec base + (path distance / 3 m/s), cap at 90 sec
-	private _timeout = time + ((10 max (_pathDist / 3)) min 90);
-	_timeout
+	// 10 sec base + (distance / 3 m/s), capped at 90 sec
+	time + ((10 max (_pathDist / 3)) min 90)
 };
 
 // ===============================
@@ -105,11 +101,9 @@ fnc_resetReviveState = {
 	params ["_medic", "_injured"];
 
 	if (!isNull _medic) then {
-		_medic enableAI "MOVE";
-		_medic enableAI "PATH";
-		_medic enableAI "AUTOCOMBAT";
-		_medic enableAI "TARGET";
-		_medic enableAI "SUPPRESSION";
+		{
+			_medic enableAI _x;
+		} forEach ["MOVE", "PATH", "AUTOCOMBAT", "TARGET", "SUPPRESSION"];
 		private _ldr = leader _medic;
 		if (!isNull _ldr && alive _ldr) then {
 			_medic doFollow _ldr;
@@ -117,10 +111,8 @@ fnc_resetReviveState = {
 		_medic setVariable ["reviving", false, true];
 	};
 
-	if (!isNull _injured) then {
-		if (!(_injured getVariable ["revived", false])) then {
-			_injured setVariable ["beingRevived", false, true];
-		};
+	if (!isNull _injured && !(_injured getVariable ["revived", false])) then {
+		_injured setVariable ["beingRevived", false, true];
 	};
 };
 
@@ -147,7 +139,7 @@ fnc_reviveLoop = {
 		// find best medic
 		_medic = [_injured] call fnc_getBestMedic;
 		if (isNull _medic || !alive _medic) then {
-			continue;
+			continue
 		};
 
 		// lock injured and medic
@@ -155,9 +147,9 @@ fnc_reviveLoop = {
 		_medic setVariable ["reviving", true, true];
 
 		// Disable combat distractions
-		_medic disableAI "AUTOCOMBAT";
-		_medic disableAI "TARGET";
-		_medic disableAI "SUPPRESSION";
+		{
+			_medic disableAI _x
+		} forEach ["AUTOCOMBAT", "TARGET", "SUPPRESSION"];
 
 		_medic doMove (position _injured);
 
@@ -183,8 +175,9 @@ fnc_reviveLoop = {
 		if (alive _medic && alive _injured && ((_medic distance _injured) < REVIVE_RANGE) && (lifeState _medic != "INCAPACITATED")) then {
 			// stop and animate revive
 			doStop _medic;
-			_medic disableAI "MOVE";
-			_medic disableAI "PATH";
+			{
+				_medic disableAI _x
+			} forEach ["MOVE", "PATH"];
 
 			_medic playMoveNow "AinvPknlMstpSnonWnonDnon_medic1";
 
@@ -268,8 +261,9 @@ fnc_handleDamage = {
 		// Make unit unconscious
 		_unit setDamage 0.9;
 		_unit setUnconscious true;
-		_unit disableAI "MOVE";
-		_unit disableAI "ANIM";
+		{
+			_unit disableAI _x
+		} forEach ["MOVE", "ANIM"];
 		_unit setCaptive true;
 		// Reset revive state for NEW incapacitation
 		_unit setVariable ["revived", false, true];
@@ -307,8 +301,9 @@ fnc_handleHeal = {
 
 	_patient setDamage 0;
 	_patient setUnconscious false;
-	_patient enableAI "MOVE";
-	_patient enableAI "ANIM";
+	{
+		_patient enableAI _x
+	} forEach ["MOVE", "ANIM"];
 	_patient setCaptive false;
 	_patient setVariable ["revived", true, true];
 	_patient setUnitPos "AUTO";
