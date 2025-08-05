@@ -117,6 +117,28 @@ fnc_resetReviveState = {
 };
 
 // ===============================
+// FUNCTION: Wait for Medic Arrival
+// ===============================
+fnc_waitForMedicArrival = {
+	params ["_medic", "_injured", "_timeout"];
+
+	private _abort = false;
+
+	waitUntil {
+		sleep 1;
+		_abort = (!alive _injured) ||
+		(_injured getVariable ["revived", false]) ||
+		((_medic distance _injured) < REVIVE_RANGE) ||
+		(!alive _medic) ||
+		(lifeState _medic == "INCAPACITATED") ||
+		(time > _timeout);
+		_abort
+	};
+
+	_abort
+};
+
+// ===============================
 // FUNCTION: Revive Loop (AI logic)
 // ===============================
 fnc_reviveLoop = {
@@ -154,18 +176,8 @@ fnc_reviveLoop = {
 		_medic doMove (position _injured);
 
 		private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
-		private _abort = false;
-
-		waitUntil {
-			sleep 1;
-			_abort = (!alive _injured)
-			|| (_injured getVariable ["revived", false])
-			|| ((_medic distance _injured) < REVIVE_RANGE)
-			|| (!alive _medic)
-			|| (lifeState _medic == "INCAPACITATED")
-			|| (time > _timeout);
-			_abort
-		};
+		 // Wait for medic arrival
+		private _abort = [_medic, _injured, _timeout] call fnc_waitForMedicArrival;
 
 		// if abort is due to timeout, medic death, or injured death (not because we reached revive range), reset state
 		if (_abort && (((_medic distance _injured) >= REVIVE_RANGE) || !alive _injured || !alive _medic)) then {
@@ -203,8 +215,9 @@ fnc_reviveLoop = {
 
 			// SUCCESS: Revive and heal
 			_injured setUnconscious false;
-			_injured enableAI "MOVE";
-			_injured enableAI "ANIM";
+			{
+				_injured enableAI _x
+			} forEach ["MOVE", "ANIM"];
 			_injured setCaptive false;
 			_injured setDamage 0; // FULL heal
 			_injured setUnitPos "AUTO";
