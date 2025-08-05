@@ -84,7 +84,7 @@ fnc_getBestMedic = {
 		objNull
 	};
 
-	    // sort by distance
+	// sort by distance
 	_candidates = [_candidates, [], {
 		_x distance _injured
 	}, "ASCEND"] call BIS_fnc_sortBy;
@@ -96,8 +96,8 @@ fnc_getBestMedic = {
 // ===============================
 fnc_bleedoutTimer = {
 	params ["_injured"];
-	private _elapsed = 0;
 	private _startTime = time;
+
 	waitUntil {
 		sleep 1;
 		!alive _injured                                    // Dead
@@ -105,7 +105,13 @@ fnc_bleedoutTimer = {
 		|| (lifeState _injured != "INCAPACITATED")         // No longer incapacitated
 		|| ((time - _startTime) >= BLEEDOUT_TIME)          // Timer expired
 	};
-	if ((alive _injured) && !(_injured getVariable ["revived", false]) && ((lifeState _injured) == "INCAPACITATED")) then {
+
+	// exit if revived or dead
+	if (!alive _injured) exitWith {};
+	if (_injured getVariable ["revived", false]) exitWith {};
+
+	// if still incapacitated after bleedout time, kill them
+	if ((lifeState _injured) == "INCAPACITATED") then {
 		if (!(_injured getVariable ["beingRevived", false])) then {
 			_injured setVariable ["isInReviveProcess", false, true];
 			_injured setDamage 1; // Bleed out
@@ -138,7 +144,10 @@ fnc_resetReviveState = {
 		_medic enableAI "AUTOCOMBAT";
 		_medic enableAI "TARGET";
 		_medic enableAI "SUPPRESSION";
-		_medic doFollow (leader _medic);
+		private _ldr = leader _medic;
+		if (!isNull _ldr && alive _ldr) then {
+			_medic doFollow _ldr;
+		};
 		_medic setVariable ["reviving", false, true];
 	};
 
@@ -156,11 +165,14 @@ fnc_reviveLoop = {
 	params ["_injured"];
 	private _loopTimeout = time + BLEEDOUT_TIME; // max 5 minutes to try reviving
 	private _medic = objNull;
-	private _attempts = 0;
-	private _MAX_ATTEMPTS = 3;
+
 	while { (alive _injured) && !( _injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
 		sleep 3;
-
+		if (!alive _injured || (_injured getVariable ["revived", false])) exitWith {
+			if (!isNull _medic) then {
+				[_medic, _injured] call fnc_resetReviveState;
+			};
+		};
 		// Skip if already being revived
 		if (_injured getVariable ["beingRevived", false]) then {
 			continue
@@ -169,7 +181,7 @@ fnc_reviveLoop = {
 		// find best medic
 		_medic = [_injured] call fnc_getBestMedic;
 		if (isNull _medic || !alive _medic) then {
-			continue
+			continue;
 		};
 
 		// lock injured and medic
@@ -184,14 +196,21 @@ fnc_reviveLoop = {
 		_medic doMove (position _injured);
 
 		private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
+		private _abort = false;
+
 		waitUntil {
 			sleep 1;
-			((_medic distance _injured) < REVIVE_RANGE)
+			_abort = (!alive _injured)
+			|| (_injured getVariable ["revived", false])
+			|| ((_medic distance _injured) < REVIVE_RANGE)
 			|| (!alive _medic)
 			|| (lifeState _medic == "INCAPACITATED")
-			|| (time > _timeout)
+			|| (time > _timeout);
+			_abort
 		};
-		if ((time > _timeout) || !alive _medic || (lifeState _medic == "INCAPACITATED")) then {
+
+		// if abort is due to timeout, medic death, or injured death (not because we reached revive range), reset state
+		if (_abort && (((_medic distance _injured) >= REVIVE_RANGE) || !alive _injured || !alive _medic)) then {
 			[_medic, _injured] call fnc_resetReviveState;
 			continue;
 		};
@@ -208,10 +227,20 @@ fnc_reviveLoop = {
 			waitUntil {
 				sleep 0.1;
 				(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
-				|| ((time - _animStartTime) > 2)
+				|| ((time - _animStartTime) > 3)
 			};
 
-			sleep 5; // Allow time for animation
+			private _animTime = time + 5;
+			waitUntil {
+				sleep 0.5;
+				(!alive _medic)
+				|| (lifeState _medic == "INCAPACITATED")
+				|| (time > _animTime)
+			};
+			if (!alive _medic || lifeState _medic == "INCAPACITATED") then {
+				[_medic, _injured] call fnc_resetReviveState;
+				continue;
+			};
 
 			// SUCCESS: Revive and heal
 			_injured setUnconscious false;
@@ -231,6 +260,11 @@ fnc_reviveLoop = {
 	if (!(_injured getVariable ["revived", false])) then {
 		_injured setVariable ["beingRevived", false, true];
 	};
+
+	// Reset medic in case loop ended unexpectedly
+	if (!isNull _medic) then {
+		[_medic, _injured] call fnc_resetReviveState;
+	};
 };
 
 // ===============================
@@ -240,7 +274,7 @@ fnc_handleDamage = {
 	params ["_unit", "_selection", "_damage", "_source", "_projectile"];
 	private _newDamage = (_damage + damage _unit);
 
-	    // if already unconscious, allow lethal hits to finish them
+	// if already unconscious, allow lethal hits to finish them
 	if (lifeState _unit == "INCAPACITATED") exitWith {
 		if ((_selection == "head" && _damage > 0.5) || _damage > 2) then {
 			_unit setDamage 1;
