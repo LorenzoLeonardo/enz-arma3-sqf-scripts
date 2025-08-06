@@ -14,14 +14,23 @@ private _checkInterval = 30;
 
 [_chopper, _heliPilot, _aiPilotGroup, _sideEnemy, _basePos, _rtbAltitude, _checkInterval] spawn {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude", "_checkInterval"];
-
+	private _hasSentRadio = false;
+	private _halfEnemyCount = floor ((count (allUnits select {
+		side _x == _sideEnemy && alive _x
+	})) / 2);
 	while { true } do {
 		private _enemies = allUnits select {
 			side _x == _sideEnemy && alive _x
 		};
-		if ((count _enemies) > 0 && (count _enemies) < 20 && {
+		if ((count _enemies) > 0 && (count _enemies) < _halfEnemyCount && {
 			alive _chopper
 		}) then {
+			if (!_hasSentRadio) then {
+				// Send radio message to ground units
+				_heliPilot sideRadio "RadioFalconToGroundUnits";
+				_hasSentRadio = true;
+			};
+
 			// Force AI to engage
 			_chopper engineOn true;
 			_chopper flyInHeight _rtbAltitude;
@@ -50,7 +59,8 @@ private _checkInterval = 30;
 			// Add SAD waypoint to enemy position
 			private _wp1 = _aiPilotGroup addWaypoint [_enemyPos, 0];
 			_wp1 setWaypointType "SAD";
-			_wp1 setWaypointStatements ["true", "hint 'Chopper en route to enemies';"];
+			_wp1 setWaypointStatements ["true", "hint 'Chopper en route to enemies';
+			"];
 
 			// Backup: Force movement if AI stuck
 			_heliPilot doMove _enemyPos;
