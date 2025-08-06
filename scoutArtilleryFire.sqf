@@ -29,9 +29,10 @@
 //   _cooldown_time         - Delay (in seconds) between volleys (default: 60).
 //   _unlimited_ammo        - Boolean; true to allow infinite resupply (default: false).
 //   _accuracy_radius       - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
+//   _claimRadius           - distance to avoid firing if target is claimed by another gun (default: 50).
 // 
 // Usage Example:
-//     [this, scoutGroup, 8, 50, 8, 60, true, 25] execVM "scoutArtilleryFire.sqf";
+//     [this, scoutGroup, 8, 50, 8, 60, true, 25, 50] execVM "scoutArtilleryFire.sqf";
 // 
 // This will make the assigned artillery gun:
 // - Wait for the designated scout group's leader to see enemies.
@@ -62,6 +63,8 @@ private _cool_down_for_effect = _this param [5, 60];
 private _unlimited_ammo = _this param [6, false];
 // _accuracy_radius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
 private _accuracy_radius = _this param [7, 0];
+// _claimRadius = distance to avoid firing if target is claimed by another gun (default: 50 meters)
+private _claimRadius = _this param [8, 50];
 
 // =========================
 // Global Target Registry
@@ -326,12 +329,11 @@ fnc_getQuietUnit = {
 // =========================
 // Main Loop (spawned)
 // =========================
-[_gun, _scoutGroup, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius] spawn {
-	params ["_gun", "_scoutGroup", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius"];
+[_gun, _scoutGroup, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius, _claimRadius] spawn {
+	params ["_gun", "_scoutGroup", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius", "_claimRadius"];
 
 	private _gunSide = [_gun] call fnc_getGunSide;
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
-	private _claimRadius = 200;         // distance to avoid firing if target is claimed (other guns)
 	private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
 
 	_gun setVehicleAmmo 1;
