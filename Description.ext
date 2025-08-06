@@ -624,4 +624,15 @@ class CfgRadio
 		// radio caption
 		title	= "Rounds complete. Out!";
 	}
+
+	class RadioFalconToGroundUnits
+	{
+		name	= "RadioFalconToGroundUnits";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\helicopter\falcon_to_ground_units.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Falcon to ground units, we are en route to your position. ETA three mikes. Out!";
+	}
 };
