@@ -70,6 +70,7 @@ private _checkInterval = 30;
 				params ["_chopper", "_grp", "_basePos", "_sideEnemy"];
 
 				while { true } do {
+					_chopper setVehicleAmmo 1;
 					sleep 10;
 					private _remainingEnemies = allUnits select {
 						side _x == _sideEnemy && alive _x
