@@ -22,7 +22,8 @@ fnc_getBestMedic = {
 		alive _x &&
 		!(_x getVariable ["reviving", false])
 		&& (_x getUnitTrait "Medic") &&
-		(lifeState _x != "INCAPACITATED")
+		(lifeState _x != "INCAPACITATED") &&
+		(isNull objectParent _x)
 	};
 
 	// step 2: Fallback to any same group unit
@@ -31,7 +32,8 @@ fnc_getBestMedic = {
 			(_x != _injured) &&
 			alive _x &&
 			!(_x getVariable ["reviving", false]) &&
-			(lifeState _x != "INCAPACITATED")
+			(lifeState _x != "INCAPACITATED") &&
+			(isNull objectParent _x)
 		};
 	};
 
@@ -42,7 +44,8 @@ fnc_getBestMedic = {
 			alive _x &&
 			!(_x getVariable ["reviving", false]) &&
 			(lifeState _x != "INCAPACITATED") &&
-			(side _x == side(group _injured))
+			(side _x == side(group _injured)) &&
+			(isNull objectParent _x)
 		};
 	};
 
@@ -52,7 +55,8 @@ fnc_getBestMedic = {
 			(_x != _injured) &&
 			alive _x &&
 			!(_x getVariable ["reviving", false]) &&
-			(lifeState _x != "INCAPACITATED")
+			(lifeState _x != "INCAPACITATED") &&
+			(isNull objectParent _x)
 		};
 	};
 
