@@ -46,6 +46,16 @@ fnc_getBestMedic = {
 		};
 	};
 
+	// step 4: if still empty, use all units
+	if (_candidates isEqualTo []) then {
+		_candidates = allUnits select {
+			(_x != _injured) &&
+			alive _x &&
+			!(_x getVariable ["reviving", false]) &&
+			(lifeState _x != "INCAPACITATED")
+		};
+	};
+
 	if (_candidates isEqualTo []) exitWith {
 		objNull
 	};
