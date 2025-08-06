@@ -122,20 +122,17 @@ fnc_resetReviveState = {
 fnc_waitForMedicArrival = {
 	params ["_medic", "_injured", "_timeout"];
 
-	private _abort = false;
-
 	waitUntil {
 		sleep 1;
-		_abort = (!alive _injured) ||
-		(_injured getVariable ["revived", false]) ||
-		((_medic distance _injured) < REVIVE_RANGE) ||
-		(!alive _medic) ||
-		(lifeState _medic == "INCAPACITATED") ||
-		(time > _timeout);
-		_abort
+		(!alive _injured)
+		|| (_injured getVariable ["revived", false])
+		|| (_medic distance _injured < REVIVE_RANGE)
+		|| (!alive _medic)
+		|| (lifeState _medic == "INCAPACITATED")
+		|| (time > _timeout)
 	};
 
-	_abort
+	(_medic distance _injured) < REVIVE_RANGE
 };
 
 // ===============================
@@ -177,14 +174,13 @@ fnc_reviveLoop = {
 
 		private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
 		 // Wait for medic arrival
-		private _abort = [_medic, _injured, _timeout] call fnc_waitForMedicArrival;
-
-		// if abort is due to timeout, medic death, or injured death (not because we reached revive range), reset state
-		if (_abort && (((_medic distance _injured) >= REVIVE_RANGE) || !alive _injured || !alive _medic)) then {
+		private _arrived = [_medic, _injured, _timeout] call fnc_waitForMedicArrival;
+		// If medic didn't arrive in time or died or incapacitated
+		if (!_arrived) then {
 			[_medic, _injured] call fnc_resetReviveState;
 			continue;
 		};
-		if (alive _medic && alive _injured && ((_medic distance _injured) < REVIVE_RANGE) && (lifeState _medic != "INCAPACITATED")) then {
+		if (alive _medic && alive _injured && (lifeState _medic != "INCAPACITATED")) then {
 			// stop and animate revive
 			doStop _medic;
 			{
