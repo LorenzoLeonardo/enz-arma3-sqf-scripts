@@ -68,7 +68,11 @@ fnc_getBestMedic = {
 	_candidates = [_candidates, [], {
 		_x distance _injured
 	}, "ASCEND"] call BIS_fnc_sortBy;
-	_candidates select 0
+	private _medic = _candidates select 0;
+	if (!isNull _medic) then {
+		_medic globalChat format ["%1 will revive %2", name _medic, name _injured];
+	};
+	_medic
 };
 
 // ===============================
@@ -166,12 +170,18 @@ fnc_reviveLoop = {
 		};
 		// Skip if already being revived
 		if (_injured getVariable ["beingRevived", false]) then {
+			if (!isNull _medic) then {
+				_medic globalChat format ["%1 is being revived.", name _injured];
+			};
 			continue
 		};
 
 		// find best medic
 		_medic = [_injured] call fnc_getBestMedic;
 		if (isNull _medic || !alive _medic) then {
+			if (!isNull _medic) then {
+				_medic globalChat format ["%1, a chosen medic to revive %2 has died.", name _medic, name _injured];
+			};
 			continue
 		};
 
@@ -191,6 +201,9 @@ fnc_reviveLoop = {
 		private _arrived = [_medic, _injured, _timeout] call fnc_waitForMedicArrival;
 		// If medic didn't arrive in time or died or incapacitated
 		if (!_arrived) then {
+			if (!isNull _medic) then {
+				_medic globalChat format ["%1 has failed to come to revive %2.", name _medic, name _injured];
+			};
 			[_medic, _injured] call fnc_resetReviveState;
 			continue;
 		};
@@ -219,6 +232,9 @@ fnc_reviveLoop = {
 				|| (time > _animTime)
 			};
 			if (!alive _medic || lifeState _medic == "INCAPACITATED") then {
+				if (!isNull _medic) then {
+					_medic globalChat format ["%1 was incapacitated or died while reviving %2.", name _medic, name _injured];
+				};
 				[_medic, _injured] call fnc_resetReviveState;
 				continue;
 			};
@@ -233,7 +249,17 @@ fnc_reviveLoop = {
 			_injured setUnitPos "AUTO";
 			_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
 
+			// if revived by an enemy, drop the weapon become a captive
+			if (((side _medic) getFriend (side _injured)) < 0.6) then {
+				_medic globalChat format ["%1 has become captive", name _injured];
+				[_injured] call fnc_surrender;
+				[_injured] call fnc_dropAllWeapons;
+			};
+
 			_injured setVariable ["revived", true, true];
+			if (!isNull _medic) then {
+				_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
+			};
 		};
 		// Always reset states after attempt
 		[_medic, _injured] call fnc_resetReviveState;
@@ -350,3 +376,29 @@ fnc_handleHeal = {
 		_unit setVariable ["reviving", false];
 	}]
 } forEach units _group;
+
+fnc_dropAllWeapons = {
+	params ["_unit"];
+	private _pos = getPosATL _unit;
+	private _holder = createVehicle ["GroundWeaponHolder", _pos, [], 0, "CAN_COLLIDE"];
+
+	// move all weapons to the ground
+	{
+		_unit removeWeapon _x;
+		_holder addWeaponCargoGlobal [_x, 1];
+	} forEach weapons _unit;
+
+	// move all magazines for those weapons
+	{
+		_unit removeMagazine _x;
+		_holder addMagazineCargoGlobal [_x, 1];
+	} forEach magazines _unit;
+};
+
+fnc_surrender = {
+	params ["_unit"];
+	_unit setCaptive true;              // AI won’t target them
+	_unit disableAI "MOVE";            // Prevent movement
+	_unit disableAI "ANIM";            // Prevent animation changes
+	_unit switchMove "Acts_AidlPsitMstpSsurWnonDnon01"; // Kneeling with hands on head
+}
