@@ -240,26 +240,7 @@ fnc_reviveLoop = {
 			};
 
 			// SUCCESS: Revive and heal
-			_injured setUnconscious false;
-			{
-				_injured enableAI _x
-			} forEach ["MOVE", "ANIM"];
-			_injured setCaptive false;
-			_injured setDamage 0; // FULL heal
-			_injured setUnitPos "AUTO";
-			_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
-
-			// if revived by an enemy, drop the weapon become a captive
-			if (((side _medic) getFriend (side _injured)) < 0.6) then {
-				_medic globalChat format ["%1 has become captive", name _injured];
-				[_injured] call fnc_surrender;
-				[_injured] call fnc_dropAllWeapons;
-			};
-
-			_injured setVariable ["revived", true, true];
-			if (!isNull _medic) then {
-				_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
-			};
+			[_medic, _injured] call fnc_handleHeal;
 		};
 		// Always reset states after attempt
 		[_medic, _injured] call fnc_resetReviveState;
@@ -346,17 +327,28 @@ fnc_handleDamage = {
 // FUNCTION: Handle Heal
 // ===============================
 fnc_handleHeal = {
-	params ["_healer", "_patient", "_amount"];
+	params ["_medic", "_injured"];
 
-	_patient setDamage 0;
-	_patient setUnconscious false;
+	_injured setUnconscious false;
 	{
-		_patient enableAI _x
+		_injured enableAI _x
 	} forEach ["MOVE", "ANIM"];
-	_patient setCaptive false;
-	_patient setVariable ["revived", true, true];
-	_patient setUnitPos "AUTO";
-	_patient playMoveNow "AmovPknlMstpSrasWrflDnon";
+	_injured setCaptive false;
+	_injured setDamage 0; // FULL heal
+	_injured setUnitPos "AUTO";
+	_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
+
+	// if revived by an enemy, drop the weapon become a captive
+	if (((side _medic) getFriend (side _injured)) < 0.6) then {
+		_medic globalChat format ["%1 has become captive", name _injured];
+		[_injured] call fnc_surrender;
+		[_injured] call fnc_dropAllWeapons;
+	};
+
+	_injured setVariable ["revived", true, true];
+	if (!isNull _medic) then {
+		_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
+	};
 };
 
 // ===============================
@@ -365,9 +357,6 @@ fnc_handleHeal = {
 {
 	_x addEventHandler ["HandleDamage", {
 		_this call fnc_handleDamage
-	}];
-	_x addEventHandler ["HandleHeal", {
-		_this call fnc_handleHeal
 	}];
 	_x addEventHandler ["Killed", {
 		params ["_unit"];
