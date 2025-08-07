@@ -351,6 +351,9 @@ fnc_handleHeal = {
 	};
 };
 
+// ===============================
+// FUNCTION: drop All weapons
+// ===============================
 fnc_dropAllWeapons = {
 	params ["_unit"];
 	private _pos = getPosATL _unit;
@@ -369,6 +372,9 @@ fnc_dropAllWeapons = {
 	} forEach magazines _unit;
 };
 
+// ===============================
+// FUNCTION: Surrender
+// ===============================
 fnc_surrender = {
 	params ["_unit"];
 	_unit setCaptive true;              // AI won’t target them
