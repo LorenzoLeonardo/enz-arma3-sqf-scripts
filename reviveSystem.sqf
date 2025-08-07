@@ -381,7 +381,7 @@ fnc_surrender = {
 	_unit disableAI "MOVE";            // Prevent movement
 	_unit disableAI "ANIM";            // Prevent animation changes
 	_unit switchMove "Acts_AidlPsitMstpSsurWnonDnon01"; // Kneeling with hands on head
-}
+};
 
 // ===============================
 // apply EVENT HANDLERS to group
@@ -395,5 +395,5 @@ fnc_surrender = {
 		_unit setVariable ["isInReviveProcess", false];
 		_unit setVariable ["beingRevived", false];
 		_unit setVariable ["reviving", false];
-	}]
+	}];
 } forEach units _group;
