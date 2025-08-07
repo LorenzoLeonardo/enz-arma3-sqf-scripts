@@ -351,21 +351,6 @@ fnc_handleHeal = {
 	};
 };
 
-// ===============================
-// apply EVENT HANDLERS to group
-// ===============================
-{
-	_x addEventHandler ["HandleDamage", {
-		_this call fnc_handleDamage
-	}];
-	_x addEventHandler ["Killed", {
-		params ["_unit"];
-		_unit setVariable ["isInReviveProcess", false];
-		_unit setVariable ["beingRevived", false];
-		_unit setVariable ["reviving", false];
-	}]
-} forEach units _group;
-
 fnc_dropAllWeapons = {
 	params ["_unit"];
 	private _pos = getPosATL _unit;
@@ -391,3 +376,18 @@ fnc_surrender = {
 	_unit disableAI "ANIM";            // Prevent animation changes
 	_unit switchMove "Acts_AidlPsitMstpSsurWnonDnon01"; // Kneeling with hands on head
 }
+
+// ===============================
+// apply EVENT HANDLERS to group
+// ===============================
+{
+	_x addEventHandler ["HandleDamage", {
+		_this call fnc_handleDamage
+	}];
+	_x addEventHandler ["Killed", {
+		params ["_unit"];
+		_unit setVariable ["isInReviveProcess", false];
+		_unit setVariable ["beingRevived", false];
+		_unit setVariable ["reviving", false];
+	}]
+} forEach units _group;
