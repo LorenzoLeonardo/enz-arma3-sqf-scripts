@@ -29,6 +29,7 @@
 //   _cooldown_time       - Delay (in seconds) between volleys (default: 60).
 //   _unlimited_ammo      - Boolean; true to allow infinite resupply (default: false).
 //   _accuracy_radius     - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
+//   _claimRadius         - distance to avoid firing if target is claimed by another gun (default: 50).
 // 
 // Usage Example:
 //     [this, 1000, 8, 50, 8, 60, true, 25] execVM "autoArtilleryFire.sqf";
@@ -62,6 +63,8 @@ private _cool_down_for_effect = _this param [5, 60];
 private _unlimited_ammo = _this param [6, false];
 // _accuracy_radius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
 private _accuracy_radius = _this param [7, 0];
+// _claimRadius = distance to avoid firing if target is claimed by another gun (default: 50 meters)
+private _claimRadius = _this param [8, 50];
 
 // =========================
 // Global Target Registry
@@ -186,7 +189,7 @@ fnc_getClusterCenter = {
 };
 
 fnc_fireGun = {
-	params ["_gun", "_targetPos", "_accuracy_radius", "_ammoType", "_rounds"];
+	params ["_caller", "_gun", "_targetPos", "_accuracy_radius", "_ammoType", "_rounds"];
 	if (!canFire _gun) exitWith {
 		false
 	};
@@ -201,40 +204,36 @@ fnc_fireGun = {
 			0
 		];
 	};
-	// Choose a caller (gunner or commander)
-	private _caller = if (!isNull (gunner _gun)) then {
+	// Choose a responder (gunner or commander)
+	private _base = if (!isNull (gunner _gun)) then {
 		gunner _gun
 	} else {
 		commander _gun
 	};
-	if (isNull _caller) exitWith {
+	if (isNull _base) exitWith {
 		false
 	};
 	private _grid = mapGridPosition _finalPos;
 
 	// Create temporary "X" marker
 	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-	private _marker = createMarker [_markerId, _centerPos];
+	private _marker = createMarker [_markerId, _finalPos];
 	_marker setMarkerShape "ICON";
 	_marker setMarkerType "mil_end";
 	_marker setMarkerColor "ColorBlue";
 	_marker setMarkerText "FIRE MISSION";
 
 	// --- 1. Standby call ---
-	playSound "ReadoutClick";
-	_caller sideChat format [
-		"%1: Alpha Battery, fire mission, grid %2, standby, over.",
-		name _caller, _grid
-	];
-
+	_caller sideRadio "RadioArtilleryRequest"; // plays sound
+	_caller sideChat format ["Request immediate artillery at the designated coordinates grid [%1]. Over!", _grid];
 	sleep 3;  // small delay before firing
 
 	// --- 2. fire the artillery ---
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
-	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Shot, over!", name _caller];
+	sleep 2;
+	_base sideRadio "RadioArtilleryResponse";
 
 	// --- Wait until the gun finishes firing ---
 	waitUntil {
@@ -253,13 +252,11 @@ fnc_fireGun = {
 		_wait = _flightTime - 5;
 	};
 	sleep _wait;
-	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Splash, out!", name _caller];
+	_base sideRadio "RadioArtillerySplash";
 
 	// --- 5. Rounds Complete (after impact) ---
-	sleep 5;
-	playSound "ReadoutClick";
-	_caller sideChat format ["%1: Rounds complete!", name _caller];
+	sleep (_flightTime + 2);
+	_base sideRadio "RadioArtilleryRoundsComplete";
 
 	deleteMarker _marker;
 	true
@@ -314,14 +311,28 @@ fnc_isClusterDuplicate = {
 	} > -1
 };
 
+fnc_getQuietUnit = {
+	params ["_group"];
+
+	private _leader = leader _group;
+	private _quietUnit = objNull;
+
+	{
+		if ((alive _x) && !isPlayer _x && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
+			_quietUnit = _x;
+		};
+	} forEach (units _group);
+
+	_quietUnit
+};
+
 // =========================
 // Main Loop (spawned)
 // =========================
-[_gun, _detection_distance, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius] spawn {
-	params ["_gun", "_detection_distance", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius"];
+[_gun, _detection_distance, _rounds, _cluster_radius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius, _claimRadius] spawn {
+	params ["_gun", "_detection_distance", "_rounds", "_cluster_radius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius", "_claimRadius"];
 
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
-	private _claimRadius = 200;         // distance to avoid firing if target is claimed (other guns)
 	private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
 
 	_gun setVehicleAmmo 1;
@@ -360,7 +371,8 @@ fnc_isClusterDuplicate = {
 				if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
 					[_centerPos, _gun] call fnc_claimTarget;
 
-					private _fired = [_gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
+					private _quiet_unit = [group _gun] call fnc_getQuietUnit;
+					private _fired = [_quiet_unit, _gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
 					if (_fired) then {
 						sleep _cool_down_for_effect;
 					};
