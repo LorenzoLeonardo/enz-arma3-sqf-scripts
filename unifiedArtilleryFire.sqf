@@ -248,9 +248,9 @@ fnc_fireGun = {
 	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
 	private _marker = createMarker [_markerId, _finalPos];
 	_marker setMarkerShape "ICON";
-	_marker setMarkerType "mil_end";
-	_marker setMarkerColor "ColorBlack";
-	_marker setMarkerText format["Fire Mission %1", groupId (group _caller)];
+	_marker setMarkerType "mil_warning";
+	_marker setMarkerColor "ColorRed";
+	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _caller)];
 
 	// --- 1. Standby call ---
 	_caller sideRadio "RadioArtilleryRequest"; // plays sound
