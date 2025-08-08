@@ -389,5 +389,6 @@ fnc_surrender = {
 		_unit setVariable ["isInReviveProcess", false];
 		_unit setVariable ["beingRevived", false];
 		_unit setVariable ["reviving", false];
+		_unit setVariable ["revived", false];
 	}];
 } forEach units _group;
