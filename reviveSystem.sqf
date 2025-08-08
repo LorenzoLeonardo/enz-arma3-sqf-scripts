@@ -265,22 +265,17 @@ fnc_handleDamage = {
 
 	// if already unconscious, allow lethal hits to finish them
 	if (lifeState _unit == "INCAPACITATED") exitWith {
-		if ((_selection == "head" && _damage > 0.5) || _damage > 2) then {
-			_unit setDamage 1;
-		};
-		0
+		_damage
 	};
 
 	// Overkill or lethal headshot before incapacitation
 	if (_damage > 2) exitWith {
-		_unit setDamage 1;
-		0
+		_damage
 	};
 
 	// if the head is hit and damage is lethal, kill instantly
 	if (_selection == "head" && _damage > 0.5) exitWith {
-		_unit setDamage 1;  // Immediate death
-		0                   // Prevent further damage handling
+		1
 	};
 
 	if (_newDamage >= 1) then {
@@ -289,7 +284,6 @@ fnc_handleDamage = {
 			moveOut _unit;
 		};
 		// Make unit unconscious
-		_unit setDamage 0.9;
 		_unit setUnconscious true;
 		{
 			_unit disableAI _x
@@ -317,7 +311,7 @@ fnc_handleDamage = {
 			};
 		};
 
-		0
+		0.9
 	} else {
 		_damage
 	};
