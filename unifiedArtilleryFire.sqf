@@ -249,12 +249,12 @@ fnc_fireGun = {
 	private _marker = createMarker [_markerId, _finalPos];
 	_marker setMarkerShape "ICON";
 	_marker setMarkerType "mil_end";
-	_marker setMarkerColor "ColorBlue";
-	_marker setMarkerText "FIRE MISSION";
+	_marker setMarkerColor "ColorBlack";
+	_marker setMarkerText format["Fire Mission %1", groupId (group _caller)];
 
 	// --- 1. Standby call ---
 	_caller sideRadio "RadioArtilleryRequest"; // plays sound
-	_caller sideChat format ["Request immediate artillery at the designated coordinates grid [%1]. Over!", _grid];
+	_caller sideChat format ["Requesting immediate artillery at the designated coordinates [%1]. Over!", _grid];
 	sleep 3;  // small delay before firing
 
 	// --- 2. fire the artillery ---
