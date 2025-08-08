@@ -20,10 +20,8 @@
 // - Works with multiple guns, mortars, or heavy artillery.
 // 
 // Parameters:
-//   _mode                  - "SCOUT" or "AUTO" (mode of operation).
 //   _gun                   - The mortar or artillery object to control.
-//   _detectionRange        - max distance (in meters) to detect enemy units (default: 800). (AUTO mode only) 
-//   _scoutGroup            - group responsible for spotting enemies.(SCOUT mode only) 
+//   _genericParam          - Either a number for AUTO mode (detection range) or an object for SCOUT mode (scout group).
 //   _rounds                - Number of rounds to fire per cluster (default: 8).
 //   _clusterRadius         - Radius (in meters) to group nearby enemies into a cluster (default: 50).
 //   _minUnitsPerCluster    - Minimum number of units in a cluster before engaging (default: 8).
@@ -34,8 +32,8 @@
 
 // 
 // Usage Example:
-// ["AUTO", this, 1000, objNull, 8, 50, 8, 60, true, 25, 50] execVM "unifiedArtilleryFire.sqf";
-// ["SCOUT", this, 0, alpha, 8, 50, 8, 60, true, 25, 50] execVM "unifiedArtilleryFire.sqf";
+// [this, 10000, 8, 50, 8, 60, true, 25, 50] execVM "unifiedArtilleryFire.sqf"; (AUTO mode)
+// [this, group, 8, 50, 8, 60, true, 25, 50] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode)
 // 
 // ==============================================================================================================
 
@@ -43,28 +41,55 @@
 // Parameters
 // =====================
 
-// _mode = "SCOUT" or "AUTO"
-private _mode = _this param [0, "SCOUT"];
 // _gun = the artillery or mortar gun object
-private _gun = _this param [1];
-// _detectionRange = distance to detect enemy units in AUTO mode (default: 800 meters)
-private _detectionRange = _this param [2, 800];
-// _scoutGroup = group doing the spotting
-private _scoutGroup = _this param [3];
+private _gun = _this param [0];
+// _genericParam = either a number for AUTO mode or an object for SCOUT mode
+private _genericParam = _this select 1;
 // _rounds = number of rounds to fire at each cluster (default: 8)
-private _rounds = _this param [4, 8];
+private _rounds = _this param [2, 8];
 // _clusterRadius = radius to consider a cluster of enemies (default: 50 meters)
-private _clusterRadius = _this param [5, 50];
+private _clusterRadius = _this param [3, 50];
 // _minUnitsPerCluster = number of enemy units in a cluster to fire at (default: 8)
-private _minUnitsPerCluster = _this param [6, 8];
+private _minUnitsPerCluster = _this param [4, 8];
 // _coolDownForEffect = cooldown time between firing rounds (default: 60 seconds)
-private _coolDownForEffect = _this param [7, 60];
+private _coolDownForEffect = _this param [5, 60];
 // _unlimitedAmmo = whether to use unlimited ammo (default: false)
-private _unlimitedAmmo = _this param [8, false];
+private _unlimitedAmmo = _this param [6, false];
 // _accuracyRadius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
-private _accuracyRadius = _this param [9, 0];
+private _accuracyRadius = _this param [7, 0];
 // _claimRadius = distance to avoid firing if target is claimed by another gun (default: 50 meters)
-private _claimRadius = _this param [10, 50];
+private _claimRadius = _this param [8, 50];
+
+// =====================
+// Initialization either AUTO Mode or SCOUT Mode
+// =====================
+// _mode = "SCOUT" or "AUTO"
+private _mode = "AUTO";
+// _detectionRange = Radial distance from the gun used to detect enemy units in AUTO mode (default: 800 meters). Applicable in AUTO mode only.
+private _detectionRange = 800;
+// _scoutGroup = group doing the spotting. Applicable in SCOUT mode only.
+private _scoutGroup = objNull;
+
+switch (typeName _genericParam) do {
+	case "SCALAR": {
+		sleep 3; // Allow time for the gun to initialize
+		_mode = "AUTO";
+		_detectionRange = _genericParam;
+		_scoutGroup = objNull; // No scout group in AUTO mode
+		hint format ["Artillery AUTO mode activated with detection range: %1 meters", _detectionRange];
+	};
+	case "GROUP": {
+		sleep 3; // Allow time for the gun to initialize
+		_mode = "SCOUT";
+		_detectionRange = 0; // No detection range in SCOUT mode
+		_scoutGroup = _genericParam; // Use the provided object as the scout group
+		hint format ["Artillery SCOUT mode activated with scout group: %1", groupId _scoutGroup];
+	};
+	default {
+		// Unsupported type
+		hint format ["Unsupported cluster type: %1", typeName _genericParam];
+	};
+};
 
 // =========================
 // Global Target Registry
