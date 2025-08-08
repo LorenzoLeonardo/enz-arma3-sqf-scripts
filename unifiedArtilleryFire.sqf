@@ -26,10 +26,10 @@
 //   _scoutGroup            - group responsible for spotting enemies.(SCOUT mode only) 
 //   _rounds                - Number of rounds to fire per cluster (default: 8).
 //   _clusterRadius         - Radius (in meters) to group nearby enemies into a cluster (default: 50).
-//   _min_units_per_cluster - Minimum number of units in a cluster before engaging (default: 8).
-//   _cool_down_for_effect  - Delay (in seconds) between volleys (default: 60).
-//   _unlimited_ammo        - Boolean; true to allow infinite resupply (default: false).
-//   _accuracy_radius       - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
+//   _minUnitsPerCluster    - Minimum number of units in a cluster before engaging (default: 8).
+//   _coolDownForEffect     - Delay (in seconds) between volleys (default: 60).
+//   _unlimitedAmmo         - Boolean; true to allow infinite resupply (default: false).
+//   _accuracyRadius        - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
 //   _claimRadius           - distance to avoid firing if target is claimed by another gun (default: 50).
 
 // 
@@ -55,14 +55,14 @@ private _scoutGroup = _this param [3];
 private _rounds = _this param [4, 8];
 // _clusterRadius = radius to consider a cluster of enemies (default: 50 meters)
 private _clusterRadius = _this param [5, 50];
-// _min_units_per_cluster = number of enemy units in a cluster to fire at (default: 8)
-private _min_units_per_cluster = _this param [6, 8];
-// _cool_down_for_effect = cooldown time between firing rounds (default: 60 seconds)
-private _cool_down_for_effect = _this param [7, 60];
-// _unlimited_ammo = whether to use unlimited ammo (default: false)
-private _unlimited_ammo = _this param [8, false];
-// _accuracy_radius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
-private _accuracy_radius = _this param [9, 0];
+// _minUnitsPerCluster = number of enemy units in a cluster to fire at (default: 8)
+private _minUnitsPerCluster = _this param [6, 8];
+// _coolDownForEffect = cooldown time between firing rounds (default: 60 seconds)
+private _coolDownForEffect = _this param [7, 60];
+// _unlimitedAmmo = whether to use unlimited ammo (default: false)
+private _unlimitedAmmo = _this param [8, false];
+// _accuracyRadius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
+private _accuracyRadius = _this param [9, 0];
 // _claimRadius = distance to avoid firing if target is claimed by another gun (default: 50 meters)
 private _claimRadius = _this param [10, 50];
 
@@ -218,15 +218,15 @@ fnc_getClusterCenter = {
 // Fire the gun at a target position with optional accuracy radius
 // =========================
 fnc_fireGun = {
-	params ["_caller", "_gun", "_targetPos", "_accuracy_radius", "_ammoType", "_rounds"];
+	params ["_caller", "_gun", "_targetPos", "_accuracyRadius", "_ammoType", "_rounds"];
 	if (!canFire _gun) exitWith {
 		false
 	};
 
 	private _finalPos = _targetPos;
-	if (_accuracy_radius > 0) then {
+	if (_accuracyRadius > 0) then {
 		private _angle = random 360;
-		private _dist = random _accuracy_radius;
+		private _dist = random _accuracyRadius;
 		_finalPos = [
 			(_targetPos select 0) + (sin _angle * _dist),
 			(_targetPos select 1) + (cos _angle * _dist),
@@ -411,8 +411,8 @@ fnc_selectEnemiesByMode = {
 // =========================
 // Main Loop (spawned)
 // =========================
-[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _min_units_per_cluster, _cool_down_for_effect, _unlimited_ammo, _accuracy_radius, _claimRadius] spawn {
-	params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds", "_clusterRadius", "_min_units_per_cluster", "_cool_down_for_effect", "_unlimited_ammo", "_accuracy_radius", "_claimRadius"];
+[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _minUnitsPerCluster, _coolDownForEffect, _unlimitedAmmo, _accuracyRadius, _claimRadius] spawn {
+	params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds", "_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
 
 	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
 	private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
@@ -424,7 +424,7 @@ fnc_selectEnemiesByMode = {
 
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
 		if (_ammoLeft <= 0) then {
-			if (_unlimited_ammo) then {
+			if (_unlimitedAmmo) then {
 				_gun setVehicleAmmo 1
 			} else {
 				[_gun] call fnc_handleGunDepletion;
@@ -448,7 +448,7 @@ fnc_selectEnemiesByMode = {
 		private _clustersChecked = [];
 		{
 			private _cluster = [_x, _clusterRadius, _gun] call fnc_getCluster;
-			if (count _cluster >= _min_units_per_cluster) then {
+			if (count _cluster >= _minUnitsPerCluster) then {
 				private _centerPos = [_cluster] call fnc_getClusterCenter;
 				private _isDuplicate = [_centerPos, _clustersChecked, _clusterMergeRadius] call fnc_isClusterDuplicate;
 
@@ -461,10 +461,10 @@ fnc_selectEnemiesByMode = {
 				if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
 					[_centerPos, _gun] call fnc_claimTarget;
 
-					private _quiet_unit = [_group] call fnc_getQuietUnit;
-					private _fired = [_quiet_unit, _gun, _centerPos, _accuracy_radius, _ammoType, _rounds] call fnc_fireGun;
+					private _quietUnit = [_group] call fnc_getQuietUnit;
+					private _fired = [_quietUnit, _gun, _centerPos, _accuracyRadius, _ammoType, _rounds] call fnc_fireGun;
 					if (_fired) then {
-						sleep _cool_down_for_effect;
+						sleep _coolDownForEffect;
 					};
 
 					[_gun] call fnc_releaseTarget;
