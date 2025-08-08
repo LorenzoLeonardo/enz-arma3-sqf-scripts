@@ -261,24 +261,26 @@ fnc_reviveLoop = {
 // ===============================
 fnc_handleDamage = {
 	params ["_unit", "_selection", "_damage", "_source", "_projectile"];
-	private _newDamage = (_damage + damage _unit);
+	private _currentDamage = damage _unit;
+	private _newDamage = _currentDamage + _damage;
 
-	// if already unconscious, allow lethal hits to finish them
+	// Allow lethal finishers if already down
 	if (lifeState _unit == "INCAPACITATED") exitWith {
 		_damage
 	};
 
-	// Overkill or lethal headshot before incapacitation
-	if (_damage > 2) exitWith {
-		_damage
-	};
-
-	// if the head is hit and damage is lethal, kill instantly
-	if (_selection == "head" && _damage > 0.5) exitWith {
+	// Instant kill for high-caliber headshots
+	if (_selection == "head" && _damage >= 0.85) exitWith {
 		1
 	};
 
-	if (_newDamage >= 1) then {
+	// Massive single hit (e.g., explosion, rocket) — kill instantly
+	if (_damage >= 0.9) exitWith {
+		1
+	};
+
+	// Incapacitate on near-lethal total damage
+	if (_newDamage >= 0.95) then {
 		// if the injured is in a vehicle or static weapon, remove them
 		if (!isNull objectParent _unit) then {
 			moveOut _unit;
