@@ -46,7 +46,7 @@
 // _gun = the artillery or mortar gun object
 private _gun = _this param [0];
 // _genericParam = either a number for AUTO mode or an object for SCOUT mode
-private _genericParam = _this select 1;
+private _genericParam = _this param [1];
 // _rounds = number of rounds to fire at each cluster (default: 8)
 private _rounds = _this param [2, 8];
 // _clusterRadius = radius to consider a cluster of enemies (default: 50 meters)
