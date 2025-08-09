@@ -32,9 +32,11 @@
 
 // 
 // Usage Example:
-// [this, 10000, 8, 50, 8, 60, true, 25, 50] execVM "unifiedArtilleryFire.sqf"; (AUTO mode)
-// [this, group, 8, 50, 8, 60, true, 25, 50] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode)
+// [this, 10000, 8, 50, 8, 60, true, 50, 25] execVM "unifiedArtilleryFire.sqf"; (AUTO mode with specified accuracy radius)
+// [this, group, 8, 50, 8, 60, true, 50, 25] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode with specified accuracy radius)
 // 
+// [this, 10000, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (AUTO mode without specified accuracy radius, used gunner's skill to determine scatter)
+// [this, group, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode without specified accuracy radius, used gunner's skill to determine scatter)
 // ==============================================================================================================
 
 // =====================
@@ -55,10 +57,10 @@ private _minUnitsPerCluster = _this param [4, 8];
 private _coolDownForEffect = _this param [5, 60];
 // _unlimitedAmmo = whether to use unlimited ammo (default: false)
 private _unlimitedAmmo = _this param [6, false];
-// _accuracyRadius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (no scatter)
-private _accuracyRadius = _this param [7, 0];
 // _claimRadius = distance to avoid firing if target is claimed by another gun (default: 50 meters)
-private _claimRadius = _this param [8, 50];
+private _claimRadius = _this param [7, 50];
+// _accuracyRadius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (Rely on gunner's skill)
+private _accuracyRadius = _this param [8, 0];
 
 // =====================
 // Initialization either AUTO Mode or SCOUT Mode
@@ -98,6 +100,41 @@ if (isNil {
 	missionNamespace getVariable "GVAR_activeTargets"
 }) then {
 	missionNamespace setVariable ["GVAR_activeTargets", []];
+};
+
+// =========================
+// Dynamic Accuracy Radius Calculation
+// =========================
+fnc_dynamicAccuracyRadius = {
+	params ["_gun", "_accuracyRadius"];
+	private _dynamicAccuracyRadius = 0;
+
+	if (_accuracyRadius <= 0) then {
+		// only auto-scale if not manually specified
+		private _gunner = gunner _gun;
+		private _skill = if (!isNull _gunner) then {
+			skill _gunner
+		} else {
+			0.5 // default if unmanned
+		};
+
+		// Weapon-type specific scatter ranges
+		private _maxScatter = 200;  // worst accuracy
+		private _minScatter = 5;    // best accuracy
+		if (_gun isKindOf "StaticMortar") then {
+			_maxScatter = 100;
+			_minScatter = 3;
+		} else {
+			_maxScatter = 200;
+			_minScatter = 10;
+		};
+
+		// Map skill to scatter (higher skill → smaller radius)
+		_dynamicAccuracyRadius = _maxScatter - (_skill * (_maxScatter - _minScatter));
+	} else {
+		_dynamicAccuracyRadius = _accuracyRadius; // use specified radius
+	};
+	_dynamicAccuracyRadius
 };
 
 // =========================
@@ -447,6 +484,7 @@ fnc_selectEnemiesByMode = {
 	while { !isNull _gun && alive _gun } do {
 		sleep 2;
 
+		private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
 		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
 		if (_ammoLeft <= 0) then {
 			if (_unlimitedAmmo) then {
@@ -487,7 +525,7 @@ fnc_selectEnemiesByMode = {
 					[_centerPos, _gun] call fnc_claimTarget;
 
 					private _quietUnit = [_group] call fnc_getQuietUnit;
-					private _fired = [_quietUnit, _gun, _centerPos, _accuracyRadius, _ammoType, _rounds] call fnc_fireGun;
+					private _fired = [_quietUnit, _gun, _centerPos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
 					if (_fired) then {
 						sleep _coolDownForEffect;
 					};
