@@ -257,6 +257,43 @@ fnc_reviveLoop = {
 };
 
 // ===============================
+// FUNCTION: Check if projectile is heavy explosive
+// ===============================
+fnc_isHeavyExplosive = {
+	params ["_projectile"];
+
+	if (_projectile isEqualTo "") exitWith {
+		false
+	};
+
+	private _projLower = toLower _projectile;
+
+	private _explosiveKeywords = [
+		"_he", "_shell", "_bomb", "_satchel", "_mine", "_rocket",
+		"gbu", "mk82", "mo_", "rpg", "at_", "_missile", "_howitzer",
+		"_mortar", "_demolition"
+	];
+
+	private _ignoreKeywords = [
+		"chemlight", "helmet", "wheel", "cheese" // safety words
+	];
+
+	{
+		if ((_projLower find _x) > -1) exitWith {
+			false
+		}; // Ignore takes priority
+	} forEach _ignoreKeywords;
+
+	{
+		if ((_projLower find _x) > -1) exitWith {
+			true
+		};
+	} forEach _explosiveKeywords;
+
+	false
+};
+
+// ===============================
 // FUNCTION: Handle damage
 // ===============================
 fnc_handleDamage = {
@@ -274,8 +311,20 @@ fnc_handleDamage = {
 		1
 	};
 
-	// Massive single hit (e.g., explosion, rocket) — kill instantly
-	if (_damage >= 0.9) exitWith {
+	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
+
+	if (_isHeavyExplosive) then {
+		private _dist = _unit distance _source;
+
+		if (_dist <= 3) exitWith {
+			1
+		}; // lethal
+		if (_dist <= 6) exitWith {
+			0.95 max _damage
+		}; // near-lethal
+	};
+
+	if (!_isHeavyExplosive && _damage >= 0.95) exitWith {
 		1
 	};
 
