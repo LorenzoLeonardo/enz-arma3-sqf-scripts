@@ -5,7 +5,6 @@
 
 #define BLEEDOUT_TIME 300 // 5 minutes
 #define REVIVE_RANGE 3 // 3 meters
-#define CACHE_LIFETIME 10 // seconds
 
 params ["_group"];
 
