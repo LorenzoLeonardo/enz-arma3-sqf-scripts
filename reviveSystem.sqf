@@ -23,7 +23,8 @@ fnc_getBestMedic = {
 		!(_x getVariable ["reviving", false])
 		&& (_x getUnitTrait "Medic") &&
 		(lifeState _x != "INCAPACITATED") &&
-		(isNull objectParent _x)
+		(isNull objectParent _x) &&
+		!(captive _x)
 	};
 
 	// step 2: Fallback to any same group unit
@@ -33,7 +34,8 @@ fnc_getBestMedic = {
 			alive _x &&
 			!(_x getVariable ["reviving", false]) &&
 			(lifeState _x != "INCAPACITATED") &&
-			(isNull objectParent _x)
+			(isNull objectParent _x) &&
+			!(captive _x)
 		};
 	};
 
@@ -45,7 +47,8 @@ fnc_getBestMedic = {
 			!(_x getVariable ["reviving", false]) &&
 			(lifeState _x != "INCAPACITATED") &&
 			(side _x == side(group _injured)) &&
-			(isNull objectParent _x)
+			(isNull objectParent _x) &&
+			!(captive _x)
 		};
 	};
 
@@ -56,7 +59,8 @@ fnc_getBestMedic = {
 			alive _x &&
 			!(_x getVariable ["reviving", false]) &&
 			(lifeState _x != "INCAPACITATED") &&
-			(isNull objectParent _x)
+			(isNull objectParent _x) &&
+			!(captive _x)
 		};
 	};
 
@@ -420,7 +424,7 @@ fnc_handleHeal = {
 	// if revived by an enemy, drop the weapon become a captive
 	if (((side _medic) getFriend (side _injured)) < 0.6) then {
 		_medic globalChat format ["%1 has become captive", name _injured];
-		[_injured] call fnc_surrender;
+		[_injured, _medic] call fnc_surrender;
 		[_injured] call fnc_dropAllWeapons;
 	};
 
@@ -449,17 +453,21 @@ fnc_dropAllWeapons = {
 		_unit removeMagazine _x;
 		_holder addMagazineCargoGlobal [_x, 1];
 	} forEach magazines _unit;
+
+	removeBackpack _unit; // remove backpack too
+	removeAllItems _unit;
 };
 
 // ===============================
 // FUNCTION: Surrender
 // ===============================
 fnc_surrender = {
-	params ["_unit"];
-	_unit setCaptive true;              // AI won’t target them
-	_unit disableAI "MOVE";            // Prevent movement
-	_unit disableAI "ANIM";            // Prevent animation changes
-	_unit switchMove "Acts_AidlPsitMstpSsurWnonDnon01"; // Kneeling with hands on head
+	params ["_unit", "_medic"];
+	// AI won’t target them
+	_unit setCaptive true;
+	// Add to player's group silently
+	[_unit] joinSilent (group _medic);
+	_unit doFollow (leader (group _medic));
 };
 
 // ===============================
