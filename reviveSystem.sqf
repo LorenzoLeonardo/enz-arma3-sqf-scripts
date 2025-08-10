@@ -192,11 +192,16 @@ fnc_reviveLoop = {
 		_injured setVariable ["beingRevived", true, true];
 		_medic setVariable ["reviving", true, true];
 
+		doStop _medic;
+		_medic stop false;
+		// Make sure no custom animation is locking movement
+		_medic switchMove "";
 		// Disable combat distractions
 		{
 			_medic disableAI _x
 		} forEach ["AUTOCOMBAT", "TARGET", "SUPPRESSION"];
-
+		// Allow AI to choose stance for movement
+		_medic setUnitPos "AUTO";
 		_medic doMove (position _injured);
 
 		private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
