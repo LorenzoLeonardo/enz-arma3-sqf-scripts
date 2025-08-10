@@ -39,6 +39,8 @@ if ({
 	side _x == _enemySide && alive _x
 } count allUnits == 0) exitWith {};
 
+[west, "Base"] sideRadio "RadioPapaBearToAllUnitsClearArea";
+
 // Dynamic hunt loop
 while {
 	({
