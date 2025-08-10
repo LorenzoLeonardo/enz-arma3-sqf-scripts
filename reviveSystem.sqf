@@ -294,6 +294,44 @@ fnc_isHeavyExplosive = {
 };
 
 // ===============================
+// FUNCTION: Headshot damage Handling
+// ===============================
+fnc_headshotDamageHandling = {
+	params ["_unit", "_damage"];
+
+	// Base chance to survive headshot
+	private _baseSurviveChance = 0.3;
+	// Minimum damage to always kill
+	private _minDamageToAlwaysKill = 0.85;
+	// Check if unit has a helmet
+	private _headgearClass = toLower (headgear _unit);
+	private _isHelmet = ((_headgearClass find "helmet" != -1) ||   // generic helmets
+	(_headgearClass find "cup_h" == 0) ||     // CUP helmets
+	(_headgearClass find "6b" != -1) ||       // Russian 6b helmets
+	(_headgearClass find "rus" != -1) ||      // Russian related helmets
+	(_headgearClass find "spetsnaz" != -1));    // Special forces helmets);
+
+	// if no headgear, no protection
+	private _helmetProtection = if (_isHelmet) then {
+		0.2
+	} else {
+		0
+	};
+	private _adjustedSurviveChance = _baseSurviveChance + _helmetProtection;
+
+	if (_damage >= _minDamageToAlwaysKill) then {
+		1
+	} else {
+		private _roll = random 1;
+		if (_roll < _adjustedSurviveChance) then {
+			_damage
+		} else {
+			1
+		};
+	};
+};
+
+// ===============================
 // FUNCTION: Handle damage
 // ===============================
 fnc_handleDamage = {
@@ -306,9 +344,9 @@ fnc_handleDamage = {
 		_damage
 	};
 
-	// Instant kill for high-caliber headshots
-	if (_selection == "head" && _damage >= 0.85) exitWith {
-		1
+	// Compute probability of chance to survive if hit in the head
+	if (_selection == "head") exitWith {
+		[_unit, _damage] call fnc_headshotDamageHandling
 	};
 
 	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
