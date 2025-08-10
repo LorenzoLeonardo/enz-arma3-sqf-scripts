@@ -324,10 +324,6 @@ fnc_handleDamage = {
 		}; // near-lethal
 	};
 
-	if (!_isHeavyExplosive && _damage >= 0.95) exitWith {
-		1
-	};
-
 	// Incapacitate on near-lethal total damage
 	if (_newDamage >= 0.95) then {
 		// if the injured is in a vehicle or static weapon, remove them
