@@ -21,4 +21,10 @@ jobs:
             -v "${{ github.workspace }}:/workspace" \
             --entrypoint sqflint \
             acemod/sqflint \
-            -d /workspace
+            -d /workspace > lint.log 2>&1
+          echo "SQFLint output:"
+          cat lint.log
+          if grep -q "error:" lint.log; then
+            echo "Errors found in SQF linting! Failing the workflow."
+            exit 1
+          fi
