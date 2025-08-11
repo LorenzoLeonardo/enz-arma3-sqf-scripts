@@ -1,7 +1,45 @@
-/*
-	    reviveSystem.sqf
-	    Usage: [group this] execVM "reviveSystem.sqf";
-*/
+// ==============================================================================================================
+// AI Revive System Script
+// Author: Lorenzo Leonardo
+// Contact: enzotechcomputersolutions@gmail.com
+// ==============================================================================================================
+// 
+// Description:
+// This script implements a fully AI-driven revive system for incapacitated units, allowing friendly (and in some
+// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection, 
+// realistic bleedout timers, headshot and explosive damage handling, and dynamic prioritization of medics
+// based on proximity, threat levels, and availability.
+// 
+// Features:
+// - Automatic AI revive for incapacitated units within a group.
+// - Prioritizes medics from the same group, then other friendlies, then any available AI (including enemies if friendlies are too far).
+// - Intelligent medic assignment that avoids multiple units trying to revive the same target.
+// - Configurable bleedout time before the unit dies if not revived.
+// - Handles headshot lethality with helmet-based survival chances.
+// - Handles explosive damage with distance-based lethality scaling.
+// - Revived units are fully restored and can become captives if revived by enemies.
+// - Prevents revive loops, duplicate revives, and AI getting stuck.
+// - Dynamic movement timeout based on medic-to-target distance.
+// - AI revives use animations for realism.
+// - units drop weapons and surrender when revived by enemies.
+// - Fully configurable constants for range, timers, and thresholds.
+// 
+// Parameters:
+//   _group                        - The group whose units will have the revive system enabled.
+// 
+// Constants (modifiable in script):
+//   BLEEDOUT_TIME                 - time in seconds before incapacitated unit dies if not revived (default: 300).
+//   REVIVE_RANGE                  - distance in meters a medic must reach to start revive (default: 3).
+//   FRIENDLY_MEDIC_FAR_THRESHOLD  - distance threshold in meters beyond which enemies may revive the unit (default: 200).
+// 
+// Usage Example:
+//   [group this] execVM "reviveSystem.sqf";
+// 
+// Notes:
+// - Works entirely server-side for AI logic, but event handlers are applied to units in the group.
+// - Can be adapted for player revive logic by adding custom event handling.
+// - Revive animations and states can be replaced with mod-specific actions for better integration.
+// ==============================================================================================================
 
 #define BLEEDOUT_TIME 300 // 5 minutes
 #define REVIVE_RANGE 3 // 3 meters
