@@ -17,8 +17,13 @@ jobs:
 
       - name: Run SQF Linter
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
-            --entrypoint sqflint \
-            acemod/sqflint \
-            -d /workspace
+          OUTPUT=$(docker run --rm \
+                  -v "${{ github.workspace }}:/workspace" \
+                  --entrypoint sqflint \
+                  acemod/sqflint \
+                  -d /workspace)
+                echo "$OUTPUT"
+                if echo "$OUTPUT" | grep -q "syntactically incorrect"; then
+                  echo "Syntax error detected by sqflint, failing the job."
+                  exit 1
+                fi
