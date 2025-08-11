@@ -175,7 +175,7 @@ fnc_isTargetClaimed = {
 };
 
 // =========================
-// Get the ammo count for a specific ammo type in a vehicle
+// get the ammo count for a specific ammo type in a vehicle
 // =========================
 fnc_getAmmoCount = {
 	params ["_vehicle", "_ammoType"];
@@ -218,11 +218,11 @@ fnc_handleGunDepletion = {
 };
 
 // =========================
-// Get the side of the gun based on its crew or default side
+// get the side of the gun based on its crew or default side
 // =========================
 fnc_getGunSide = {
 	params ["_gun"];
-	if (crew _gun isNotEqualTo []) exitWith {
+	if ((count (crew _gun)) > 0) exitWith {
 		side (gunner _gun)
 	};
 	side _gun
@@ -237,7 +237,7 @@ fnc_isHostile = {
 };
 
 // =========================
-// Get enemies near a position within a specified distance
+// get enemies near a position within a specified distance
 // =========================
 fnc_getEnemies = {
 	params ["_origin", "_distance", "_gun"];
@@ -248,7 +248,7 @@ fnc_getEnemies = {
 };
 
 // =========================
-// Get a cluster of hostile units around a unit within a specified radius
+// get a cluster of hostile units around a unit within a specified radius
 // =========================
 fnc_getCluster = {
 	params ["_unit", "_radius", "_gun"];
@@ -259,7 +259,7 @@ fnc_getCluster = {
 };
 
 // =========================
-// Get the center position of a cluster of units
+// get the center position of a cluster of units
 // =========================
 fnc_getClusterCenter = {
 	params ["_cluster"];
@@ -277,7 +277,7 @@ fnc_getClusterCenter = {
 };
 
 // =========================
-// Fire the gun at a target position with optional accuracy radius
+// fire the gun at a target position with optional accuracy radius
 // =========================
 fnc_fireGun = {
 	params ["_caller", "_gun", "_targetPos", "_accuracyRadius", "_ammoType", "_rounds"];
@@ -354,7 +354,7 @@ fnc_fireGun = {
 };
 
 // =========================
-// Get the artillery ammo type based on gun type
+// get the artillery ammo type based on gun type
 // =========================
 fnc_getArtilleryAmmoType = {
 	params ["_gun"];
@@ -402,14 +402,16 @@ fnc_getArtilleryAmmoType = {
 // =========================
 fnc_isClusterDuplicate = {
 	params ["_centerPos", "_clustersChecked", "_mergeRadius"];
-	_clustersChecked findIf {
-		private _pos = _x;
-		_centerPos distance2D _pos < _mergeRadius
-	} > -1
-};
 
+	private _foundIndex = _clustersChecked findIf {
+		private _pos = _x;
+		(_centerPos distance2D _pos) < _mergeRadius
+	};
+
+	(_foundIndex isKindOf "NUMBER") && (_foundIndex > -1)
+};
 // =========================
-// Get a quiet unit from the group
+// get a quiet unit from the group
 // =========================
 fnc_getQuietUnit = {
 	params ["_group"];
