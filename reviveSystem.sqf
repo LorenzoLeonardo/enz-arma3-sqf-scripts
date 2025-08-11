@@ -31,7 +31,7 @@ fnc_getBestMedic = {
 	private _candidates = _groupUnits select {
 		(_x != _injured) &&
 		([_x] call fnc_isUnitGood) &&
-		!(_x getVariable ["reviving", false]) &&
+		!([_x] call fnc_isReviving) &&
 		(_x getUnitTrait "Medic") &&
 		(isNull objectParent _x) &&
 		!(captive _x)
@@ -42,7 +42,7 @@ fnc_getBestMedic = {
 		_candidates = _groupUnits select {
 			(_x != _injured) &&
 			([_x] call fnc_isUnitGood) &&
-			!(_x getVariable ["reviving", false]) &&
+			!([_x] call fnc_isReviving) &&
 			(isNull objectParent _x) &&
 			!(captive _x)
 		};
@@ -53,7 +53,7 @@ fnc_getBestMedic = {
 		_candidates = allUnits select {
 			(_x != _injured) &&
 			([_x] call fnc_isUnitGood) &&
-			!(_x getVariable ["reviving", false]) &&
+			!([_x] call fnc_isReviving) &&
 			(side _x == side(group _injured)) &&
 			(isNull objectParent _x) &&
 			!(captive _x)
@@ -65,7 +65,7 @@ fnc_getBestMedic = {
 		_candidates = allUnits select {
 			(_x != _injured) &&
 			([_x] call fnc_isUnitGood) &&
-			!(_x getVariable ["reviving", false]) &&
+			!([_x] call fnc_isReviving) &&
 			(isNull objectParent _x) &&
 			!(captive _x)
 		};
@@ -137,7 +137,7 @@ fnc_resetReviveState = {
 		if (!isNull _ldr && alive _ldr) then {
 			_medic doFollow _ldr;
 		};
-		_medic setVariable ["reviving", false, true];
+		[_medic, false] call fnc_setReviving;
 	};
 
 	if (!isNull _injured && !([_injured] call fnc_isRevived)) then {
@@ -339,7 +339,7 @@ fnc_reviveLoop = {
 
 		// lock injured and medic
 		[_injured, true] call fnc_setBeingRevived;
-		_medic setVariable ["reviving", true, true];
+		[_medic, true] call fnc_setReviving;
 
 		doStop _medic;
 		_medic stop false;
@@ -440,6 +440,16 @@ fnc_setRevived = {
 	_unit setVariable ["revived", _state, true];
 };
 
+fnc_isReviving = {
+	params ["_unit"];
+	_unit getVariable ["reviving", false]
+};
+
+fnc_setReviving = {
+	params ["_unit", "_state"];
+	_unit setVariable ["reviving", _state, true];
+};
+
 // ===============================
 // FUNCTION: Handle damage
 // ===============================
@@ -522,7 +532,7 @@ fnc_handleDamage = {
 		params ["_unit"];
 		[_unit, false] call fnc_setReviveProcess;
 		[_unit, false] call fnc_setBeingRevived;
-		_unit setVariable ["reviving", false];
+		[_unit, false] call fnc_setReviving;
 		[_unit, false] call fnc_setRevived;
 	}];
 } forEach units _group;
