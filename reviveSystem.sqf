@@ -5,6 +5,7 @@
 
 #define BLEEDOUT_TIME 300 // 5 minutes
 #define REVIVE_RANGE 3 // 3 meters
+#define FRIENDLY_MEDIC_FAR_THRESHOLD 200 // 200 meters
 
 params ["_group"];
 
@@ -45,6 +46,7 @@ fnc_findNearestUnit = {
 // ===============================
 fnc_getBestMedic = {
 	params ["_injured"];
+	private _injuredSide = side _injured;
 	private _groupUnits = units group _injured;
 
 	// step 1: Check same group first for medics
@@ -68,13 +70,13 @@ fnc_getBestMedic = {
 		};
 	};
 
-	// step 3: if still empty, use other side units
+	// step 3: if still empty, use other side units (friendly side)
 	if (_candidates isEqualTo []) then {
 		_candidates = allUnits select {
 			(_x != _injured) &&
 			([_x] call fnc_isUnitGood) &&
 			!([_x] call fnc_isReviving) &&
-			(side _x == side(group _injured)) &&
+			(side _x == _injuredSide) &&
 			(isNull objectParent _x) &&
 			!(captive _x)
 		};
@@ -95,13 +97,42 @@ fnc_getBestMedic = {
 		objNull
 	};
 
-	// get the nearest unit
-	private _medic = [_injured, _candidates] call fnc_findNearestUnit;
-
-	if (!isNull _medic) then {
-		_medic globalChat format ["%1 will revive %2", name _medic, name _injured];
+	// find nearest friendly candidate (medic or fallback)
+	private _nearestMedic = [_injured, _candidates] call fnc_findNearestUnit;
+	private _nearestMedicDist = if (isNull _nearestMedic) then {
+		1e10
+	} else {
+		_injured distance _nearestMedic
 	};
-	_medic
+
+	// find nearest enemy unit to injured
+	private _enemies = allUnits select {
+		(side _x != _injuredSide) &&
+		alive _x &&
+		!(captive _x)
+	};
+	private _nearestEnemy = [_injured, _enemies] call fnc_findNearestUnit;
+	private _nearestEnemyDist = 1e10;
+	if (isNull _nearestEnemy) then {
+		_nearestEnemyDist = 1e10
+	} else {
+		_nearestEnemyDist = _injured distance _nearestEnemy
+	};
+
+	// Define distance threshold for friendly medics being "too far"
+	private _friendlyFarThreshold = FRIENDLY_MEDIC_FAR_THRESHOLD; // adjust as you like
+
+	// If enemy is closer than friendly medic and friendlies are "too far", let enemy revive
+	if ((_nearestEnemyDist < _nearestMedicDist) && (_nearestMedicDist > _friendlyFarThreshold)) exitWith {
+		_nearestEnemy globalChat format ["%1 will revive %2", name _nearestEnemy, name _injured];
+		_nearestEnemy
+	};
+
+	// Otherwise, normal friendly medic revive
+	if (!isNull _nearestMedic) then {
+		_nearestMedic globalChat format ["%1 will revive %2", name _nearestMedic, name _injured];
+	};
+	_nearestMedic
 };
 
 // ===============================
