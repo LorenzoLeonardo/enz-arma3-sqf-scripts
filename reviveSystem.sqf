@@ -77,6 +77,7 @@ fnc_getBestMedic = {
 
 	// sort by distance
 	_candidates = [_candidates, [], {
+		params ["_x"];
 		_x distance _injured
 	}, "ASCEND"] call BIS_fnc_sortBy;
 	private _medic = _candidates select 0;
