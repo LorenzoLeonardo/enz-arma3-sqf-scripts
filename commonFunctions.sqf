@@ -467,7 +467,7 @@ is_artillery_target_in_range =
 	private _maxArtilleryRange = 12000;
 	private _minArtilleryRange = 500;
 	{
-		if (_theLeader != _x) then {
+		if ((leader _group) != _x) then {
 			private _gun = vehicle _x;
 			private _thisGunPos = getPos _gun;
 			private _distance = sqrt(abs((_targetPos select 0) - (_thisGunPos select 0))^2 +
@@ -809,21 +809,21 @@ monitor_group_status =
 		} count units _group == 0
 	};
 
-	switch (_teamName) do {
-		case "Alpha": {
+	switch (toLower _groupID) do {
+		case "alpha": {
 			[west, "Base"] sideRadio "LostContactWithAlphaTeam";
 		};
-		case "Bravo": {
+		case "bravo": {
 			[west, "Base"] sideRadio "LostContactWithBravoTeam";
 		};
-		case "Charlie": {
+		case "charlie": {
 			[west, "Base"] sideRadio "LostContactWithCharlieTeam";
 		};
-		case "Delta": {
+		case "delta": {
 			[west, "Base"] sideRadio "LostContactWithDeltaTeam";
 		};
 		default {
-			hint format["%1 is not a valid squad name. Please use Alpha, Bravo, Charlie, Delta", _teamName];
+			hint format["%1 is not a valid squad name. Please use Alpha, Bravo, Charlie, Delta", _groupID];
 		};
 	};
 };

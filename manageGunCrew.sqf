@@ -29,6 +29,7 @@ private _findReplacementGunner = {
 	};
 
 	private _sorted = [_candidates, [], {
+		params ["_x"];
 		_x distance _gun
 	}] call BIS_fnc_sortBy;
 
