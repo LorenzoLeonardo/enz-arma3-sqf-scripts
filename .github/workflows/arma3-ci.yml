@@ -1,0 +1,24 @@
+name: Arma 3 CI - SQF Lint
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run SQF Linter
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            --entrypoint sqflint \
+            acemod/sqflint \
+            -d /workspace
