@@ -141,8 +141,10 @@ fnc_resetReviveState = {
 // FUNCTION: Wait for Medic Arrival
 // ===============================
 fnc_waitForMedicArrival = {
-	params ["_medic", "_injured", "_timeout"];
+	params ["_medic", "_injured"];
 
+	// Wait for medic to arrive within range or timeout
+	private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
 	waitUntil {
 		sleep 1;
 		(!alive _injured)
@@ -204,9 +206,8 @@ fnc_reviveLoop = {
 		_medic setUnitPos "AUTO";
 		_medic doMove (position _injured);
 
-		private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
 		 // Wait for medic arrival
-		private _arrived = [_medic, _injured, _timeout] call fnc_waitForMedicArrival;
+		private _arrived = [_medic, _injured] call fnc_waitForMedicArrival;
 		// If medic didn't arrive in time or died or incapacitated
 		if (!_arrived) then {
 			if (!isNull _medic) then {
