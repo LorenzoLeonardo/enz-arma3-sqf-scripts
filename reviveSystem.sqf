@@ -87,55 +87,46 @@ fnc_getBestMedic = {
 	private _injuredSide = side _injured;
 	private _groupUnits = units group _injured;
 
-	// step 1: Check same group first for medics
-	private _candidates = _groupUnits select {
+	// Gather all valid units once
+	private _allValidUnits = allUnits select {
 		(_x != _injured) &&
 		([_x] call fnc_isUnitGood) &&
 		!([_x] call fnc_isReviving) &&
-		(_x getUnitTrait "Medic") &&
 		(isNull objectParent _x) &&
 		!(captive _x)
 	};
 
-	// step 2: Fallback to any same group unit
+	private _candidates = [];
+
+	// 1️⃣ Same group medics
+	_candidates = _groupUnits select {
+		_x in _allValidUnits && (_x getUnitTrait "Medic")
+	};
+
+	// 2️⃣ Same group non-medics
 	if (_candidates isEqualTo []) then {
 		_candidates = _groupUnits select {
-			(_x != _injured) &&
-			([_x] call fnc_isUnitGood) &&
-			!([_x] call fnc_isReviving) &&
-			(isNull objectParent _x) &&
-			!(captive _x)
+			_x in _allValidUnits
 		};
 	};
 
-	// step 3: if still empty, use other side units (friendly side)
+	// 3️⃣ Other friendly units
 	if (_candidates isEqualTo []) then {
-		_candidates = allUnits select {
-			(_x != _injured) &&
-			([_x] call fnc_isUnitGood) &&
-			!([_x] call fnc_isReviving) &&
-			(side _x == _injuredSide) &&
-			(isNull objectParent _x) &&
-			!(captive _x)
+		_candidates = _allValidUnits select {
+			side _x == _injuredSide
 		};
 	};
 
-	// step 4: if still empty, use all units
+	// 4️⃣ Fallback to *anyone* (already in _allValidUnits)
 	if (_candidates isEqualTo []) then {
-		_candidates = allUnits select {
-			(_x != _injured) &&
-			([_x] call fnc_isUnitGood) &&
-			!([_x] call fnc_isReviving) &&
-			(isNull objectParent _x) &&
-			!(captive _x)
-		};
+		_candidates = _allValidUnits;
 	};
 
 	if (_candidates isEqualTo []) exitWith {
 		objNull
 	};
 
-	// find nearest friendly candidate (medic or fallback)
+	// find nearest friendly medic or fallback unit
 	private _nearestMedic = [_injured, _candidates] call fnc_findNearestUnit;
 	private _nearestMedicDist = if (isNull _nearestMedic) then {
 		1e10
@@ -143,30 +134,24 @@ fnc_getBestMedic = {
 		_injured distance _nearestMedic
 	};
 
-	// find nearest enemy unit to injured
-	private _enemies = allUnits select {
-		(side _x != _injuredSide) &&
-		alive _x &&
-		!(captive _x)
+	// find nearest enemy
+	private _enemies = _allValidUnits select {
+		side _x != _injuredSide
 	};
 	private _nearestEnemy = [_injured, _enemies] call fnc_findNearestUnit;
-	private _nearestEnemyDist = 1e10;
-	if (isNull _nearestEnemy) then {
-		_nearestEnemyDist = 1e10
+	private _nearestEnemyDist = if (isNull _nearestEnemy) then {
+		1e10
 	} else {
-		_nearestEnemyDist = _injured distance _nearestEnemy
+		_injured distance _nearestEnemy
 	};
 
-	// Define distance threshold for friendly medics being "too far"
-	private _friendlyFarThreshold = FRIENDLY_MEDIC_FAR_THRESHOLD; // adjust as you like
-
-	// If enemy is closer than friendly medic and friendlies are "too far", let enemy revive
-	if ((_nearestEnemyDist < _nearestMedicDist) && (_nearestMedicDist > _friendlyFarThreshold)) exitWith {
+	// Enemy revival logic if friendlies too far
+	if ((_nearestEnemyDist < _nearestMedicDist) && (_nearestMedicDist > FRIENDLY_MEDIC_FAR_THRESHOLD)) exitWith {
 		_nearestEnemy globalChat format ["%1 will revive %2", name _nearestEnemy, name _injured];
 		_nearestEnemy
 	};
 
-	// Otherwise, normal friendly medic revive
+	// default: nearest friendly medic or fallback
 	if (!isNull _nearestMedic) then {
 		_nearestMedic globalChat format ["%1 will revive %2", name _nearestMedic, name _injured];
 	};
