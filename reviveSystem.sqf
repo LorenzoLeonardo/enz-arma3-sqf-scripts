@@ -9,6 +9,18 @@
 params ["_group"];
 
 // ===============================
+// FUNCTION: Check if unit is ok
+// ===============================
+fnc_isUnitGood = {
+	params ["_unit"];
+	!isNull _unit && {
+		alive _unit && {
+			lifeState _unit != "INCAPACITATED"
+		}
+	}
+};
+
+// ===============================
 // FUNCTION: get Best Medic
 // ===============================
 fnc_getBestMedic = {
@@ -18,10 +30,9 @@ fnc_getBestMedic = {
 	// step 1: Check same group first for medics
 	private _candidates = _groupUnits select {
 		(_x != _injured) &&
-		alive _x &&
-		!(_x getVariable ["reviving", false])
-		&& (_x getUnitTrait "Medic") &&
-		(lifeState _x != "INCAPACITATED") &&
+		([_x] call fnc_isUnitGood) &&
+		!(_x getVariable ["reviving", false]) &&
+		(_x getUnitTrait "Medic") &&
 		(isNull objectParent _x) &&
 		!(captive _x)
 	};
@@ -30,9 +41,8 @@ fnc_getBestMedic = {
 	if (_candidates isEqualTo []) then {
 		_candidates = _groupUnits select {
 			(_x != _injured) &&
-			alive _x &&
+			([_x] call fnc_isUnitGood) &&
 			!(_x getVariable ["reviving", false]) &&
-			(lifeState _x != "INCAPACITATED") &&
 			(isNull objectParent _x) &&
 			!(captive _x)
 		};
@@ -42,9 +52,8 @@ fnc_getBestMedic = {
 	if (_candidates isEqualTo []) then {
 		_candidates = allUnits select {
 			(_x != _injured) &&
-			alive _x &&
+			([_x] call fnc_isUnitGood) &&
 			!(_x getVariable ["reviving", false]) &&
-			(lifeState _x != "INCAPACITATED") &&
 			(side _x == side(group _injured)) &&
 			(isNull objectParent _x) &&
 			!(captive _x)
@@ -55,9 +64,8 @@ fnc_getBestMedic = {
 	if (_candidates isEqualTo []) then {
 		_candidates = allUnits select {
 			(_x != _injured) &&
-			alive _x &&
+			([_x] call fnc_isUnitGood) &&
 			!(_x getVariable ["reviving", false]) &&
-			(lifeState _x != "INCAPACITATED") &&
 			(isNull objectParent _x) &&
 			!(captive _x)
 		};
@@ -216,7 +224,7 @@ fnc_reviveLoop = {
 			[_medic, _injured] call fnc_resetReviveState;
 			continue;
 		};
-		if (alive _medic && alive _injured && (lifeState _medic != "INCAPACITATED")) then {
+		if (([_medic] call fnc_isUnitGood) && alive _injured) then {
 			// stop and animate revive
 			doStop _medic;
 			{
@@ -240,10 +248,8 @@ fnc_reviveLoop = {
 				|| (lifeState _medic == "INCAPACITATED")
 				|| (time > _animTime)
 			};
-			if (!alive _medic || lifeState _medic == "INCAPACITATED") then {
-				if (!isNull _medic) then {
-					_medic globalChat format ["%1 was incapacitated or died while reviving %2.", name _medic, name _injured];
-				};
+			if (!([_medic] call fnc_isUnitGood)) then {
+				_medic globalChat format ["%1 was incapacitated or died while reviving %2.", name _medic, name _injured];
 				[_medic, _injured] call fnc_resetReviveState;
 				continue;
 			};
