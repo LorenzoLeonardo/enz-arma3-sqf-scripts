@@ -167,6 +167,145 @@ fnc_waitForMedicArrival = {
 };
 
 // ===============================
+// FUNCTION: Check if projectile is heavy explosive
+// ===============================
+fnc_isHeavyExplosive = {
+	params ["_projectile"];
+
+	if (_projectile isEqualTo "") exitWith {
+		false
+	};
+
+	private _projLower = toLower _projectile;
+
+	private _explosiveKeywords = [
+		"_he", "_shell", "_bomb", "_satchel", "_mine", "_rocket",
+		"gbu", "mk82", "mo_", "rpg", "at_", "_missile", "_howitzer",
+		"_mortar", "_demolition"
+	];
+
+	private _ignoreKeywords = [
+		"chemlight", "helmet", "wheel", "cheese" // safety words
+	];
+
+	{
+		if ((_projLower find _x) > -1) exitWith {
+			false
+		}; // Ignore takes priority
+	} forEach _ignoreKeywords;
+
+	{
+		if ((_projLower find _x) > -1) exitWith {
+			true
+		};
+	} forEach _explosiveKeywords;
+
+	false
+};
+
+// ===============================
+// FUNCTION: Headshot damage Handling
+// ===============================
+fnc_headshotDamageHandling = {
+	params ["_unit", "_damage"];
+
+	// Base chance to survive headshot
+	private _baseSurviveChance = 0.3;
+	// Minimum damage to always kill
+	private _minDamageToAlwaysKill = 0.85;
+	// Check if unit has a helmet
+	private _headgearClass = toLower (headgear _unit);
+	private _isHelmet = ((_headgearClass find "helmet" != -1) ||   // generic helmets
+	(_headgearClass find "cup_h" == 0) ||     // CUP helmets
+	(_headgearClass find "6b" != -1) ||       // Russian 6b helmets
+	(_headgearClass find "rus" != -1) ||      // Russian related helmets
+	(_headgearClass find "spetsnaz" != -1));    // Special forces helmets);
+
+	// if no headgear, no protection
+	private _helmetProtection = if (_isHelmet) then {
+		0.2
+	} else {
+		0
+	};
+	private _adjustedSurviveChance = _baseSurviveChance + _helmetProtection;
+
+	if (_damage >= _minDamageToAlwaysKill) then {
+		1
+	} else {
+		private _roll = random 1;
+		if (_roll < _adjustedSurviveChance) then {
+			_damage
+		} else {
+			1
+		};
+	};
+};
+
+// ===============================
+// FUNCTION: Handle Heal
+// ===============================
+fnc_handleHeal = {
+	params ["_medic", "_injured"];
+
+	_injured setUnconscious false;
+	{
+		_injured enableAI _x
+	} forEach ["MOVE", "ANIM"];
+	_injured setCaptive false;
+	_injured setDamage 0; // FULL heal
+	_injured setUnitPos "AUTO";
+	_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
+
+	// if revived by an enemy, drop the weapon become a captive
+	if (((side _medic) getFriend (side _injured)) < 0.6) then {
+		_medic globalChat format ["%1 has become captive", name _injured];
+		[_injured, _medic] call fnc_surrender;
+		[_injured] call fnc_dropAllWeapons;
+	};
+
+	_injured setVariable ["revived", true, true];
+	if (!isNull _medic) then {
+		_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
+	};
+};
+
+// ===============================
+// FUNCTION: drop All weapons
+// ===============================
+fnc_dropAllWeapons = {
+	params ["_unit"];
+	private _pos = getPosATL _unit;
+	private _holder = createVehicle ["GroundWeaponHolder", _pos, [], 0, "CAN_COLLIDE"];
+
+	// move all weapons to the ground
+	{
+		_unit removeWeapon _x;
+		_holder addWeaponCargoGlobal [_x, 1];
+	} forEach weapons _unit;
+
+	// move all magazines for those weapons
+	{
+		_unit removeMagazine _x;
+		_holder addMagazineCargoGlobal [_x, 1];
+	} forEach magazines _unit;
+
+	removeBackpack _unit; // remove backpack too
+	removeAllItems _unit;
+};
+
+// ===============================
+// FUNCTION: Surrender
+// ===============================
+fnc_surrender = {
+	params ["_unit", "_medic"];
+	// AI won’t target them
+	_unit setCaptive true;
+	// Add to player's group silently
+	[_unit] joinSilent (group _medic);
+	_unit doFollow (leader (group _medic));
+};
+
+// ===============================
 // FUNCTION: Revive Loop (AI logic)
 // ===============================
 fnc_reviveLoop = {
@@ -272,81 +411,6 @@ fnc_reviveLoop = {
 };
 
 // ===============================
-// FUNCTION: Check if projectile is heavy explosive
-// ===============================
-fnc_isHeavyExplosive = {
-	params ["_projectile"];
-
-	if (_projectile isEqualTo "") exitWith {
-		false
-	};
-
-	private _projLower = toLower _projectile;
-
-	private _explosiveKeywords = [
-		"_he", "_shell", "_bomb", "_satchel", "_mine", "_rocket",
-		"gbu", "mk82", "mo_", "rpg", "at_", "_missile", "_howitzer",
-		"_mortar", "_demolition"
-	];
-
-	private _ignoreKeywords = [
-		"chemlight", "helmet", "wheel", "cheese" // safety words
-	];
-
-	{
-		if ((_projLower find _x) > -1) exitWith {
-			false
-		}; // Ignore takes priority
-	} forEach _ignoreKeywords;
-
-	{
-		if ((_projLower find _x) > -1) exitWith {
-			true
-		};
-	} forEach _explosiveKeywords;
-
-	false
-};
-
-// ===============================
-// FUNCTION: Headshot damage Handling
-// ===============================
-fnc_headshotDamageHandling = {
-	params ["_unit", "_damage"];
-
-	// Base chance to survive headshot
-	private _baseSurviveChance = 0.3;
-	// Minimum damage to always kill
-	private _minDamageToAlwaysKill = 0.85;
-	// Check if unit has a helmet
-	private _headgearClass = toLower (headgear _unit);
-	private _isHelmet = ((_headgearClass find "helmet" != -1) ||   // generic helmets
-	(_headgearClass find "cup_h" == 0) ||     // CUP helmets
-	(_headgearClass find "6b" != -1) ||       // Russian 6b helmets
-	(_headgearClass find "rus" != -1) ||      // Russian related helmets
-	(_headgearClass find "spetsnaz" != -1));    // Special forces helmets);
-
-	// if no headgear, no protection
-	private _helmetProtection = if (_isHelmet) then {
-		0.2
-	} else {
-		0
-	};
-	private _adjustedSurviveChance = _baseSurviveChance + _helmetProtection;
-
-	if (_damage >= _minDamageToAlwaysKill) then {
-		1
-	} else {
-		private _roll = random 1;
-		if (_roll < _adjustedSurviveChance) then {
-			_damage
-		} else {
-			1
-		};
-	};
-};
-
-// ===============================
 // FUNCTION: Handle damage
 // ===============================
 fnc_handleDamage = {
@@ -415,70 +479,6 @@ fnc_handleDamage = {
 	} else {
 		_damage
 	};
-};
-
-// ===============================
-// FUNCTION: Handle Heal
-// ===============================
-fnc_handleHeal = {
-	params ["_medic", "_injured"];
-
-	_injured setUnconscious false;
-	{
-		_injured enableAI _x
-	} forEach ["MOVE", "ANIM"];
-	_injured setCaptive false;
-	_injured setDamage 0; // FULL heal
-	_injured setUnitPos "AUTO";
-	_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
-
-	// if revived by an enemy, drop the weapon become a captive
-	if (((side _medic) getFriend (side _injured)) < 0.6) then {
-		_medic globalChat format ["%1 has become captive", name _injured];
-		[_injured, _medic] call fnc_surrender;
-		[_injured] call fnc_dropAllWeapons;
-	};
-
-	_injured setVariable ["revived", true, true];
-	if (!isNull _medic) then {
-		_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
-	};
-};
-
-// ===============================
-// FUNCTION: drop All weapons
-// ===============================
-fnc_dropAllWeapons = {
-	params ["_unit"];
-	private _pos = getPosATL _unit;
-	private _holder = createVehicle ["GroundWeaponHolder", _pos, [], 0, "CAN_COLLIDE"];
-
-	// move all weapons to the ground
-	{
-		_unit removeWeapon _x;
-		_holder addWeaponCargoGlobal [_x, 1];
-	} forEach weapons _unit;
-
-	// move all magazines for those weapons
-	{
-		_unit removeMagazine _x;
-		_holder addMagazineCargoGlobal [_x, 1];
-	} forEach magazines _unit;
-
-	removeBackpack _unit; // remove backpack too
-	removeAllItems _unit;
-};
-
-// ===============================
-// FUNCTION: Surrender
-// ===============================
-fnc_surrender = {
-	params ["_unit", "_medic"];
-	// AI won’t target them
-	_unit setCaptive true;
-	// Add to player's group silently
-	[_unit] joinSilent (group _medic);
-	_unit doFollow (leader (group _medic));
 };
 
 // ===============================
