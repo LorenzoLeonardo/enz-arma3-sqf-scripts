@@ -6,7 +6,7 @@
 // 
 // Description:
 // This script implements a fully AI-driven revive system for incapacitated units, allowing friendly (and in some
-// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection, 
+// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection,  
 // realistic bleedout timers, headshot and explosive damage handling, and dynamic prioritization of medics
 // based on proximity, threat levels, and availability.
 // 
@@ -69,7 +69,7 @@ fnc_findNearestUnit = {
 	private _nearestDist = 1e10;  // a very large distance
 
 	{
-		private _dist = _pos distance _x;
+		private _dist = _pos distance2D _x;
 		if (_dist < _nearestDist) then {
 			_nearestDist = _dist;
 			_nearestUnit = _x;
@@ -131,7 +131,7 @@ fnc_getBestMedic = {
 	private _nearestMedicDist = if (isNull _nearestMedic) then {
 		1e10
 	} else {
-		_injured distance _nearestMedic
+		_injured distance2D _nearestMedic
 	};
 
 	// find nearest enemy
@@ -142,7 +142,7 @@ fnc_getBestMedic = {
 	private _nearestEnemyDist = if (isNull _nearestEnemy) then {
 		1e10
 	} else {
-		_injured distance _nearestEnemy
+		_injured distance2D _nearestEnemy
 	};
 
 	// Enemy revival logic if friendlies too far
@@ -189,7 +189,7 @@ fnc_bleedoutTimer = {
 fnc_getDynamicTimeout = {
 	params ["_medic", "_injured"];
 
-	private _pathDist = _medic distance _injured;
+	private _pathDist = _medic distance2D _injured;
 
 	// 10 sec base + (distance / 3 m/s), capped at 90 sec
 	time + ((10 max (_pathDist / 3)) min 90)
@@ -255,13 +255,13 @@ fnc_waitForMedicArrival = {
 		sleep 1;
 		(!alive _injured)
 		|| ([_injured] call fnc_isRevived)
-		|| (_medic distance _injured < REVIVE_RANGE)
+		|| (_medic distance2D _injured < REVIVE_RANGE)
 		|| (!alive _medic)
 		|| (lifeState _medic == "INCAPACITATED")
 		|| (time > _timeout)
 	};
 
-	(_medic distance _injured) < REVIVE_RANGE
+	(_medic distance2D _injured) < REVIVE_RANGE
 };
 
 // ===============================
@@ -556,7 +556,7 @@ fnc_handleDamage = {
 	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
 
 	if (_isHeavyExplosive) then {
-		private _dist = _unit distance _source;
+		private _dist = _unit distance2D _source;
 
 		if (_dist <= 3) exitWith {
 			1
