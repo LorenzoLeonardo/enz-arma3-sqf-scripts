@@ -410,6 +410,9 @@ fnc_reviveLoop = {
 	};
 };
 
+// =======================================================
+// START: Getter/Setters for Revive States
+// =======================================================
 fnc_isInReviveProcess = {
 	params ["_unit"];
 	_unit getVariable ["isInReviveProcess", false]
@@ -449,6 +452,9 @@ fnc_setReviving = {
 	params ["_unit", "_state"];
 	_unit setVariable ["reviving", _state, true];
 };
+// =======================================================
+// END: Getter/Setters for Revive States
+// =======================================================
 
 // ===============================
 // FUNCTION: Handle damage
