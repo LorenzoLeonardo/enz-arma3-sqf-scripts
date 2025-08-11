@@ -213,7 +213,7 @@ fnc_getDynamicTimeout = {
 // ===============================
 // FUNCTION: Reset Revive State
 // ===============================
-fnc_resetReviveState = {
+fnc_unlockReviveState = {
 	params ["_medic", "_injured"];
 
 	if (!isNull _medic) then {
@@ -227,9 +227,35 @@ fnc_resetReviveState = {
 		[_medic, false] call fnc_setReviving;
 	};
 
-	if (!isNull _injured && !([_injured] call fnc_isRevived)) then {
+	if (!isNull _injured) then {
 		[_injured, false] call fnc_setBeingRevived;
 	};
+};
+
+// ===============================
+// FUNCTION: Start Revive State
+// ===============================
+fnc_lockReviveState = {
+	params ["_medic", "_injured"];
+	// lock injured and medic
+	if (!isNull _medic) then {
+		[_medic, true] call fnc_setReviving;
+	};
+
+	if (!isNull _injured) then {
+		[_injured, true] call fnc_setBeingRevived;
+	};
+
+	doStop _medic;
+	_medic stop false;
+	// Make sure no custom animation is locking movement
+	_medic switchMove "";
+	// Disable combat distractions
+	{
+		_medic disableAI _x
+	} forEach ["AUTOCOMBAT", "TARGET", "SUPPRESSION"];
+	// Allow AI to choose stance for movement
+	_medic setUnitPos "AUTO";
 };
 
 // ===============================
@@ -404,7 +430,7 @@ fnc_reviveLoop = {
 		sleep 3;
 		if (!alive _injured || ([_injured] call fnc_isRevived)) exitWith {
 			if (!isNull _medic) then {
-				[_medic, _injured] call fnc_resetReviveState;
+				[_medic, _injured] call fnc_unlockReviveState;
 			};
 		};
 		// Skip if already being revived
@@ -425,19 +451,8 @@ fnc_reviveLoop = {
 		};
 
 		// lock injured and medic
-		[_injured, true] call fnc_setBeingRevived;
-		[_medic, true] call fnc_setReviving;
+		[_medic, _injured] call fnc_lockReviveState;
 
-		doStop _medic;
-		_medic stop false;
-		// Make sure no custom animation is locking movement
-		_medic switchMove "";
-		// Disable combat distractions
-		{
-			_medic disableAI _x
-		} forEach ["AUTOCOMBAT", "TARGET", "SUPPRESSION"];
-		// Allow AI to choose stance for movement
-		_medic setUnitPos "AUTO";
 		_medic doMove (position _injured);
 
 		 // Wait for medic arrival
@@ -447,7 +462,7 @@ fnc_reviveLoop = {
 			if (!isNull _medic) then {
 				_medic globalChat format ["%1 has failed to come to revive %2.", name _medic, name _injured];
 			};
-			[_medic, _injured] call fnc_resetReviveState;
+			[_medic, _injured] call fnc_unlockReviveState;
 			continue;
 		};
 		if (([_medic] call fnc_isUnitGood) && alive _injured) then {
@@ -476,7 +491,7 @@ fnc_reviveLoop = {
 			};
 			if (!([_medic] call fnc_isUnitGood)) then {
 				_medic globalChat format ["%1 was incapacitated or died while reviving %2.", name _medic, name _injured];
-				[_medic, _injured] call fnc_resetReviveState;
+				[_medic, _injured] call fnc_unlockReviveState;
 				continue;
 			};
 
@@ -484,17 +499,9 @@ fnc_reviveLoop = {
 			[_medic, _injured] call fnc_handleHeal;
 		};
 		// Always reset states after attempt
-		[_medic, _injured] call fnc_resetReviveState;
+		[_medic, _injured] call fnc_unlockReviveState;
 	};
-	// if time runs out and still not revived, unlock
-	if (!([_injured] call fnc_isRevived)) then {
-		[_injured, false] call fnc_setBeingRevived;
-	};
-
-	// Reset medic in case loop ended unexpectedly
-	if (!isNull _medic) then {
-		[_medic, _injured] call fnc_resetReviveState;
-	};
+	[_medic, _injured] call fnc_unlockReviveState;
 };
 
 // =======================================================
