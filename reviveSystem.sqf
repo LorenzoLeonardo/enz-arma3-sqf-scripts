@@ -106,7 +106,7 @@ fnc_bleedoutTimer = {
 
 	// if still incapacitated after bleedout time, kill them
 	if (lifeState _injured == "INCAPACITATED" && !(_injured getVariable ["beingRevived", false])) then {
-		_injured setVariable ["isInReviveProcess", false, true];
+		[_injured, false] call fnc_setReviveProcess;
 		_injured setDamage 1; // Bleed out
 	};
 };
@@ -410,6 +410,16 @@ fnc_reviveLoop = {
 	};
 };
 
+fnc_isInReviveProcess = {
+	params ["_unit"];
+	_unit getVariable ["isInReviveProcess", false]
+};
+
+fnc_setReviveProcess = {
+	params ["_unit", "_state"];
+	_unit setVariable ["isInReviveProcess", _state, true];
+};
+
 // ===============================
 // FUNCTION: Handle damage
 // ===============================
@@ -459,8 +469,8 @@ fnc_handleDamage = {
 		_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
 
 		// Prevent multiple revive loops from stacking
-		if (!(_unit getVariable ["isInReviveProcess", false])) then {
-			_unit setVariable ["isInReviveProcess", true, true];
+		if (!([_unit] call fnc_isInReviveProcess)) then {
+			[_unit, true] call fnc_setReviveProcess;
 
 			// Bleeding out timer
 			[_unit] spawn fnc_bleedoutTimer;
@@ -471,7 +481,7 @@ fnc_handleDamage = {
 				[_injured] call fnc_reviveLoop;
 
 				// Reset the process flag after loop ends
-				_injured setVariable ["isInReviveProcess", false, true];
+				[_injured, false] call fnc_setReviveProcess;
 			};
 		};
 
@@ -490,7 +500,7 @@ fnc_handleDamage = {
 	}];
 	_x addEventHandler ["Killed", {
 		params ["_unit"];
-		_unit setVariable ["isInReviveProcess", false];
+		[_unit, false] call fnc_setReviveProcess;
 		_unit setVariable ["beingRevived", false];
 		_unit setVariable ["reviving", false];
 		_unit setVariable ["revived", false];
