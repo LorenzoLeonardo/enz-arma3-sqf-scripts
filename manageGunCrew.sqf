@@ -9,6 +9,26 @@ params ["_gun", "_group"];
 	};
 };
 
+// ===============================
+// FUNCTION: find Nearest Unit
+// ===============================
+fnc_findNearestUnit = {
+	params ["_pos", "_candidates"];
+
+	private _nearestUnit = objNull;
+	private _nearestDist = 1e10;  // a very large distance
+
+	{
+		private _dist = _pos distance _x;
+		if (_dist < _nearestDist) then {
+			_nearestDist = _dist;
+			_nearestUnit = _x;
+		};
+	} forEach _candidates;
+
+	_nearestUnit
+};
+
 // Function to find a suitable gunner
 private _findReplacementGunner = {
 	params ["_group", "_gun"];
@@ -28,12 +48,8 @@ private _findReplacementGunner = {
 		objNull
 	};
 
-	private _sorted = [_candidates, [], {
-		params ["_x"];
-		_x distance _gun
-	}] call BIS_fnc_sortBy;
-
-	_sorted select 0
+	private _gunner = [_gun, _candidates] call fnc_findNearestUnit;
+	_gunner
 };
 
 // Monitor gun and assign AI if unmanned

@@ -21,6 +21,26 @@ fnc_isUnitGood = {
 };
 
 // ===============================
+// FUNCTION: find Nearest Unit
+// ===============================
+fnc_findNearestUnit = {
+	params ["_pos", "_candidates"];
+
+	private _nearestUnit = objNull;
+	private _nearestDist = 1e10;  // a very large distance
+
+	{
+		private _dist = _pos distance _x;
+		if (_dist < _nearestDist) then {
+			_nearestDist = _dist;
+			_nearestUnit = _x;
+		};
+	} forEach _candidates;
+
+	_nearestUnit
+};
+
+// ===============================
 // FUNCTION: get Best Medic
 // ===============================
 fnc_getBestMedic = {
@@ -75,12 +95,9 @@ fnc_getBestMedic = {
 		objNull
 	};
 
-	// sort by distance
-	_candidates = [_candidates, [], {
-		params ["_x"];
-		_x distance _injured
-	}, "ASCEND"] call BIS_fnc_sortBy;
-	private _medic = _candidates select 0;
+	// get the nearest unit
+	private _medic = [_injured, _candidates] call fnc_findNearestUnit;
+
 	if (!isNull _medic) then {
 		_medic globalChat format ["%1 will revive %2", name _medic, name _injured];
 	};
