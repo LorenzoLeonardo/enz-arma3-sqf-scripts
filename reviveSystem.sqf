@@ -96,13 +96,13 @@ fnc_bleedoutTimer = {
 	waitUntil {
 		sleep 1;
 		!alive _injured                                    // Dead
-		|| (_injured getVariable ["revived", false])       // Revived
+		|| ([_injured] call fnc_isRevived)       // Revived
 		|| (lifeState _injured != "INCAPACITATED")         // No longer incapacitated
 		|| ((time - _startTime) >= BLEEDOUT_TIME)          // Timer expired
 	};
 
 	// exit if revived or dead
-	if (!alive _injured || (_injured getVariable ["revived", false])) exitWith {};
+	if (!alive _injured || ([_injured] call fnc_isRevived)) exitWith {};
 
 	// if still incapacitated after bleedout time, kill them
 	if (lifeState _injured == "INCAPACITATED" && !([_injured] call fnc_isBeingRevived)) then {
@@ -140,7 +140,7 @@ fnc_resetReviveState = {
 		_medic setVariable ["reviving", false, true];
 	};
 
-	if (!isNull _injured && !(_injured getVariable ["revived", false])) then {
+	if (!isNull _injured && !([_injured] call fnc_isRevived)) then {
 		[_injured, false] call fnc_setBeingRevived;
 	};
 };
@@ -156,7 +156,7 @@ fnc_waitForMedicArrival = {
 	waitUntil {
 		sleep 1;
 		(!alive _injured)
-		|| (_injured getVariable ["revived", false])
+		|| ([_injured] call fnc_isRevived)
 		|| (_medic distance _injured < REVIVE_RANGE)
 		|| (!alive _medic)
 		|| (lifeState _medic == "INCAPACITATED")
@@ -263,7 +263,7 @@ fnc_handleHeal = {
 		[_injured] call fnc_dropAllWeapons;
 	};
 
-	_injured setVariable ["revived", true, true];
+	[_injured, true] call fnc_setRevived;
 	if (!isNull _medic) then {
 		_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
 	};
@@ -313,9 +313,9 @@ fnc_reviveLoop = {
 	private _loopTimeout = time + BLEEDOUT_TIME; // max 5 minutes to try reviving
 	private _medic = objNull;
 
-	while { (alive _injured) && !( _injured getVariable ["revived", false]) && (time < _loopTimeout) } do {
+	while { (alive _injured) && !([_injured] call fnc_isRevived) && (time < _loopTimeout) } do {
 		sleep 3;
-		if (!alive _injured || (_injured getVariable ["revived", false])) exitWith {
+		if (!alive _injured || ([_injured] call fnc_isRevived)) exitWith {
 			if (!isNull _medic) then {
 				[_medic, _injured] call fnc_resetReviveState;
 			};
@@ -400,7 +400,7 @@ fnc_reviveLoop = {
 		[_medic, _injured] call fnc_resetReviveState;
 	};
 	// if time runs out and still not revived, unlock
-	if (!(_injured getVariable ["revived", false])) then {
+	if (!([_injured] call fnc_isRevived)) then {
 		[_injured, false] call fnc_setBeingRevived;
 	};
 
@@ -428,6 +428,16 @@ fnc_isBeingRevived = {
 fnc_setBeingRevived = {
 	params ["_unit", "_state"];
 	_unit setVariable ["beingRevived", _state, true];
+};
+
+fnc_isRevived = {
+	params ["_unit"];
+	_unit getVariable ["revived", false]
+};
+
+fnc_setRevived = {
+	params ["_unit", "_state"];
+	_unit setVariable ["revived", _state, true];
 };
 
 // ===============================
@@ -474,7 +484,7 @@ fnc_handleDamage = {
 		} forEach ["MOVE", "ANIM"];
 		_unit setCaptive true;
 		// Reset revive state for NEW incapacitation
-		_unit setVariable ["revived", false, true];
+		[_unit, false] call fnc_setRevived;
 		[_unit, false] call fnc_setBeingRevived;
 		_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
 
@@ -513,6 +523,6 @@ fnc_handleDamage = {
 		[_unit, false] call fnc_setReviveProcess;
 		[_unit, false] call fnc_setBeingRevived;
 		_unit setVariable ["reviving", false];
-		_unit setVariable ["revived", false];
+		[_unit, false] call fnc_setRevived;
 	}];
 } forEach units _group;
