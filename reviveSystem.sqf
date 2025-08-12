@@ -43,7 +43,7 @@
 
 #define BLEEDOUT_TIME 300 // 5 minutes
 #define REVIVE_RANGE 3 // 3 meters
-#define FRIENDLY_MEDIC_FAR_THRESHOLD 200 // 200 meters
+#define FRIENDLY_MEDIC_FAR_THRESHOLD 120 // 120 meters
 
 params ["_group"];
 
