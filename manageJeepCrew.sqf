@@ -97,8 +97,7 @@ fnc_getReplacement = {
 		if (!([_driver] call fnc_isUnitGood)) then {
 			private _replacement = [_vehicle] call fnc_getReplacement;
 			if (([_replacement] call fnc_isUnitGood)) then {
-				_replacement assignAsDriver _vehicle;
-				[_replacement] orderGetIn true;
+				_replacement moveInDriver _vehicle;
 			};
 		};
 
@@ -108,8 +107,7 @@ fnc_getReplacement = {
 			if (!([_unit] call fnc_isUnitGood)) then {
 				private _replacement = [_vehicle] call fnc_getReplacement;
 				if (([_replacement] call fnc_isUnitGood)) then {
-					_replacement assignAsTurret [_vehicle, _x];
-					[_replacement] orderGetIn true;
+					_replacement moveInTurret [_vehicle, _x];
 				};
 			};
 		} forEach _turrets;
