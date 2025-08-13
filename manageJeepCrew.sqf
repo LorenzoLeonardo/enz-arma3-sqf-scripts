@@ -1,91 +1,90 @@
+/*
+	    manageJeepCrew.sqf
+	    Usage: [vehicle] execVM "manageJeepCrew.sqf";
+
+	    Automatically replaces dead driver or turret crew with nearest available
+	    group member not in a vehicle.
+
+	    Works for:
+	    - driver
+	    - Any turret seat (supports multi-seat turrets)
+*/
+
 params ["_vehicle"];
 
-private _group = group _vehicle;
+fnc_isUnitGood = {
+	!(isNull _x) && alive _x && lifeState _x != "INCAPACITATED"
+};
 
-while { alive _vehicle } do {
-	// === driver MANAGEMENT ===
-	private _currentDriver = driver _vehicle;
-	private _leader = leader _group;
-
-	if (isNull _currentDriver || {
-		!alive _currentDriver
-	}) then {
-		if (!isNull _currentDriver && {
-			!alive _currentDriver && _currentDriver in _vehicle
-		}) then {
-			moveOut _currentDriver;
-			unassignVehicle _currentDriver;
-		};
-
-		private _crewInVehicle = crew _vehicle;
-		private _replacementDriver = objNull;
-
-		{
-			if (
-			alive _x &&
-			!isPlayer _x &&
-			_x in _vehicle &&
-			_x != _leader &&
-			assignedVehicleRole _x isNotEqualTo ["driver"]
-			) exitWith {
-				_replacementDriver = _x;
-			};
-		} forEach _crewInVehicle;
-
-		if (!isNull _replacementDriver) then {
-			_replacementDriver assignAsDriver _vehicle;
-			[_replacementDriver] orderGetIn true;
-			waitUntil {
-				driver _vehicle == _replacementDriver || {
-					!alive _replacementDriver
-				}
-			};
-		};
+// Helper function: get nearest available unit from the same group
+fnc_getReplacement = {
+	params ["_vehicle"];
+	private _grp = group _vehicle;
+	private _candidates = (units _grp) select {
+		([_x] call fnc_isUnitGood) &&
+		isNull objectParent _x &&
+		!isPlayer _x
 	};
 
-	// === gunner MANAGEMENT ===
-	private _gunnerSeats = fullCrew [_vehicle, "gunner", true];
+	if (_candidates isEqualTo []) exitWith {
+		objNull
+	};
+
+	private _nearest = objNull;
+	private _nearestDist = 1e10;
 
 	{
-		private _seatInfo = _x;
-		private _currentGunner = _seatInfo select 0;
+		private _dist = _x distance _vehicle;
+		if (_dist < _nearestDist) then {
+			_nearestDist = _dist;
+			_nearest = _x;
+		};
+	} forEach _candidates;
 
-		if (isNull _currentGunner || {
-			!alive _currentGunner
-		}) then {
-			if (!isNull _currentGunner && {
-				!alive _currentGunner && _currentGunner in _vehicle
-			}) then {
-				moveOut _currentGunner;
-				unassignVehicle _currentGunner;
-			};
+	_nearest
+};
 
-			private _replacementGunner = objNull;
-			private _groupUnits = units _group;
+// get all turret paths except driver
 
-			{
-				if (
-				alive _x &&
-				!isPlayer _x &&
-				_x != _leader &&
-				!(_x in _vehicle) &&
-				isNull assignedVehicle _x
-				) exitWith {
-					_replacementGunner = _x;
-				};
-			} forEach _groupUnits;
+// Periodic replacement check (driver + turrets)
+[_vehicle] spawn {
+	params ["_vehicle", "_turrets"];
+	private _turrets = allTurrets [_vehicle, false];
 
-			if (!isNull _replacementGunner) then {
-				_replacementGunner assignAsGunner _vehicle;
-				[_replacementGunner] orderGetIn true;
-				waitUntil {
-					(_replacementGunner in _vehicle) || {
-						!alive _replacementGunner
-					}
-				};
+	while { alive _vehicle } do {
+		// Wait until either driver or any turret seat becomes invalid
+		waitUntil {
+			sleep 0.1; // Small delay to avoid CPU spam
+			private _driverBad = !([driver _vehicle] call fnc_isUnitGood);
+			private _turretBad = _turrets findIf {
+				!([_vehicle turretUnit _x] call fnc_isUnitGood)
+			} != -1;
+			_driverBad || _turretBad || {
+				!alive _vehicle
+			}
+		};
+		if (!alive _vehicle) exitWith {};
+
+		// 1. Check driver
+		private _driver = driver _vehicle;
+		if (!([_driver] call fnc_isUnitGood)) then {
+			private _replacement = [_vehicle] call fnc_getReplacement;
+			if (([_replacement] call fnc_isUnitGood)) then {
+				_replacement moveInDriver _vehicle;
 			};
 		};
-	} forEach _gunnerSeats;
 
-	sleep 1;
+		// 2. Check each turret
+		{
+			private _unit = _vehicle turretUnit _x;
+			if (!([_unit] call fnc_isUnitGood)) then {
+				private _replacement = [_vehicle] call fnc_getReplacement;
+				if (([_replacement] call fnc_isUnitGood)) then {
+					_replacement moveInTurret [_vehicle, _x];
+				};
+			};
+		} forEach _turrets;
+
+		sleep 1; // Check every second
+	};
 };
