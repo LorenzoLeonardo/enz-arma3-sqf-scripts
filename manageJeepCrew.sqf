@@ -1,56 +1,61 @@
 // ==============================================================================================================
-// AI crew Management Script
+// AI crew Management Script (Event Handler Version)
 // Author: Lorenzo Leonardo
 // Contact: enzotechcomputersolutions@gmail.com
 // ==============================================================================================================
 // 
 // Description:
-// This script automatically manages vehicle crew composition by replacing incapacitated or dead crew members 
-// (driver and turret operators) with the nearest available AI unit from the same group. It ensures that vehicles 
-// remain operational in combat by dynamically reassigning idle AI to critical crew positions. The replacement 
-// process uses `assignAs...` and `orderGetIn` commands so units physically move to the vehicle instead of 
-// instantly teleporting, providing more immersive and realistic behavior.
+// This script manages AI crew in vehicles by replacing incapacitated or dead crew members with the nearest
+// available AI from the same group. It now uses event handlers (`GetIn`, `GetOut`, `Killed`) to detect seat
+// changes instantly, removing the timing issues with `turretUnit` returning objNull.
 // 
 // Features:
-// - Automatically replaces incapacitated or dead drivers.
-// - Automatically replaces turret crew for any number of turret seats (supports multi-seat turrets).
-// - Selects nearest available AI from the same group to minimize downtime.
-// - Uses AI movement (`orderGetIn`) for realistic crew changes (no instant teleport).
-// - Avoids assigning player units to vehicle seats.
-// - Works continuously until the vehicle is destroyed.
-// - Efficient `waitUntil`-based monitoring to avoid unnecessary CPU usage.
+// - Automatically replaces incapacitated or dead drivers/turret operators
+// - Supports any number of turret seats
+// - Uses `orderGetIn` for realism (can switch to `moveIn...` for instant assignment)
+// - Avoids assigning player units
+// - Refreshes turret list dynamically
+// - Event handler driven (no delay from polling)
 // 
 // Parameters:
-//   _vehicle                       - The vehicle to monitor and manage crew for.
+//   _vehicle - The vehicle to monitor and manage crew for
 // 
-// Functions:
-//   fnc_isUnitGood                 - Checks if a unit is alive, not incapacitated, and exists.
-//   fnc_getReplacement             - Finds the nearest available AI from the vehicle's group.
-// 
-// Usage Example:
+// Usage:
 //   [myVehicle] execVM "manageJeepCrew.sqf";
-// 
-// Notes:
-// - Designed for AI-only crew management; player seats are excluded from replacement.
-// - Works with land vehicles, boats, and aircraft that have defined turret paths.
-// - Can be expanded with event handlers (`Killed`, `GetOut`) for even faster reaction times.
-// - Intended for server-side execution to ensure consistent behavior for all clients.
-// ==================================================================================================
+// ==============================================================================================================
 
 params ["_vehicle"];
 
+// =============================
+// Helper: Check if unit is valid
+// =============================
 fnc_isUnitGood = {
-	!(isNull _x) && alive _x && lifeState _x != "INCAPACITATED"
+	params ["_unit"];
+	!(isNull _unit) && {
+		alive _unit
+	} && {
+		lifeState _unit != "INCAPACITATED"
+	}
 };
 
-// Helper function: get nearest available unit from the same group
+// =============================
+// Helper: get nearest available AI from same group
+// =============================
 fnc_getReplacement = {
 	params ["_vehicle"];
-	private _grp = group _vehicle;
+
+	private _assignedUnits = _vehicle getVariable ["assignedUnits", []];
+
+	private _grp = if (!isNull driver _vehicle) then {
+		group driver _vehicle
+	} else {
+		group effectiveCommander _vehicle
+	};
 	private _candidates = (units _grp) select {
 		([_x] call fnc_isUnitGood) &&
 		isNull objectParent _x &&
-		!isPlayer _x
+		!isPlayer _x &&
+		!(_x in _assignedUnits)
 	};
 
 	if (_candidates isEqualTo []) exitWith {
@@ -59,7 +64,6 @@ fnc_getReplacement = {
 
 	private _nearest = objNull;
 	private _nearestDist = 1e10;
-
 	{
 		private _dist = _x distance _vehicle;
 		if (_dist < _nearestDist) then {
@@ -71,47 +75,82 @@ fnc_getReplacement = {
 	_nearest
 };
 
-// get all turret paths except driver
+// ===========================================
+// Function: Assign replacement to given seat
+// ===========================================
+fnc_assignReplacement = {
+	params ["_vehicle", "_role", "_turretPath"];
 
-// Periodic replacement check (driver + turrets)
-[_vehicle] spawn {
-	params ["_vehicle", "_turrets"];
-	private _turrets = allTurrets [_vehicle, false];
+	private _assignedUnits = _vehicle getVariable ["assignedUnits", []];
+	private _replacement = [_vehicle] call fnc_getReplacement;
 
-	while { alive _vehicle } do {
-		// Wait until either driver or any turret seat becomes invalid
-		waitUntil {
-			sleep 0.1; // Small delay to avoid CPU spam
-			private _driverBad = !([driver _vehicle] call fnc_isUnitGood);
-			private _turretBad = _turrets findIf {
-				!([_vehicle turretUnit _x] call fnc_isUnitGood)
-			} != -1;
-			_driverBad || _turretBad || {
-				!alive _vehicle
-			}
-		};
-		if (!alive _vehicle) exitWith {};
-
-		// 1. Check driver
-		private _driver = driver _vehicle;
-		if (!([_driver] call fnc_isUnitGood)) then {
-			private _replacement = [_vehicle] call fnc_getReplacement;
-			if (([_replacement] call fnc_isUnitGood)) then {
-				_replacement moveInDriver _vehicle;
-			};
-		};
-
-		// 2. Check each turret
-		{
-			private _unit = _vehicle turretUnit _x;
-			if (!([_unit] call fnc_isUnitGood)) then {
-				private _replacement = [_vehicle] call fnc_getReplacement;
-				if (([_replacement] call fnc_isUnitGood)) then {
-					_replacement moveInTurret [_vehicle, _x];
-				};
-			};
-		} forEach _turrets;
-
-		sleep 1; // Check every second
+	if (isNull _replacement) exitWith {
+		systemChat "No AI available to replace!";
 	};
+
+	systemChat format ["Assigning %1 to seat: %2", name _replacement, _role];
+
+	switch (true) do {
+		case (_role == "driver"): {
+			systemChat format ["DRIVER: %1", _replacement];
+			_replacement moveInDriver _vehicle;
+		};
+		case (_role == "gunner"): {
+			systemChat format ["GUNNER: %1 PATH: %2", _replacement, _turretPath];
+			_replacement moveInTurret [_vehicle, _turretPath];
+		};
+		case (_role == "turret"): {
+			systemChat format ["TURRET: %1 PATH: %2", _replacement, _turretPath];
+			_replacement moveInTurret [_vehicle, _turretPath];
+		};
+		case (_role == "commander"): {
+			systemChat format ["COMMANDER: %1", _replacement];
+			_replacement moveInCommander _vehicle;
+		};
+		default {
+			systemChat format ["UNDEFINED ROLE: %1", _role];
+		};
+	};
+
+	_assignedUnits pushBackUnique _replacement;
+	_vehicle setVariable ["assignedUnits", _assignedUnits, true]; // public so MP safe
 };
+
+// =============================
+// EVENT HANDLERS
+// =============================
+
+// Prepare global variable for this vehicle
+_vehicle setVariable ["assignedUnits", [], true];
+
+// Handle GetOut event
+_vehicle addEventHandler ["GetOut", {
+	params ["_veh", "_role", "_unit", "_turretPath"];
+	if (isPlayer _unit) exitWith {};
+	if (alive _veh) then {
+		switch (true) do {
+			case (_role == "driver"): {
+				[_veh, "driver", _turretPath] call fnc_assignReplacement;
+			};
+			case (_role == "gunner"): {
+				[_veh, "gunner", _turretPath] call fnc_assignReplacement;
+			};
+			case (_role == "turret"): {
+				[_veh, "turret", _turretPath] call fnc_assignReplacement;
+			};
+			case (_role == "commander"): {
+				[_veh, "commander", _turretPath] call fnc_assignReplacement;
+			};
+			default {
+				[_veh, _role, _turretPath] call fnc_assignReplacement;
+			};
+		};
+	};
+}];
+
+// Handle vehicle destroyed
+_vehicle addEventHandler ["Killed", {
+	params ["_veh"];
+	_veh setVariable ["assignedUnits", [], true];
+	systemChat format ["Vehicle %1 destroyed - crew list cleared", _veh];
+}];
