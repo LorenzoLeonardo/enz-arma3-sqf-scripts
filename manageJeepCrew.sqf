@@ -1,14 +1,41 @@
-/*
-	    manageJeepCrew.sqf
-	    Usage: [vehicle] execVM "manageJeepCrew.sqf";
-
-	    Automatically replaces dead driver or turret crew with nearest available
-	    group member not in a vehicle.
-
-	    Works for:
-	    - driver
-	    - Any turret seat (supports multi-seat turrets)
-*/
+// ==============================================================================================================
+// AI crew Management Script
+// Author: Lorenzo Leonardo
+// Contact: enzotechcomputersolutions@gmail.com
+// ==============================================================================================================
+// 
+// Description:
+// This script automatically manages vehicle crew composition by replacing incapacitated or dead crew members 
+// (driver and turret operators) with the nearest available AI unit from the same group. It ensures that vehicles 
+// remain operational in combat by dynamically reassigning idle AI to critical crew positions. The replacement 
+// process uses `assignAs...` and `orderGetIn` commands so units physically move to the vehicle instead of 
+// instantly teleporting, providing more immersive and realistic behavior.
+// 
+// Features:
+// - Automatically replaces incapacitated or dead drivers.
+// - Automatically replaces turret crew for any number of turret seats (supports multi-seat turrets).
+// - Selects nearest available AI from the same group to minimize downtime.
+// - Uses AI movement (`orderGetIn`) for realistic crew changes (no instant teleport).
+// - Avoids assigning player units to vehicle seats.
+// - Works continuously until the vehicle is destroyed.
+// - Efficient `waitUntil`-based monitoring to avoid unnecessary CPU usage.
+// 
+// Parameters:
+//   _vehicle                       - The vehicle to monitor and manage crew for.
+// 
+// Functions:
+//   fnc_isUnitGood                 - Checks if a unit is alive, not incapacitated, and exists.
+//   fnc_getReplacement             - Finds the nearest available AI from the vehicle's group.
+// 
+// Usage Example:
+//   [myVehicle] execVM "manageJeepCrew.sqf";
+// 
+// Notes:
+// - Designed for AI-only crew management; player seats are excluded from replacement.
+// - Works with land vehicles, boats, and aircraft that have defined turret paths.
+// - Can be expanded with event handlers (`Killed`, `GetOut`) for even faster reaction times.
+// - Intended for server-side execution to ensure consistent behavior for all clients.
+// ==================================================================================================
 
 params ["_vehicle"];
 
@@ -70,7 +97,8 @@ fnc_getReplacement = {
 		if (!([_driver] call fnc_isUnitGood)) then {
 			private _replacement = [_vehicle] call fnc_getReplacement;
 			if (([_replacement] call fnc_isUnitGood)) then {
-				_replacement moveInDriver _vehicle;
+				_replacement assignAsDriver _vehicle;
+				[_replacement] orderGetIn true;
 			};
 		};
 
@@ -80,7 +108,8 @@ fnc_getReplacement = {
 			if (!([_unit] call fnc_isUnitGood)) then {
 				private _replacement = [_vehicle] call fnc_getReplacement;
 				if (([_replacement] call fnc_isUnitGood)) then {
-					_replacement moveInTurret [_vehicle, _x];
+					_replacement assignAsTurret [_vehicle, _x];
+					[_replacement] orderGetIn true;
 				};
 			};
 		} forEach _turrets;
