@@ -5,14 +5,16 @@
 // ==============================================================================================================
 // 
 // Description:
-// This script provides flexible AI-controlled mortar and artillery fire support in two modes:
+// This script provides flexible player or AI-controlled mortar and artillery fire support in three modes:
 //     SCOUT - Fires only when a designated scout group's leader detects and identifies enemies.
 //     AUTO  - Automatically scans for enemy unit clusters within a set detection range of the gun.
+//    MAP   - Fires only when a player opens tha map and click on a target location.
 // It unifies both functionalities into one configurable system.
 // 
 // Features:
 // - SCOUT mode: Fires based on a scout leader's spotted enemies.
 // - AUTO mode: Continuously scans for enemy clusters within detection range.
+// - MAP mode: Fires when player clicks on the desired location on the map.
 // - Groups enemies into clusters before engagement.
 // - Prevents redundant targeting by tracking claimed zones.
 // - Configurable rounds per strike, cluster size, accuracy, and cooldown.
@@ -34,9 +36,11 @@
 // Usage Example:
 // [this, 10000, 8, 50, 8, 60, true, 50, 25] execVM "unifiedArtilleryFire.sqf"; (AUTO mode with specified accuracy radius)
 // [this, group, 8, 50, 8, 60, true, 50, 25] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode with specified accuracy radius)
+// [this, player, 8, 50, 8, 60, true, 50, 25] execVM "unifiedArtilleryFire.sqf"; (MAP mode with specified accuracy radius)
 // 
 // [this, 10000, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (AUTO mode without specified accuracy radius, used gunner's skill to determine scatter)
 // [this, group, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode without specified accuracy radius, used gunner's skill to determine scatter)
+// [this, player, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (MAP mode without specified accuracy radius, used gunner's skill to determine scatter)
 // ==============================================================================================================
 
 // =====================
@@ -45,7 +49,7 @@
 
 // _gun = the artillery or mortar gun object
 private _gun = _this param [0];
-// _genericParam = either a number for AUTO mode or an object for SCOUT mode
+// _genericParam = either a number for AUTO mode or an object for SCOUT mode or player for MAP mode
 private _genericParam = _this param [1];
 // _rounds = number of rounds to fire at each cluster (default: 8)
 private _rounds = _this param [2, 8];
@@ -86,6 +90,13 @@ switch (typeName _genericParam) do {
 		_detectionRange = 0; // No detection range in SCOUT mode
 		_scoutGroup = _genericParam; // Use the provided object as the scout group
 		hint format ["Artillery SCOUT mode activated with scout group: %1", groupId _scoutGroup];
+	};
+	case "OBJECT": {
+		sleep 3; // Allow time for the gun to initialize
+		_mode = "MAP";
+		_detectionRange = 0; // No detection range in SCOUT mode
+		_scoutGroup = objNull; // Use the provided object as the scout group
+		hint "Artillery MAP mode activated";
 	};
 	default {
 		// Unsupported type
@@ -320,6 +331,13 @@ fnc_fireGun = {
 	sleep 3;  // small delay before firing
 
 	// --- 2. fire the artillery ---
+	private _canReach = _finalPos inRangeOfArtillery [[_gun], _ammoType];
+	if (!_canReach) exitWith {
+		_base sideRadio "CannotExecuteThatsOutsideOurFiringEnvelope";
+		sleep 2;
+		deleteMarker _marker;
+		false
+	};
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
@@ -472,71 +490,103 @@ fnc_selectEnemiesByMode = {
 	[_enemies, _group]
 };
 
-// =========================
-// Main Loop (spawned)
-// =========================
-[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _minUnitsPerCluster, _coolDownForEffect, _unlimitedAmmo, _accuracyRadius, _claimRadius] spawn {
-	params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds", "_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
+if (_mode != "MAP") then {
+	// =========================
+	// Main Loop (spawned)
+	// =========================
+	[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _minUnitsPerCluster, _coolDownForEffect, _unlimitedAmmo, _accuracyRadius, _claimRadius] spawn {
+		params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds", "_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
 
-	private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
-	private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
+		private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+		private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
 
-	_gun setVehicleAmmo 1;
+		_gun setVehicleAmmo 1;
 
-	while { !isNull _gun && alive _gun } do {
-		sleep 2;
+		while { !isNull _gun && alive _gun } do {
+			sleep 2;
 
-		private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
-		private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
-		if (_ammoLeft <= 0) then {
-			if (_unlimitedAmmo) then {
-				_gun setVehicleAmmo 1
-			} else {
-				[_gun] call fnc_handleGunDepletion;
-				break
-			};
-		};
-
-		private _enemiesAndGroup = [_mode, _scoutGroup, _gun, _detectionRange] call fnc_selectEnemiesByMode;
-		if (_enemiesAndGroup isEqualTo [[], objNull]) then {
-			continue
-		};
-		private _enemies = _enemiesAndGroup select 0;
-		if (_enemies isEqualTo []) then {
-			continue
-		};
-		private _group = _enemiesAndGroup select 1;
-		if (isNull _group) then {
-			continue
-		};
-
-		private _clustersChecked = [];
-		{
-			private _cluster = [_x, _clusterRadius, _gun] call fnc_getCluster;
-			if (count _cluster >= _minUnitsPerCluster) then {
-				private _centerPos = [_cluster] call fnc_getClusterCenter;
-				private _isDuplicate = [_centerPos, _clustersChecked, _clusterMergeRadius] call fnc_isClusterDuplicate;
-
-				if (_isDuplicate) then {
-					continue
+			private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
+			private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
+			if (_ammoLeft <= 0) then {
+				if (_unlimitedAmmo) then {
+					_gun setVehicleAmmo 1
+				} else {
+					[_gun] call fnc_handleGunDepletion;
+					break
 				};
+			};
 
-				_clustersChecked pushBack _centerPos;
+			private _enemiesAndGroup = [_mode, _scoutGroup, _gun, _detectionRange] call fnc_selectEnemiesByMode;
+			if (_enemiesAndGroup isEqualTo [[], objNull]) then {
+				continue
+			};
+			private _enemies = _enemiesAndGroup select 0;
+			if (_enemies isEqualTo []) then {
+				continue
+			};
+			private _group = _enemiesAndGroup select 1;
+			if (isNull _group) then {
+				continue
+			};
 
-				if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
-					[_centerPos, _gun] call fnc_claimTarget;
+			private _clustersChecked = [];
+			{
+				private _cluster = [_x, _clusterRadius, _gun] call fnc_getCluster;
+				if (count _cluster >= _minUnitsPerCluster) then {
+					private _centerPos = [_cluster] call fnc_getClusterCenter;
+					private _isDuplicate = [_centerPos, _clustersChecked, _clusterMergeRadius] call fnc_isClusterDuplicate;
 
-					private _quietUnit = [_group] call fnc_getQuietUnit;
-					private _fired = [_quietUnit, _gun, _centerPos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
-					if (_fired) then {
-						sleep _coolDownForEffect;
+					if (_isDuplicate) then {
+						continue
 					};
 
-					[_gun] call fnc_releaseTarget;
-					// one cluster per loop
-					break;
+					_clustersChecked pushBack _centerPos;
+
+					if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
+						[_centerPos, _gun] call fnc_claimTarget;
+
+						private _quietUnit = [_group] call fnc_getQuietUnit;
+						private _fired = [_quietUnit, _gun, _centerPos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
+						if (_fired) then {
+							sleep _coolDownForEffect;
+						};
+
+						[_gun] call fnc_releaseTarget;
+						// one cluster per loop
+						break;
+					};
 				};
+			} forEach _enemies;
+		};
+	};
+} else {
+	player setVariable ["gun", _gun, true];
+	player setVariable ["rounds", _rounds, true];
+	player setVariable ["accuracy", _accuracyRadius, true];
+	player setVariable ["claimRadius", _claimRadius, true];
+
+	onMapSingleClick {
+		params ["_pos", "_alt", "_shift"];
+		[_pos] spawn {
+			params ["_pos"];
+
+			private _gun = player getVariable ["gun", objNull];
+			private _rounds = player getVariable ["rounds", 0];
+			private _accuracyRadius = player getVariable ["accuracy", 0];
+			private _claimRadius = player getVariable ["claimRadius", 0];
+			private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
+			private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+
+			if (!([_pos, _claimRadius] call fnc_isTargetClaimed)) then {
+				[_pos, _gun] call fnc_claimTarget;
+				private _fired = [player, _gun, _pos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
+				if (!_fired) then {
+					hint "Artillery cannot fire on that range!";
+				};
+				[_gun] call fnc_releaseTarget;
+			} else {
+				hint "This target is already claimed!";
 			};
-		} forEach _enemies;
+		};
 	};
 };
