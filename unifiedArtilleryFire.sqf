@@ -596,11 +596,11 @@ if (_mode != "MAP") then {
 		"MapSingleClick",
 		{
 			params ["_units", "_pos", "_alt", "_shift", "_thisArgs"];
-			_thisArgs params ["_gun", "_rounds", "_clusterRadius", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
+			_thisArgs params ["_gun", "_rounds", "_unlimitedAmmo", "_accuracyRadius"];
 
 			if (!([] call fnc_isOnGoingFire)) then {
-				[_gun, _rounds, _clusterRadius, _unlimitedAmmo, _accuracyRadius, _claimRadius, _pos] spawn {
-					params ["_gun", "_rounds", "_clusterRadius", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius", "_pos"];
+				[_gun, _rounds, _unlimitedAmmo, _accuracyRadius, _pos] spawn {
+					params ["_gun", "_rounds", "_unlimitedAmmo", "_accuracyRadius", "_pos"];
 
 					[] call fnc_lockOnGoingFire;
 					[_pos, _gun] call fnc_claimTarget;
@@ -629,6 +629,6 @@ if (_mode != "MAP") then {
 			};
 		},
 		// Custom parameters passed to this event handler
-		[_gun, _rounds, _clusterRadius, _unlimitedAmmo, _accuracyRadius, _claimRadius]
+		[_gun, _rounds, _unlimitedAmmo, _accuracyRadius]
 	];
 };
