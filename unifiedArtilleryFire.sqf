@@ -560,15 +560,6 @@ if (_mode != "MAP") then {
 		};
 	};
 } else {
-	player setVariable ["gun", _gun, true];
-	player setVariable ["rounds", _rounds, true];
-	player setVariable ["accuracy", _accuracyRadius, true];
-	player setVariable ["claimRadius", _claimRadius, true];
-
-	if (_unlimitedAmmo) then {
-		_gun setVehicleAmmo 1;
-	};
-
 	fnc_lockOnGoingFire = {
 		if (isNil "onGoingGunFire") then {
 			missionNamespace setVariable ["onGoingGunFire", true, true];
@@ -586,37 +577,39 @@ if (_mode != "MAP") then {
 	fnc_isOnGoingFire = {
 		missionNamespace getVariable ["onGoingGunFire", false]
 	};
+	private _ehId = addMissionEventHandler [
+		"MapSingleClick",
+		{
+			params ["_units", "_pos", "_alt", "_shift", "_thisArgs"];
+			_thisArgs params ["_gun", "_rounds", "_clusterRadius", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
 
-	onMapSingleClick {
-		params ["_pos", "_alt", "_shift"];
-		if (!([] call fnc_isOnGoingFire)) then {
-			[_pos] spawn {
-				params ["_pos"];
-				[] call fnc_lockOnGoingFire;
-				private _gun = player getVariable ["gun", objNull];
-				private _rounds = player getVariable ["rounds", 0];
-				private _accuracyRadius = player getVariable ["accuracy", 0];
-				private _claimRadius = player getVariable ["claimRadius", 0];
-				private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
-				private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+			if (!([] call fnc_isOnGoingFire)) then {
+				[_gun, _rounds, _clusterRadius, _unlimitedAmmo, _accuracyRadius, _claimRadius, _pos] spawn {
+					params ["_gun", "_rounds", "_clusterRadius", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius", "_pos"];
 
-				if (!([_pos, _claimRadius] call fnc_isTargetClaimed)) then {
+					[] call fnc_lockOnGoingFire;
 					[_pos, _gun] call fnc_claimTarget;
-					private _fired = [player, _gun, _pos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
-					if (!_fired) then {
-						hint "Artillery cannot fire on that range!";
+
+					private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
+					private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+
+					if (_unlimitedAmmo) then {
+						_gun setVehicleAmmo 1;
 					};
+					private _fired = [player, _gun, _pos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
+
+					if (!_fired) then {
+						hint "Gun fire failed!";
+					};
+
 					[_gun] call fnc_releaseTarget;
-				} else {
-					hint "This target is already claimed!";
+					[] call fnc_unlockOnGoingFire;
 				};
-				[] call fnc_unlockOnGoingFire;
+			} else {
+				hint "Guns are busy at the moment!";
 			};
-		} else {
-			hint "Cannot issue artillery fire as of the moment, on going call on progress.";
-			private _gun = player getVariable ["gun", objNull];
-			private _radioMan = [group _gun] call fnc_getQuietUnit;
-			_radioMan sideRadio "BeAdvisedArtilleryIsUnavailableAtThisTimeOut";
-		};
-	};
+		},
+		// Custom parameters passed to this event handler
+		[_gun, _rounds, _clusterRadius, _unlimitedAmmo, _accuracyRadius, _claimRadius]
+	];
 };
