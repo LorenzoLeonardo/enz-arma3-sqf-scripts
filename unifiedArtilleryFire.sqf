@@ -60,6 +60,11 @@
 // Artillery Invalid Range
 #define GUN_BARRAGE_PHASE_INVALID_RANGE 5
 
+// Artillery Mode
+#define MODE_AUTO 0
+#define MODE_SCOUT 1
+#define MODE_MAP 2
+
 // =====================
 // Parameters
 // =====================
@@ -86,8 +91,8 @@ private _accuracyRadius = _this param [8, 0];
 // =====================
 // Initialization either AUTO Mode or SCOUT Mode
 // =====================
-// _mode = "SCOUT" or "AUTO"
-private _mode = "AUTO";
+// _mode = MODE_AUTO, MODE_SCOUT or MODE_MAP
+private _mode = MODE_AUTO;
 // _detectionRange = Radial distance from the gun used to detect enemy units in AUTO mode (default: 800 meters). Applicable in AUTO mode only.
 private _detectionRange = 800;
 // _scoutGroup = group doing the spotting. Applicable in SCOUT mode only.
@@ -96,21 +101,21 @@ private _scoutGroup = objNull;
 switch (typeName _genericParam) do {
 	case "SCALAR": {
 		sleep 3; // Allow time for the gun to initialize
-		_mode = "AUTO";
+		_mode = MODE_AUTO;
 		_detectionRange = _genericParam;
 		_scoutGroup = objNull; // No scout group in AUTO mode
 		hint format ["Artillery AUTO mode activated with detection range: %1 meters", _detectionRange];
 	};
 	case "GROUP": {
 		sleep 3; // Allow time for the gun to initialize
-		_mode = "SCOUT";
+		_mode = MODE_SCOUT;
 		_detectionRange = 0; // No detection range in SCOUT mode
 		_scoutGroup = _genericParam; // Use the provided object as the scout group
 		hint format ["Artillery SCOUT mode activated with scout group: %1", groupId _scoutGroup];
 	};
 	case "OBJECT": {
 		sleep 3; // Allow time for the gun to initialize
-		_mode = "MAP";
+		_mode = MODE_MAP;
 		_detectionRange = 0; // No detection range in SCOUT mode
 		_scoutGroup = objNull; // Use the provided object as the scout group
 		hint "Artillery MAP mode activated";
@@ -507,8 +512,8 @@ fnc_selectEnemiesByMode = {
 	private _enemies = [];
 	private _group = objNull;
 
-	switch (toLower _mode) do {
-		case "scout": {
+	switch (_mode) do {
+		case MODE_SCOUT: {
 			private _gunSide = [_gun] call fnc_getGunSide;
 			private _scoutLeader = leader _scoutGroup;
 			if (isNull _scoutLeader || !alive _scoutLeader) exitWith {
@@ -526,7 +531,7 @@ fnc_selectEnemiesByMode = {
 			};
 			_group = group _scoutLeader;
 		};
-		case "auto": {
+		case MODE_AUTO: {
 			_enemies = [getPos _gun, _detectionRange, _gun] call fnc_getEnemies;
 			if (_enemies isEqualTo []) exitWith {
 				[[], objNull]
@@ -534,7 +539,7 @@ fnc_selectEnemiesByMode = {
 			_group = group _gun;
 		};
 		default {
-			hint format["Invalid mode specified. Use 'SCOUT' or 'AUTO'."];
+			hint format["Invalid mode specified. Use MODE_SCOUT, MODE_AUTO or MODE_MAP."];
 			[[], objNull]
 		};
 	};
@@ -742,25 +747,34 @@ fnc_handleMapMode = {
 // =========================
 // Main Script Entry
 // =========================
-if (_mode != "MAP") then {
-	[
-		_mode,
-		_gun,
-		_detectionRange,
-		_scoutGroup,
-		_rounds,
-		_clusterRadius,
-		_minUnitsPerCluster,
-		_coolDownForEffect,
-		_unlimitedAmmo,
-		_accuracyRadius,
-		_claimRadius
-	] call fnc_handleAutoOrScoutMode;
-} else {
-	[
-		_gun,
-		_rounds,
-		_unlimitedAmmo,
-		_accuracyRadius
-	] call fnc_handleMapMode;
+switch (_mode) do {
+	case MODE_AUTO;
+	case MODE_SCOUT: {
+		[
+			_mode,
+			_gun,
+			_detectionRange,
+			_scoutGroup,
+			_rounds,
+			_clusterRadius,
+			_minUnitsPerCluster,
+			_coolDownForEffect,
+			_unlimitedAmmo,
+			_accuracyRadius,
+			_claimRadius
+		] call fnc_handleAutoOrScoutMode;
+	};
+
+	case MODE_MAP: {
+		[
+			_gun,
+			_rounds,
+			_unlimitedAmmo,
+			_accuracyRadius
+		] call fnc_handleMapMode;
+	};
+
+	default {
+		hint format ["Invalid Mode used: %1", _mode];
+	};
 };
