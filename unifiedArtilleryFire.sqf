@@ -47,7 +47,7 @@
 // Definitions
 // =====================
 
-// Callback name for atrillery fire radio routines
+// Callback name for artillery fire radio routines
 #define GUN_FIRE_CALLBACK "Callback_gunFireRadio"
 // Artillery Request Phase
 #define GUN_BARRAGE_PHASE_REQUEST 1
@@ -59,6 +59,9 @@
 #define GUN_BARRAGE_PHASE_DONE 4
 // Artillery Invalid Range
 #define GUN_BARRAGE_PHASE_INVALID_RANGE 5
+
+// Callback name for artillery fire marker
+#define GUN_MARKER_CALLBACK "Callback_gunFireMarker"
 
 // Artillery Mode
 #define MODE_AUTO 0
@@ -345,6 +348,19 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 	};
 }];
 
+missionNamespace setVariable [GUN_MARKER_CALLBACK, {
+	params ["_requestor", "_targetPost"];
+
+	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
+	private _marker = createMarker [_markerId, _targetPost];
+	_marker setMarkerShape "ICON";
+	_marker setMarkerType "mil_warning";
+	_marker setMarkerColor "ColorRed";
+	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _requestor)];
+
+	_marker
+}];
+
 // =========================
 // fire the gun at a target position with optional accuracy radius
 // =========================
@@ -376,13 +392,7 @@ fnc_fireGun = {
 	private _grid = mapGridPosition _finalPos;
 
 	// Create temporary "X" marker
-	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-	private _marker = createMarker [_markerId, _finalPos];
-	_marker setMarkerShape "ICON";
-	_marker setMarkerType "mil_warning";
-	_marker setMarkerColor "ColorRed";
-	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _caller)];
-
+	private _marker = [_caller, _finalPos] call (missionNamespace getVariable GUN_MARKER_CALLBACK);
 	// --- 1. Standby call ---
 	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 	sleep 3;  // small delay before firing
