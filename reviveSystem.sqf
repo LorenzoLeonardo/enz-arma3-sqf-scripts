@@ -232,9 +232,6 @@ fnc_lockReviveState = {
 	};
 
 	doStop _medic;
-	_medic stop false;
-	// Make sure no custom animation is locking movement
-	_medic switchMove "";
 	// Disable combat distractions
 	{
 		_medic disableAI _x
