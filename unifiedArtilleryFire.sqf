@@ -355,7 +355,24 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 	private _marker = createMarker [_markerId, _targetPost];
 	_marker setMarkerShape "ICON";
 	_marker setMarkerType "mil_warning";
-	_marker setMarkerColor "ColorRed";
+
+	switch (toLower groupId (group _requestor)) do {
+		case "alpha": {
+			_marker setMarkerColor "ColorBlue";
+		};
+		case "bravo": {
+			_marker setMarkerColor "ColorRed";
+		};
+		case "charlie": {
+			_marker setMarkerColor "ColorGreen";
+		};
+		case "delta": {
+			_marker setMarkerColor "ColorYellow";
+		};
+		default {
+			_marker setMarkerColor "ColorBlack";
+		};
+	};
 	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _requestor)];
 
 	_marker
