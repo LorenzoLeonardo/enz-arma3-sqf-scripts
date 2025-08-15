@@ -577,6 +577,21 @@ if (_mode != "MAP") then {
 	fnc_isOnGoingFire = {
 		missionNamespace getVariable ["onGoingGunFire", false]
 	};
+
+	missionNamespace setVariable ["onGoingGunFire", false, true];
+
+	// The purpose of these lines if this script is attached to multiple guns.
+	// Thus we don't need to let them fire at the same time.
+	// We stored each index and make it as a delay.
+	private _current = 0;
+	if (isNil "gunCount") then {
+		missionNamespace setVariable ["gunCount", 0, true];
+	} else {
+		_current = missionNamespace getVariable ["gunCount", 0];
+		missionNamespace setVariable ["gunCount", _current + 1, true];
+	};
+	_gun setVariable["gunIndex", missionNamespace getVariable["gunCount", 0], true];
+
 	private _ehId = addMissionEventHandler [
 		"MapSingleClick",
 		{
@@ -596,6 +611,10 @@ if (_mode != "MAP") then {
 					if (_unlimitedAmmo) then {
 						_gun setVehicleAmmo 1;
 					};
+					// We use the gun's index as a delay so that they won't fire at the same time.
+					// This is needed since this script can be attached into multiple guns.
+					private _thisDelay = _gun getVariable["gunIndex", 0];
+					sleep _thisDelay;
 					private _fired = [player, _gun, _pos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
 
 					if (!_fired) then {
