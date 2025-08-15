@@ -886,11 +886,11 @@ set_support_marker_and_radio = {
 			_unit sideRadio "RadioBravoWipedOut";
 		};
 		case "charlie":{
-			_marker setMarkerColorLocal "ColorYellow";
+			_marker setMarkerColorLocal "ColorGreen";
 			_unit sideRadio "RadioCharlieWipedOut";
 		};
 		case "delta": {
-			_marker setMarkerColorLocal "ColorOrange";
+			_marker setMarkerColorLocal "ColorYellow";
 			_unit sideRadio "RadioDeltaWipedOut";
 		};
 		default {

@@ -369,8 +369,11 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 		case "delta": {
 			_marker setMarkerColor "ColorYellow";
 		};
+		case "echo": {
+			_marker setMarkerColor "ColorOrange";
+		};
 		default {
-			_marker setMarkerColor "ColorBlack";
+			_marker setMarkerColor "ColorWhite";
 		};
 	};
 	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _requestor)];
