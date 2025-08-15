@@ -141,14 +141,31 @@ private _rtbAltitude = 80;
 						_replacement = _x;
 					};
 				} forEach (crew _veh);
-				unassignVehicle _unit;
-				moveOut _unit;
-				_unit moveInCargo _veh;
 
-				if (!(isNull _replacement)) then {
-					unassignVehicle _replacement;
-					moveOut _replacement;
-					_replacement moveInDriver _veh;
+				private _role = assignedVehicleRole _replacement select 0;
+
+				switch (toLower _role) do {
+					case "driver": {
+						hint "Pilot/Driver"
+					};
+					case "turret": {
+						private _seat = assignedVehicleRole _replacement select 1;
+						systemChat format ["Turret: %1", _seat];
+						unassignVehicle _unit;
+						moveOut _unit;
+						unassignVehicle _replacement;
+						moveOut _replacement;
+						_unit moveInTurret[_veh, _seat];
+						_replacement moveInDriver _veh;
+					};
+					case "cargo": {
+						unassignVehicle _unit;
+						moveOut _unit;
+						unassignVehicle _replacement;
+						moveOut _replacement;
+						_unit moveInCargo _veh;
+						_replacement moveInDriver _veh;
+					};
 				};
 			};
 		};
