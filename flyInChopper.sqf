@@ -116,3 +116,42 @@ private _rtbAltitude = 80;
 		};
 	};
 };
+
+// Auto-replace dead pilot
+{
+	_x addEventHandler ["HandleDamage", {
+		params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex"];
+		private _currentDamage = damage _unit;
+		private _newDamage = _currentDamage + _damage;
+
+		// if incoming damage will result in death
+		if (((_newDamage >= 1) && {
+			alive _unit
+		}) || (lifeState _unit == "INCAPACITATED")) then {
+			private _veh = vehicle _unit;
+			systemChat format ["Incoming Damage of : %1", _newDamage];
+
+			if (_unit == driver _veh) then {
+				// Move to cargo if they're in the heli
+				private _replacement = objNull;
+				{
+					if (_x != _unit && alive _x && {
+						lifeState _x != "INCAPACITATED"
+					}) exitWith {
+						_replacement = _x;
+					};
+				} forEach (crew _veh);
+				unassignVehicle _unit;
+				moveOut _unit;
+				_unit moveInCargo _veh;
+
+				if (!(isNull _replacement)) then {
+					unassignVehicle _replacement;
+					moveOut _replacement;
+					_replacement moveInDriver _veh;
+				};
+			};
+		};
+		_newDamage
+	}];
+} forEach crew _chopper;
