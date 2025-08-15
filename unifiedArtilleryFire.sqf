@@ -490,12 +490,53 @@ fnc_selectEnemiesByMode = {
 	[_enemies, _group]
 };
 
-if (_mode != "MAP") then {
-	// =========================
-	// Main Loop (spawned)
-	// =========================
-	[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _minUnitsPerCluster, _coolDownForEffect, _unlimitedAmmo, _accuracyRadius, _claimRadius] spawn {
-		params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds", "_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect", "_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
+// =========================
+// lock / Unlock System
+// =========================
+fnc_lockOnGoingFire = {
+	missionNamespace setVariable ["onGoingGunFire", true, true];
+};
+
+fnc_unlockOnGoingFire = {
+	missionNamespace setVariable ["onGoingGunFire", false, true];
+};
+
+fnc_isOnGoingFire = {
+	missionNamespace getVariable ["onGoingGunFire", false]
+};
+
+// =========================
+// Gun Index Assignment
+// =========================
+fnc_assignGunIndex = {
+	params ["_gun"];
+	// The purpose of these lines if this script is attached to multiple guns.
+	// Thus we don't need to let them fire at the same time.
+	// We stored each index and make it as a delay.
+	private _current = 0;
+	if (isNil "gunCount") then {
+		missionNamespace setVariable ["gunCount", 0, true];
+	} else {
+		_current = missionNamespace getVariable ["gunCount", 0];
+		missionNamespace setVariable ["gunCount", _current + 1, true];
+	};
+	_gun setVariable["gunIndex", missionNamespace getVariable["gunCount", 0], true];
+};
+
+// =========================
+// Handler for AUTO or SCOUT Mode
+// =========================
+fnc_handleAutoOrScoutMode = {
+	params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds",
+	"_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect",
+	"_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
+
+	[_mode, _gun, _detectionRange, _scoutGroup, _rounds,
+	_clusterRadius, _minUnitsPerCluster, _coolDownForEffect,
+	_unlimitedAmmo, _accuracyRadius, _claimRadius] spawn {
+		params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds",
+		"_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect",
+		"_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
 
 		private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
 		private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
@@ -559,39 +600,15 @@ if (_mode != "MAP") then {
 			} forEach _enemies;
 		};
 	};
-} else {
-	fnc_lockOnGoingFire = {
-		if (isNil "onGoingGunFire") then {
-			missionNamespace setVariable ["onGoingGunFire", true, true];
-		};
-		missionNamespace setVariable ["onGoingGunFire", true, true];
-	};
+};
 
-	fnc_unlockOnGoingFire = {
-		if (isNil "onGoingGunFire") then {
-			missionNamespace setVariable ["onGoingGunFire", false, true];
-		};
-		missionNamespace setVariable ["onGoingGunFire", false, true];
-	};
-
-	fnc_isOnGoingFire = {
-		missionNamespace getVariable ["onGoingGunFire", false]
-	};
-
+// =========================
+// Handler for MAP Mode
+// =========================
+fnc_handleMapMode = {
+	params ["_gun", "_rounds", "_unlimitedAmmo", "_accuracyRadius"];
 	missionNamespace setVariable ["onGoingGunFire", false, true];
-
-	// The purpose of these lines if this script is attached to multiple guns.
-	// Thus we don't need to let them fire at the same time.
-	// We stored each index and make it as a delay.
-	private _current = 0;
-	if (isNil "gunCount") then {
-		missionNamespace setVariable ["gunCount", 0, true];
-	} else {
-		_current = missionNamespace getVariable ["gunCount", 0];
-		missionNamespace setVariable ["gunCount", _current + 1, true];
-	};
-	_gun setVariable["gunIndex", missionNamespace getVariable["gunCount", 0], true];
-
+	[_gun] call fnc_assignGunIndex;
 	private _ehId = addMissionEventHandler [
 		"MapSingleClick",
 		{
@@ -631,4 +648,14 @@ if (_mode != "MAP") then {
 		// Custom parameters passed to this event handler
 		[_gun, _rounds, _unlimitedAmmo, _accuracyRadius]
 	];
+};
+
+// =========================
+// Main Script Entry
+// =========================
+if (_mode != "MAP") then {
+	[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _minUnitsPerCluster,
+	_coolDownForEffect, _unlimitedAmmo, _accuracyRadius, _claimRadius] call fnc_handleAutoOrScoutMode;
+} else {
+	[_gun, _rounds, _unlimitedAmmo, _accuracyRadius] call fnc_handleMapMode;
 };
