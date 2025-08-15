@@ -527,16 +527,47 @@ fnc_assignGunIndex = {
 // Handler for AUTO or SCOUT Mode
 // =========================
 fnc_handleAutoOrScoutMode = {
-	params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds",
-	"_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect",
-	"_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
+	params [
+		"_mode",
+		"_gun",
+		"_detectionRange",
+		"_scoutGroup",
+		"_rounds",
+		"_clusterRadius",
+		"_minUnitsPerCluster",
+		"_coolDownForEffect",
+		"_unlimitedAmmo",
+		"_accuracyRadius",
+		"_claimRadius"
+	];
 
-	[_mode, _gun, _detectionRange, _scoutGroup, _rounds,
-	_clusterRadius, _minUnitsPerCluster, _coolDownForEffect,
-	_unlimitedAmmo, _accuracyRadius, _claimRadius] spawn {
-		params ["_mode", "_gun", "_detectionRange", "_scoutGroup", "_rounds",
-		"_clusterRadius", "_minUnitsPerCluster", "_coolDownForEffect",
-		"_unlimitedAmmo", "_accuracyRadius", "_claimRadius"];
+	[
+		_mode,
+		_gun,
+		_detectionRange,
+		_scoutGroup,
+		_rounds,
+		_clusterRadius,
+		_minUnitsPerCluster,
+		_coolDownForEffect,
+		_unlimitedAmmo,
+		_accuracyRadius,
+		_claimRadius
+	]
+	spawn {
+		params [
+			"_mode",
+			"_gun",
+			"_detectionRange",
+			"_scoutGroup",
+			"_rounds",
+			"_clusterRadius",
+			"_minUnitsPerCluster",
+			"_coolDownForEffect",
+			"_unlimitedAmmo",
+			"_accuracyRadius",
+			"_claimRadius"
+		];
 
 		private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
 		private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
@@ -606,10 +637,16 @@ fnc_handleAutoOrScoutMode = {
 // Handler for MAP Mode
 // =========================
 fnc_handleMapMode = {
-	params ["_gun", "_rounds", "_unlimitedAmmo", "_accuracyRadius"];
+	params [
+		"_gun",
+		"_rounds",
+		"_unlimitedAmmo",
+		"_accuracyRadius"
+	];
+
 	missionNamespace setVariable ["onGoingGunFire", false, true];
 	[_gun] call fnc_assignGunIndex;
-	private _ehId = addMissionEventHandler [
+	addMissionEventHandler [
 		"MapSingleClick",
 		{
 			params ["_units", "_pos", "_alt", "_shift", "_thisArgs"];
@@ -654,8 +691,24 @@ fnc_handleMapMode = {
 // Main Script Entry
 // =========================
 if (_mode != "MAP") then {
-	[_mode, _gun, _detectionRange, _scoutGroup, _rounds, _clusterRadius, _minUnitsPerCluster,
-	_coolDownForEffect, _unlimitedAmmo, _accuracyRadius, _claimRadius] call fnc_handleAutoOrScoutMode;
+	[
+		_mode,
+		_gun,
+		_detectionRange,
+		_scoutGroup,
+		_rounds,
+		_clusterRadius,
+		_minUnitsPerCluster,
+		_coolDownForEffect,
+		_unlimitedAmmo,
+		_accuracyRadius,
+		_claimRadius
+	] call fnc_handleAutoOrScoutMode;
 } else {
-	[_gun, _rounds, _unlimitedAmmo, _accuracyRadius] call fnc_handleMapMode;
+	[
+		_gun,
+		_rounds,
+		_unlimitedAmmo,
+		_accuracyRadius
+	] call fnc_handleMapMode;
 };
