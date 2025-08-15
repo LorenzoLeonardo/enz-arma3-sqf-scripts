@@ -44,6 +44,13 @@
 // ==============================================================================================================
 
 // =====================
+// Definitions
+// =====================
+
+// Callback name for atrillery fire radio routines
+#define GUN_FIRE_CALLBACK "Callback_gunFireRadio"
+
+// =====================
 // Parameters
 // =====================
 
@@ -288,6 +295,42 @@ fnc_getClusterCenter = {
 };
 
 // =========================
+// Callbacks
+// =========================
+
+// if this callback is not defined, there will be no radio sounds, 
+// The artillery/mortar will continue to do its job
+missionNamespace setVariable [GUN_FIRE_CALLBACK, {
+	params ["_requestor", "_responder", "_phase", "_grid"];
+
+	switch (toLower _phase) do {
+		case "request": {
+			_requestor sideRadio "RadioArtilleryRequest"; // plays sound
+			_requestor sideChat format ["Requesting immediate artillery at the designated coordinates [%1]. Over!", _grid];
+		};
+		case "shot" : {
+			_responder sideRadio "RadioArtilleryResponse";
+			_responder sideChat "Target location received, order is inbound. Out!";
+		};
+		case "splash" : {
+			_responder sideRadio "RadioArtillerySplash";
+			_responder sideChat "Splash. Out!";
+		};
+		case "done" : {
+			_responder sideRadio "RadioArtilleryRoundsComplete";
+			_responder sideChat "Rounds complete. Out!";
+		};
+		case "range_error" :{
+			_responder sideRadio "CannotExecuteThatsOutsideOurFiringEnvelope";
+			_responder sideChat "Cannot execute. That's outside our firing envelope!";
+		};
+		default {
+			systemChat format ["Invalid artillery call phase: %1", _phase];
+		};
+	};
+}];
+
+// =========================
 // fire the gun at a target position with optional accuracy radius
 // =========================
 fnc_fireGun = {
@@ -326,14 +369,13 @@ fnc_fireGun = {
 	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _caller)];
 
 	// --- 1. Standby call ---
-	_caller sideRadio "RadioArtilleryRequest"; // plays sound
-	_caller sideChat format ["Requesting immediate artillery at the designated coordinates [%1]. Over!", _grid];
+	[_caller, _base, "request", _grid] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 	sleep 3;  // small delay before firing
 
 	// --- 2. fire the artillery ---
 	private _canReach = _finalPos inRangeOfArtillery [[_gun], _ammoType];
 	if (!_canReach) exitWith {
-		_base sideRadio "CannotExecuteThatsOutsideOurFiringEnvelope";
+		[_caller, _base, "range_error"] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 		sleep 2;
 		deleteMarker _marker;
 		false
@@ -342,7 +384,7 @@ fnc_fireGun = {
 
 	// --- 3. Shot call ---
 	sleep 2;
-	_base sideRadio "RadioArtilleryResponse";
+	[_caller, _base, "shot"] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// --- Wait until the gun finishes firing ---
 	waitUntil {
@@ -361,11 +403,11 @@ fnc_fireGun = {
 		_wait = _flightTime - 5;
 	};
 	sleep _wait;
-	_base sideRadio "RadioArtillerySplash";
+	[_caller, _base, "splash"] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// --- 5. Rounds Complete (after impact) ---
 	sleep (_flightTime + 2);
-	_base sideRadio "RadioArtilleryRoundsComplete";
+	[_caller, _base, "done"] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	deleteMarker _marker;
 	true
