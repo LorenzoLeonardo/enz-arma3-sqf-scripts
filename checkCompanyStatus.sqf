@@ -7,19 +7,14 @@ _group setGroupId [_grpName];
 // Save original unit types and loadouts
 private _originalLoadouts = [_group] call save_original_loadouts;
 private _totalUnits = count units _group;
-private _supportCalled = false;
 
 while { true } do {
 	waitUntil {
 		sleep 2;
 		private _aliveCount = {
-			alive _x
+			alive _x && (lifeState _x != "INCAPACITATED")
 		} count units _group;
 		_aliveCount <= (_totalUnits / 3)
-	};
-
-	if (_supportCalled) then {
-		continue;
 	};
 
 	private _radioUnit = [_group] call get_quiet_unit;
@@ -32,6 +27,4 @@ while { true } do {
 
 	// call support
 	[_radioUnit, 350, 300, 8000, 400, _markerName, _originalLoadouts] call call_support_team;
-
-	_supportCalled = true;
 };
