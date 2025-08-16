@@ -19,6 +19,13 @@ private _rtbAltitude = 80;
 	})) / 2);
 	_chopper allowCrewInImmobile true;
 
+	// Remove all men in cargo from group, so that the pilot cannot command them later to disembark.
+	{
+		if (tolower((assignedVehicleRole _x) select 0) == "cargo") then {
+			[_x] joinSilent grpNull;
+		}
+	} forEach (crew _chopper);
+
 	// Wait until enemy count is below half and chopper is alive
 	waitUntil {
 		((count (allUnits select {
@@ -161,6 +168,8 @@ private _rtbAltitude = 80;
 							moveOut _unit;
 							unassignVehicle _replacement;
 							moveOut _replacement;
+							// join the replacement from cargo to the group of the vehicle
+							[_replacement] joinSilent (group _unit);
 							_unit moveInCargo _veh;
 							_replacement moveInDriver _veh;
 						};
@@ -184,6 +193,8 @@ private _rtbAltitude = 80;
 							moveOut _unit;
 							unassignVehicle _replacement;
 							moveOut _replacement;
+							// join the replacement from cargo to the group of the vehicle
+							[_replacement] joinSilent (group _unit);
 							_unit moveInCargo _veh;
 							_replacement moveInTurret[_veh, _seat];
 						};
@@ -194,8 +205,3 @@ private _rtbAltitude = 80;
 		_newDamage
 	}];
 } forEach crew _chopper;
-
-_chopper addEventHandler ["GetOut", {
-	params ["_vehicle", "_role", "_unit", "_turret"];
-	[_unit] orderGetIn true;
-}];
