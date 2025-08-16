@@ -6,7 +6,7 @@
 // 
 // Description:
 // This script implements a fully AI-driven revive system for incapacitated units, allowing friendly (and in some
-// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection,
+// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection, 
 // realistic bleedout timers, headshot and explosive damage handling, and dynamic prioritization of medics
 // based on proximity, threat levels, and availability.
 // 
@@ -566,7 +566,8 @@ fnc_handleDamage = {
 	// Incapacitate on near-lethal total damage
 	if (_newDamage >= 0.95) then {
 		// if the injured is in a vehicle or static weapon, remove them
-		if (!isNull objectParent _unit) then {
+		private _vehicle = objectParent _unit;
+		if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
 			moveOut _unit;
 		};
 		// Make unit unconscious
