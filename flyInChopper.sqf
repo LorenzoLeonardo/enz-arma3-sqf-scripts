@@ -90,7 +90,7 @@ private _rtbAltitude = 80;
 
 					// Add new waypoint to target
 					private _wp = _aiPilotGroup addWaypoint [getPos _target, 0];
-					_wp setWaypointType "MOVE"; // could also use "SAD"
+					_wp setWaypointType "SAD"; // could also use "SAD"
 					_wp setWaypointBehaviour "AWARE";
 					_wp setWaypointCombatMode "RED";
 					_wp setWaypointSpeed "FULL";
@@ -99,6 +99,7 @@ private _rtbAltitude = 80;
 						!(alive _target) || (lifeState _target == "INCAPACITATED")
 					};
 				};
+				sleep 1;
 			};
 
 			if (alive _chopper) then {
@@ -152,26 +153,28 @@ private _rtbAltitude = 80;
 						};
 					} forEach (crew _veh);
 
-					private _replacementRole = assignedVehicleRole _replacement select 0;
-					switch (toLower _replacementRole) do {
-						case "turret": {
-							private _seat = assignedVehicleRole _replacement select 1;
-							unassignVehicle _unit;
-							moveOut _unit;
-							unassignVehicle _replacement;
-							moveOut _replacement;
-							_unit moveInTurret[_veh, _seat];
-							_replacement moveInDriver _veh;
-						};
-						case "cargo": {
-							unassignVehicle _unit;
-							moveOut _unit;
-							unassignVehicle _replacement;
-							moveOut _replacement;
-							// join the replacement from cargo to the group of the vehicle
-							[_replacement] joinSilent (group _unit);
-							_unit moveInCargo _veh;
-							_replacement moveInDriver _veh;
+					if (!isNull _replacement) then {
+						private _replacementRole = assignedVehicleRole _replacement select 0;
+						switch (toLower _replacementRole) do {
+							case "turret": {
+								private _seat = assignedVehicleRole _replacement select 1;
+								unassignVehicle _unit;
+								moveOut _unit;
+								unassignVehicle _replacement;
+								moveOut _replacement;
+								_unit moveInTurret[_veh, _seat];
+								_replacement moveInDriver _veh;
+							};
+							case "cargo": {
+								unassignVehicle _unit;
+								moveOut _unit;
+								unassignVehicle _replacement;
+								moveOut _replacement;
+								// join the replacement from cargo to the group of the vehicle
+								[_replacement] joinSilent (group _unit);
+								_unit moveInCargo _veh;
+								_replacement moveInDriver _veh;
+							};
 						};
 					};
 				};
@@ -185,18 +188,20 @@ private _rtbAltitude = 80;
 						};
 					} forEach (crew _veh);
 
-					private _replacementRole = assignedVehicleRole _replacement select 0;
-					switch (toLower _replacementRole) do {
-						case "cargo": {
-							private _seat = assignedVehicleRole _unit select 1;
-							unassignVehicle _unit;
-							moveOut _unit;
-							unassignVehicle _replacement;
-							moveOut _replacement;
-							// join the replacement from cargo to the group of the vehicle
-							[_replacement] joinSilent (group _unit);
-							_unit moveInCargo _veh;
-							_replacement moveInTurret[_veh, _seat];
+					if (!isNull _replacement) then {
+						private _replacementRole = assignedVehicleRole _replacement select 0;
+						switch (toLower _replacementRole) do {
+							case "cargo": {
+								private _seat = assignedVehicleRole _unit select 1;
+								unassignVehicle _unit;
+								moveOut _unit;
+								unassignVehicle _replacement;
+								moveOut _replacement;
+								// join the replacement from cargo to the group of the vehicle
+								[_replacement] joinSilent (group _unit);
+								_unit moveInCargo _veh;
+								_replacement moveInTurret[_veh, _seat];
+							};
 						};
 					};
 				};
