@@ -130,39 +130,43 @@ private _rtbAltitude = 80;
 			alive _unit
 		}) || (lifeState _unit == "INCAPACITATED")) then {
 			private _veh = vehicle _unit;
+			private _roleInfo = assignedVehicleRole _unit;
+			private _roleType = toLower (_roleInfo select 0);
 
-			if (_unit == driver _veh) then {
-				// Move to cargo if they're in the heli
-				private _replacement = objNull;
-				{
-					if (_x != _unit && alive _x && {
-						lifeState _x != "INCAPACITATED"
-					}) exitWith {
-						_replacement = _x;
-					};
-				} forEach (crew _veh);
+			switch (_roleType) do {
+				case "driver": {
+					// Move to cargo if they're in the heli
+					private _replacement = objNull;
+					{
+						if (_x != _unit && alive _x && {
+							lifeState _x != "INCAPACITATED"
+						}) exitWith {
+							_replacement = _x;
+						};
+					} forEach (crew _veh);
 
-				private _role = assignedVehicleRole _replacement select 0;
-				switch (toLower _role) do {
-					case "driver": {
-						hint "Pilot/Driver"
-					};
-					case "turret": {
-						private _seat = assignedVehicleRole _replacement select 1;
-						unassignVehicle _unit;
-						moveOut _unit;
-						unassignVehicle _replacement;
-						moveOut _replacement;
-						_unit moveInTurret[_veh, _seat];
-						_replacement moveInDriver _veh;
-					};
-					case "cargo": {
-						unassignVehicle _unit;
-						moveOut _unit;
-						unassignVehicle _replacement;
-						moveOut _replacement;
-						_unit moveInCargo _veh;
-						_replacement moveInDriver _veh;
+					private _role = assignedVehicleRole _replacement select 0;
+					switch (toLower _role) do {
+						case "driver": {
+							hint "Pilot/Driver"
+						};
+						case "turret": {
+							private _seat = assignedVehicleRole _replacement select 1;
+							unassignVehicle _unit;
+							moveOut _unit;
+							unassignVehicle _replacement;
+							moveOut _replacement;
+							_unit moveInTurret[_veh, _seat];
+							_replacement moveInDriver _veh;
+						};
+						case "cargo": {
+							unassignVehicle _unit;
+							moveOut _unit;
+							unassignVehicle _replacement;
+							moveOut _replacement;
+							_unit moveInCargo _veh;
+							_replacement moveInDriver _veh;
+						};
 					};
 				};
 			};
