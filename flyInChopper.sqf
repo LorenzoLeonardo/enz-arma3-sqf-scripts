@@ -35,7 +35,7 @@ private _rtbAltitude = 80;
 
 	if (alive _chopper) then {
 		// Send radio message to ground units
-		_heliPilot sideRadio "RadioFalconToGroundUnits";
+		_heliPilot sideRadio "RadioHeliTacticalStrike";
 
 		// Force AI to engage
 		_chopper engineOn true;
@@ -211,10 +211,27 @@ private _rtbAltitude = 80;
 	params["_chopper"];
 
 	waitUntil {
-		{
+		({
 			alive _x
-		} count crew _chopper == 0
+		} count crew _chopper == 0) || !(alive _chopper)
 	};
-
 	_chopper setDamage 1;
+
+	private _grp = createGroup west;
+	private _unit = _grp createUnit ["B_Soldier_F", getPos player, [], 0, "NONE"];
+
+	// set group callsign
+	_grp setGroupIdGlobal ["November"];
+
+	_unit sideRadio "RadioHeliMayday";
+	sleep 3;
+	player sideRadio "RadioHeliHeloDown";
+	sleep 5;
+	[west, "Base"] sideRadio "RadioHeliHeloSearchAndRescue";
+	sleep 3;
+
+	{
+		deleteVehicle _x;
+	} forEach units _grp;
+	deleteGroup _grp;
 };

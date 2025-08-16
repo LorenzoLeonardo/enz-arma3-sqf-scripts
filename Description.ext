@@ -635,4 +635,56 @@ class CfgRadio
 		// radio caption
 		title	= "Falcon to ground units, we are en route to your position. ETA three mikes. Out!";
 	}
+
+	class RadioPapaBearToAllUnitsClearArea
+	{
+		name	= "RadioPapaBearToAllUnitsClearArea";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\RadioPapaBearToAllUnitsClearArea.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Attention all units, new orders. Eliminate all remaining forces in the vacinity. Clearing the rest of the area will be a child's play. Papa Bear out!";
+	}
+
+	class RadioHeliMayday
+	{
+		name	= "RadioHeliMayday";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\helicopter\showcase_slingloading_x10_mayday_PIL_1.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "November is going down! I repeat we are going down!";
+	}
+	class RadioHeliHeloDown
+	{
+		name	= "RadioHeliHeloDown";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\helicopter\mp_groundsupport_65_chopperdown_BHQ_0.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "All elements be advised, we have a helo down! I repeat we have a helo down!";
+	}
+	class RadioHeliHeloSearchAndRescue
+	{
+		name	= "RadioHeliHeloSearchAndRescue";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\helicopter\showcase_slingloading_x10_mayday_TOW_0.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Copy November, dispatching search and rescue to your grid.";
+	}
+	class RadioHeliTacticalStrike
+	{
+		name	= "RadioHeliTacticalStrike";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\helicopter\mp_groundsupport_70_tacticalstrikeinbound_BHQ_3.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "All callsigns friendly tactical strike incoming.";
+	}
 };
