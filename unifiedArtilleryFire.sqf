@@ -312,6 +312,28 @@ fnc_getClusterCenter = {
 	[_sumX / (count _cluster), _sumY / (count _cluster), 0]
 };
 
+fnc_getIndexOfGroup = {
+	params ["_group"];
+
+	switch (toLower(groupId _group)) do {
+		case "alpha" : {
+			[1, 2]
+		};
+		case "bravo" : {
+			[3, 4]
+		};
+		case "charlie" : {
+			[5, 6]
+		};
+		case "delta" : {
+			[7, 8]
+		};
+		default {
+			[11, 12]
+		};
+	};
+};
+
 // =========================
 // Callbacks
 // =========================
@@ -320,26 +342,27 @@ fnc_getClusterCenter = {
 // The artillery/mortar will continue to do its job
 missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 	params ["_requestor", "_responder", "_phase", "_grid"];
+	private _index = [group _requestor] call fnc_getIndexOfGroup;
 
 	switch (_phase) do {
 		case GUN_BARRAGE_PHASE_REQUEST: {
-			_requestor sideRadio "RadioArtilleryRequest"; // plays sound
-			_requestor sideChat format ["Requesting immediate artillery at the designated coordinates [%1]. Over!", _grid];
+			_requestor sideRadio format["ArtyRequest%1", _index select 0]; // plays sound
+			_requestor sideChat format ["Requesting immediate artillery support at the designated coordinates [%1]. Over!", _grid];
 		};
 		case GUN_BARRAGE_PHASE_SHOT : {
-			_responder sideRadio "RadioArtilleryResponse";
+			_responder sideRadio format["ArtyResponse%1", _index select 1];
 			_responder sideChat "Target location received, order is inbound. Out!";
 		};
 		case GUN_BARRAGE_PHASE_SPLASH : {
-			_responder sideRadio "RadioArtillerySplash";
+			_responder sideRadio format["ArtySplash%1", _index select 1];
 			_responder sideChat "Splash. Out!";
 		};
 		case GUN_BARRAGE_PHASE_DONE : {
-			_responder sideRadio "RadioArtilleryRoundsComplete";
+			_responder sideRadio format["ArtyComplete%1", _index select 1];
 			_responder sideChat "Rounds complete. Out!";
 		};
 		case GUN_BARRAGE_PHASE_INVALID_RANGE :{
-			_responder sideRadio "CannotExecuteThatsOutsideOurFiringEnvelope";
+			_responder sideRadio format["ArtyRangeError%1", _index select 1];
 			_responder sideChat "Cannot execute. That's outside our firing envelope!";
 		};
 		default {

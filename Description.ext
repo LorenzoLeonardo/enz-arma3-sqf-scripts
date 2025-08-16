@@ -327,7 +327,7 @@ class CfgRadio
 		sound[]	= { "\sounds\artillery\CannotExecuteThatsOutsideOurFiringEnvelope.ogg", db + 100, 1.0 };
 
 		// radio caption
-		title	= "Cannot execute. That's outside our firing envelope!";			
+		title	= "";
 	}
 	class WeCopyYouLoudAndClear
 	{
@@ -587,7 +587,6 @@ class CfgRadio
 
 		// filename, volume, pitch
 		sound[]	= { "\sounds\artillery\artillery_request.ogg", db + 100, 1.0 };
-
 		// radio caption
 		title	= "";
 	}
@@ -598,9 +597,8 @@ class CfgRadio
 
 		// filename, volume, pitch
 		sound[]	= { "\sounds\artillery\artillery_acknowledged.ogg", db + 100, 1.0 };
-
 		// radio caption
-		title	= "Target location received, order is inbound. Out!";
+		title	= "";
 	}
 
 	class RadioArtillerySplash
@@ -611,7 +609,7 @@ class CfgRadio
 		sound[]	= { "\sounds\artillery\artillery_accomplished.ogg", db + 100, 1.0 };
 
 		// radio caption
-		title	= "Splash. Out!";
+		title	= "";
 	}
 
 	class RadioArtilleryRoundsComplete
@@ -622,7 +620,7 @@ class CfgRadio
 		sound[]	= { "\sounds\artillery\artillery_rounds_complete.ogg", db + 100, 1.0 };
 
 		// radio caption
-		title	= "Rounds complete. Out!";
+		title	= "";
 	}
 
 	class RadioFalconToGroundUnits
@@ -686,5 +684,321 @@ class CfgRadio
 
 		// radio caption
 		title	= "All callsigns friendly tactical strike incoming.";
+	}
+
+
+
+
+
+	// Bultin Artillery Radio
+
+	// Request
+	class ArtyRequest1 {
+		name	= "ArtyRequest1";
+		sound[]	= {"\sounds\artillery\Male01ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest2 {
+		name	= "ArtyRequest2";
+		sound[]	= {"\sounds\artillery\Male02ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest3 {
+		name	= "ArtyRequest3";
+		sound[]	= {"\sounds\artillery\Male03ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest4 {
+		name	= "ArtyRequest4";
+		sound[]	= {"\sounds\artillery\Male04ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest5 {
+		name	= "ArtyRequest5";
+		sound[]	= {"\sounds\artillery\Male05ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest6 {
+		name	= "ArtyRequest6";
+		sound[]	= {"\sounds\artillery\Male06ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest7 {
+		name	= "ArtyRequest7";
+		sound[]	= {"\sounds\artillery\Male07ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest8 {
+		name	= "ArtyRequest8";
+		sound[]	= {"\sounds\artillery\Male08ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest9 {
+		name	= "ArtyRequest9";
+		sound[]	= {"\sounds\artillery\Male09ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest10 {
+		name	= "ArtyRequest10";
+		sound[]	= {"\sounds\artillery\Male10ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest11 {
+		name	= "ArtyRequest11";
+		sound[]	= {"\sounds\artillery\Male11ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRequest12 {
+		name	= "ArtyRequest12";
+		sound[]	= {"\sounds\artillery\Male12ENG\SupportRequestRGArty.ogg",db+0,1};
+		title	= "";
+	}
+
+	// Response
+	class ArtyResponse1 {
+		name	= "ArtyResponse1";
+		sound[]	= {"\sounds\artillery\Male01ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse2 {
+		name	= "ArtyResponse2";
+		sound[]	= {"\sounds\artillery\Male02ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse3 {
+		name	= "ArtyResponse3";
+		sound[]	= {"\sounds\artillery\Male03ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse4 {
+		name	= "ArtyResponse4";
+		sound[]	= {"\sounds\artillery\Male04ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse5 {
+		name	= "ArtyResponse5";
+		sound[]	= {"\sounds\artillery\Male05ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse6 {
+		name	= "ArtyResponse6";
+		sound[]	= {"\sounds\artillery\Male06ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse7 {
+		name	= "ArtyResponse7";
+		sound[]	= {"\sounds\artillery\Male07ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse8 {
+		name	= "ArtyResponse8";
+		sound[]	= {"\sounds\artillery\Male08ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse9 {
+		name	= "ArtyResponse9";
+		sound[]	= {"\sounds\artillery\Male09ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse10 {
+		name	= "ArtyResponse10";
+		sound[]	= {"\sounds\artillery\Male10ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse11 {
+		name	= "ArtyResponse11";
+		sound[]	= {"\sounds\artillery\Male11ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyResponse12 {
+		name	= "ArtyResponse12";
+		sound[]	= {"\sounds\artillery\Male12ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+
+	// Splash
+	class ArtySplash1 {
+		name	= "ArtySplash1";
+		sound[]	= {"\sounds\artillery\Male01ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash2 {
+		name	= "ArtySplash2";
+		sound[]	= {"\sounds\artillery\Male02ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash3 {
+		name	= "ArtySplash3";
+		sound[]	= {"\sounds\artillery\Male03ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash4 {
+		name	= "ArtySplash4";
+		sound[]	= {"\sounds\artillery\Male04ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash5 {
+		name	= "ArtySplash5";
+		sound[]	= {"\sounds\artillery\Male05ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash6 {
+		name	= "ArtySplash6";
+		sound[]	= {"\sounds\artillery\Male06ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash7 {
+		name	= "ArtySplash7";
+		sound[]	= {"\sounds\artillery\Male07ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash8 {
+		name	= "ArtySplash8";
+		sound[]	= {"\sounds\artillery\Male08ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash9 {
+		name	= "ArtySplash9";
+		sound[]	= {"\sounds\artillery\Male09ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash10 {
+		name	= "ArtySplash10";
+		sound[]	= {"\sounds\artillery\Male10ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash11 {
+		name	= "ArtySplash11";
+		sound[]	= {"\sounds\artillery\Male11ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtySplash12 {
+		name	= "ArtySplash12";
+		sound[]	= {"\sounds\artillery\Male12ENG\RequestAccomplishedSGArty.ogg",db+0,1};
+		title	= "";
+	}
+
+	// Rounds Complete
+	class ArtyComplete1 {
+		name	= "ArtyComplete1";
+		sound[]	= {"\sounds\artillery\Male01ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete2 {
+		name	= "ArtyComplete2";
+		sound[]	= {"\sounds\artillery\Male02ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete3 {
+		name	= "ArtyComplete3";
+		sound[]	= {"\sounds\artillery\Male03ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete4 {
+		name	= "ArtyComplete4";
+		sound[]	= {"\sounds\artillery\Male04ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete5 {
+		name	= "ArtyComplete5";
+		sound[]	= {"\sounds\artillery\Male05ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete6 {
+		name	= "ArtyComplete6";
+		sound[]	= {"\sounds\artillery\Male06ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete7 {
+		name	= "ArtyComplete7";
+		sound[]	= {"\sounds\artillery\Male07ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete8 {
+		name	= "ArtyComplete8";
+		sound[]	= {"\sounds\artillery\Male08ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete9 {
+		name	= "ArtyComplete9";
+		sound[]	= {"\sounds\artillery\Male09ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete10 {
+		name	= "ArtyComplete10";
+		sound[]	= {"\sounds\artillery\Male10ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete11 {
+		name	= "ArtyComplete11";
+		sound[]	= {"\sounds\artillery\Male11ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyComplete12 {
+		name	= "ArtyComplete12";
+		sound[]	= {"\sounds\artillery\Male12ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
+		title	= "";
+	}
+
+	// Range Error
+	class ArtyRangeError1 {
+		name	= "ArtyRangeError1";
+		sound[]	= {"\sounds\artillery\Male01ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError2 {
+		name	= "ArtyRangeError2";
+		sound[]	= {"\sounds\artillery\Male02ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError3 {
+		name	= "ArtyRangeError3";
+		sound[]	= {"\sounds\artillery\Male03ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError4 {
+		name	= "ArtyRangeError4";
+		sound[]	= {"\sounds\artillery\Male04ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError5 {
+		name	= "ArtyRangeError5";
+		sound[]	= {"\sounds\artillery\Male05ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError6 {
+		name	= "ArtyRangeError6";
+		sound[]	= {"\sounds\artillery\Male06ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError7 {
+		name	= "ArtyRangeError7";
+		sound[]	= {"\sounds\artillery\Male07ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError8 {
+		name	= "ArtyRangeError8";
+		sound[]	= {"\sounds\artillery\Male08ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError9 {
+		name	= "ArtyRangeError9";
+		sound[]	= {"\sounds\artillery\Male09ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError10 {
+		name	= "ArtyRangeError10";
+		sound[]	= {"\sounds\artillery\Male10ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError11 {
+		name	= "ArtyRangeError11";
+		sound[]	= {"\sounds\artillery\Male11ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
+	}
+	class ArtyRangeError12 {
+		name	= "ArtyRangeError12";
+		sound[]	= {"\sounds\artillery\Male12ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
+		title	= "";
 	}
 };
