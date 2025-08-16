@@ -145,11 +145,8 @@ private _rtbAltitude = 80;
 						};
 					} forEach (crew _veh);
 
-					private _role = assignedVehicleRole _replacement select 0;
-					switch (toLower _role) do {
-						case "driver": {
-							hint "Pilot/Driver"
-						};
+					private _replacementRole = assignedVehicleRole _replacement select 0;
+					switch (toLower _replacementRole) do {
 						case "turret": {
 							private _seat = assignedVehicleRole _replacement select 1;
 							unassignVehicle _unit;
@@ -169,6 +166,29 @@ private _rtbAltitude = 80;
 						};
 					};
 				};
+				case "turret": {
+					private _replacement = objNull;
+					{
+						if (_x != _unit && alive _x &&
+						(lifeState _x != "INCAPACITATED") &&
+						(tolower((assignedVehicleRole _x) select 0) == "cargo")) exitWith {
+							_replacement = _x;
+						};
+					} forEach (crew _veh);
+
+					private _replacementRole = assignedVehicleRole _replacement select 0;
+					switch (toLower _replacementRole) do {
+						case "cargo": {
+							private _seat = assignedVehicleRole _unit select 1;
+							unassignVehicle _unit;
+							moveOut _unit;
+							unassignVehicle _replacement;
+							moveOut _replacement;
+							_unit moveInCargo _veh;
+							_replacement moveInTurret[_veh, _seat];
+						};
+					};
+				};
 			};
 		};
 		_newDamage
@@ -178,5 +198,4 @@ private _rtbAltitude = 80;
 _chopper addEventHandler ["GetOut", {
 	params ["_vehicle", "_role", "_unit", "_turret"];
 	[_unit] orderGetIn true;
-	systemChat format ["GetOut"];
 }];
