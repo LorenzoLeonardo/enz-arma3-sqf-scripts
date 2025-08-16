@@ -205,3 +205,16 @@ private _rtbAltitude = 80;
 		_newDamage
 	}];
 } forEach crew _chopper;
+
+// When all units are dead, destroy the heli
+[_chopper] spawn {
+	params["_chopper"];
+
+	waitUntil {
+		{
+			alive _x
+		} count crew _chopper == 0
+	};
+
+	_chopper setDamage 1;
+};
