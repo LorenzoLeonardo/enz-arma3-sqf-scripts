@@ -17,6 +17,7 @@ private _rtbAltitude = 80;
 	private _halfEnemyCount = floor ((count (allUnits select {
 		side _x == _sideEnemy && alive _x
 	})) / 2);
+	_chopper allowCrewInImmobile true;
 
 	// Wait until enemy count is below half and chopper is alive
 	waitUntil {
@@ -129,7 +130,6 @@ private _rtbAltitude = 80;
 			alive _unit
 		}) || (lifeState _unit == "INCAPACITATED")) then {
 			private _veh = vehicle _unit;
-			systemChat format ["Incoming Damage of : %1", _newDamage];
 
 			if (_unit == driver _veh) then {
 				// Move to cargo if they're in the heli
@@ -143,14 +143,12 @@ private _rtbAltitude = 80;
 				} forEach (crew _veh);
 
 				private _role = assignedVehicleRole _replacement select 0;
-
 				switch (toLower _role) do {
 					case "driver": {
 						hint "Pilot/Driver"
 					};
 					case "turret": {
 						private _seat = assignedVehicleRole _replacement select 1;
-						systemChat format ["Turret: %1", _seat];
 						unassignVehicle _unit;
 						moveOut _unit;
 						unassignVehicle _replacement;
@@ -172,3 +170,9 @@ private _rtbAltitude = 80;
 		_newDamage
 	}];
 } forEach crew _chopper;
+
+_chopper addEventHandler ["GetOut", {
+	params ["_vehicle", "_role", "_unit", "_turret"];
+	[_unit] orderGetIn true;
+	systemChat format ["GetOut"];
+}];
