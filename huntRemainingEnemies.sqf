@@ -58,6 +58,8 @@ while {
 			deleteWaypoint [_squad, 0];
 		};
 
+		_squad setFormation "WEDGE";
+		_squad setCombatMode "YELLOW";
 		// Add new waypoint to target
 		private _wp = _squad addWaypoint [getPos _target, 0];
 		_wp setWaypointType "DESTROY"; // could also use "SAD"
