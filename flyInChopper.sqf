@@ -183,14 +183,13 @@ fnc_flyInChopper = {
 				[_aiPilotGroup] call fnc_clearWaypoints;
 				private _markerName = [
 					_basePos,
-					"Going Home",
+					"mil_end",
 					"mil_objective",
 					"ColorBlack"
 				] call fnc_createMarker;
 				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
 				_rtbWP setWaypointType "GETOUT";
 				sleep 60;
-				deleteMarker _markerName;
 			};
 		};
 	};
@@ -333,8 +332,8 @@ fnc_startMonitoringHeliStatus = {
 	private _markerName = [
 		getPosATL _chopper,
 		"Heli Crash Site",
-		"mil_objective",
-		"ColorBlack"
+		"mil_destroy",
+		"ColorRed"
 	] call fnc_createMarker;
 
 	private _grp = createGroup west;
