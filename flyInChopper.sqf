@@ -110,7 +110,7 @@ fnc_engageEnemies = {
 		_chopper setVehicleAmmo 1;
 
 		private _aliveEnemies = allUnits select {
-			side _x == _sideEnemy && alive _x
+			(side _x == _sideEnemy) && (alive _x) && (lifeState _x != "INCAPACITATED")
 		};
 		private _target = _aliveEnemies param [0, objNull];
 
@@ -128,7 +128,10 @@ fnc_engageEnemies = {
 				"mil_objective",
 				"ColorBlack"
 			] call fnc_createMarker;
-			sleep 20;
+
+			waitUntil {
+				(!alive _target) || (lifeState _target == "INCAPACITATED")
+			};
 			deleteMarker _markerName;
 		};
 		sleep 1;
