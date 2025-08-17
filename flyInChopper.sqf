@@ -35,6 +35,8 @@ private _sideEnemy = [_chopper] call fnc_getEnemySide;
 private _basePos = getPos _chopper;
 private _rtbAltitude = 80;
 
+_chopper setVariable["basePosition", _basePos, true];
+
 fnc_getEnemyCount = {
 	params ["_sideEnemy"];
 	count (allUnits select {
@@ -89,9 +91,21 @@ fnc_createMarker = {
 };
 
 fnc_engageEnemies = {
-	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy"];
+	params ["_chopper", "_sideEnemy"];
 
-	while { ([_sideEnemy] call fnc_getEnemyCount) > 0 && alive _chopper } do {
+	private _heliPilot = driver _chopper;
+	private _aiPilotGroup = group _heliPilot;
+
+	while {
+		(([_sideEnemy] call fnc_getEnemyCount) > 0) &&
+		alive _chopper &&
+		(({
+			alive _x
+		} count crew _chopper) > 1)
+	} do {
+		_heliPilot = driver _chopper;
+		_aiPilotGroup = group _heliPilot;
+
 		hint format ["Remaining enemies: %1", ([_sideEnemy] call fnc_getEnemyCount)];
 		_chopper setVehicleAmmo 1;
 
@@ -161,9 +175,11 @@ fnc_flyInChopper = {
 			_heliPilot doMove _enemyPos;
 
 			// Engage loop
-			[_chopper, _heliPilot, _aiPilotGroup, _sideEnemy] call fnc_engageEnemies;
+			[_chopper, _sideEnemy] call fnc_engageEnemies;
 
 			if (alive _chopper) then {
+				_heliPilot = driver _chopper;
+				_aiPilotGroup = group _heliPilot;
 				[_aiPilotGroup] call fnc_clearWaypoints;
 				private _markerName = [
 					_basePos,
