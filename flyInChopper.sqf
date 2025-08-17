@@ -138,12 +138,12 @@ fnc_engageEnemies = {
 fnc_flyInChopper = {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
 
-	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 1);
+	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 0.75);
 
-	    // Remove cargo from group
+	// Remove cargo from group
 	[_chopper] call fnc_removeCargoFromGroup;
 
-	    // Wait until enemy count drops
+	// Wait until enemy count drops
 	waitUntil {
 		([_sideEnemy] call fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
 	};
