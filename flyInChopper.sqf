@@ -74,6 +74,9 @@ private _rtbAltitude = 80;
 					side _x == _sideEnemy && alive _x
 				} count allUnits) > 0) && (alive _chopper)
 			} do {
+				hint format ["Remaining enemies: %1", ({
+					side _x == _sideEnemy && alive _x
+				} count allUnits)];
 				_chopper setVehicleAmmo 1;
 				private _aliveEnemies = allUnits select {
 					side _x == _sideEnemy && alive _x
@@ -93,9 +96,7 @@ private _rtbAltitude = 80;
 					_wp setWaypointCombatMode "RED";
 					_wp setWaypointSpeed "FULL";
 
-					waitUntil {
-						!(alive _target) || (lifeState _target == "INCAPACITATED")
-					};
+					sleep 20;
 				};
 				sleep 1;
 			};
@@ -210,7 +211,7 @@ private _rtbAltitude = 80;
 	_chopper setDamage 1;
 
 	private _grp = createGroup west;
-	private _unit = _grp createUnit ["B_Soldier_F", [0,0,0], [], 0, "NONE"];
+	private _unit = _grp createUnit ["B_Soldier_F", [0, 0, 0], [], 0, "NONE"];
 
 	// set group callsign
 	_grp setGroupIdGlobal ["November"];
