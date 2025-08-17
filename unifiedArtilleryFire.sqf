@@ -338,12 +338,14 @@ fnc_getIndexOfGroup = {
 // Callbacks
 // =========================
 
-// if this callback is not defined, there will be no radio sounds, 
+// if this callback is not defined, there will be no radio sounds.
 // The artillery/mortar will continue to do its job
 missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 	params ["_requestor", "_responder", "_phase", "_grid"];
 	private _index = [group _requestor] call fnc_getIndexOfGroup;
 
+	_requestor setVariable ["isRadioBusy", true];
+	_responder setVariable ["isRadioBusy", true];
 	switch (_phase) do {
 		case GUN_BARRAGE_PHASE_REQUEST: {
 			_requestor sideRadio format["ArtyRequest%1", _index select 0]; // plays sound
@@ -369,6 +371,8 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 			systemChat format ["Invalid artillery call phase: %1", _phase];
 		};
 	};
+	_requestor setVariable ["isRadioBusy", false];
+	_responder setVariable ["isRadioBusy", false];
 }];
 
 missionNamespace setVariable [GUN_MARKER_CALLBACK, {
@@ -424,14 +428,7 @@ fnc_fireGun = {
 		];
 	};
 	// Choose a responder (gunner or commander)
-	private _base = if (!isNull (gunner _gun)) then {
-		gunner _gun
-	} else {
-		commander _gun
-	};
-	if (isNull _base) exitWith {
-		false
-	};
+	private _base = [group _gun] call fnc_getQuietUnit;
 	private _grid = mapGridPosition _finalPos;
 
 	// Create temporary "X" marker
@@ -553,6 +550,9 @@ fnc_getQuietUnit = {
 		};
 	} forEach (units _group);
 
+	if (isNull _quietUnit) then {
+		_quietUnit = _leader;
+	};
 	_quietUnit
 };
 
