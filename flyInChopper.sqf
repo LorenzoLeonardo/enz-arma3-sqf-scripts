@@ -5,108 +5,148 @@
 
 params ["_chopper"];
 
+fnc_getEnemySide = {
+	params ["_chopper"];
+
+	private _side = side (driver _chopper);
+
+	switch (_side) do {
+		case east: {
+			west
+		};
+		case west: {
+			east
+		};
+		case independent: {
+			west
+		};   // often fight blufor
+		case civilian: {
+			east
+		};      // optional: treat civilians as hostile to opfor
+		default {
+			independent
+		};
+	};
+};
+
 private _heliPilot = driver _chopper;
 private _aiPilotGroup = group _heliPilot;
-private _sideEnemy = east;
-private _basePos = getMarkerPos "airbase";
+private _sideEnemy = [_chopper] call fnc_getEnemySide;
+private _basePos = getPos _chopper;
 private _rtbAltitude = 80;
 
-[_chopper, _heliPilot, _aiPilotGroup, _sideEnemy, _basePos, _rtbAltitude] spawn {
-	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
-	// Calculate 75% of current enemy count
-	private _threshHoldCount = floor ((count (allUnits select {
+fnc_getEnemyCount = {
+	params ["_sideEnemy"];
+	count (allUnits select {
 		side _x == _sideEnemy && alive _x
-	})) * 0.75);
+	})
+};
 
-	// Remove all men in cargo from group, so that the pilot cannot command them later to disembark.
+fnc_removeCargoFromGroup = {
+	params ["_chopper"];
 	{
 		if (tolower((assignedVehicleRole _x) select 0) == "cargo") then {
 			[_x] joinSilent grpNull;
-		}
+		};
 	} forEach (crew _chopper);
+};
 
-	// Wait until enemy count is below half and chopper is alive
-	waitUntil {
-		((count (allUnits select {
+fnc_getAverageEnemyPos = {
+	params ["_sideEnemy"];
+	private _enemies = allUnits select {
+		side _x == _sideEnemy && alive _x
+	};
+	private _enemyPos = [0, 0, 0];
+	{
+		_enemyPos = _enemyPos vectorAdd (getPosATL _x)
+	} forEach _enemies;
+
+	if ((count _enemies) > 0) then {
+		_enemyPos vectorMultiply (1 / (count _enemies))
+	} else {
+		[0, 0, 0]
+	}
+};
+
+fnc_clearWaypoints = {
+	params ["_group"];
+	while { (count waypoints _group) > 0 } do {
+		deleteWaypoint [_group, 0];
+	};
+};
+
+fnc_engageEnemies = {
+	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy"];
+
+	while { ([_sideEnemy] call fnc_getEnemyCount) > 0 && alive _chopper } do {
+		hint format ["Remaining enemies: %1", ([_sideEnemy] call fnc_getEnemyCount)];
+		_chopper setVehicleAmmo 1;
+
+		private _aliveEnemies = allUnits select {
 			side _x == _sideEnemy && alive _x
-		})) < _threshHoldCount) && alive _chopper
+		};
+		private _target = _aliveEnemies param [0, objNull];
+
+		if (!isNull _target) then {
+			[_aiPilotGroup] call fnc_clearWaypoints;
+
+			private _wp = _aiPilotGroup addWaypoint [getPos _target, 0];
+			_wp setWaypointType "SAD";
+			_wp setWaypointBehaviour "AWARE";
+			_wp setWaypointCombatMode "RED";
+			_wp setWaypointSpeed "FULL";
+
+			sleep 20;
+		};
+		sleep 1;
+	};
+};
+
+fnc_flyInChopper = {
+	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
+
+	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 0.75);
+
+	    // Remove cargo from group
+	[_chopper] call fnc_removeCargoFromGroup;
+
+	    // Wait until enemy count drops
+	waitUntil {
+		([_sideEnemy] call fnc_getEnemyCount) < _threshHoldCount && alive _chopper
 	};
 
 	if (alive _chopper) then {
 		hint "Tactical airstrike is coming your location.";
-		// Send radio message to ground units
 		_heliPilot sideRadio "RadioHeliTacticalStrike";
 
-		// Force AI to engage
 		_chopper engineOn true;
 		_chopper flyInHeight _rtbAltitude;
 		_aiPilotGroup setBehaviour "AWARE";
-		_aiPilotGroup setCombatMode "RED";  // Engage enemies
+		_aiPilotGroup setCombatMode "RED";
+
 		{
 			_x enableAI "MOVE"
 		} forEach units _aiPilotGroup;
 
-		private _enemies = allUnits select {
-			side _x == _sideEnemy && alive _x
-		};
-		// Calculate average enemy position
-		private _enemyPos = [0, 0, 0];
-		{
-			_enemyPos = _enemyPos vectorAdd (getPosATL _x)
-		} forEach _enemies;
+		private _enemyPos = [_sideEnemy] call fnc_getAverageEnemyPos;
 
-		if ((count _enemies) > 0) then {
-			_enemyPos = _enemyPos vectorMultiply (1 / (count _enemies));
-			// Add TAKEOFF move waypoint first (forces liftoff)
+		if (_enemyPos isNotEqualTo [0, 0, 0]) then {
+			// Add TAKEOFF move waypoint
 			private _wp0 = _aiPilotGroup addWaypoint [getPos _chopper, 0];
 			_wp0 setWaypointType "MOVE";
 
-			// Add SAD waypoint to enemy position
+			// SAD waypoint to enemy cluster
 			private _wp1 = _aiPilotGroup addWaypoint [_enemyPos, 0];
 			_wp1 setWaypointType "SAD";
 
-			// Backup: Force movement if AI stuck
 			_heliPilot doMove _enemyPos;
 
-			// Monitor and RTB when all enemies are dead
-			while {
-				(({
-					side _x == _sideEnemy && alive _x
-				} count allUnits) > 0) && (alive _chopper)
-			} do {
-				hint format ["Remaining enemies: %1", ({
-					side _x == _sideEnemy && alive _x
-				} count allUnits)];
-				_chopper setVehicleAmmo 1;
-				private _aliveEnemies = allUnits select {
-					side _x == _sideEnemy && alive _x
-				};
-				private _target = _aliveEnemies param [0, objNull];
-
-				if (!isNull _target) then {
-					// Clear waypoints
-					while { (count waypoints _aiPilotGroup) > 0 } do {
-						deleteWaypoint [_aiPilotGroup, 0];
-					};
-
-					// Add new waypoint to target
-					private _wp = _aiPilotGroup addWaypoint [getPos _target, 0];
-					_wp setWaypointType "SAD"; // could also use "SAD"
-					_wp setWaypointBehaviour "AWARE";
-					_wp setWaypointCombatMode "RED";
-					_wp setWaypointSpeed "FULL";
-
-					sleep 20;
-				};
-				sleep 1;
-			};
+			// Engage loop
+			[_chopper, _heliPilot, _aiPilotGroup, _sideEnemy] call fnc_engageEnemies;
 
 			if (alive _chopper) then {
-				// Clear waypoints
-				while { (count waypoints _aiPilotGroup) > 0 } do {
-					deleteWaypoint [_aiPilotGroup, 0];
-				};
-				// Return to base when all enemy unit are dead.
+				[_aiPilotGroup] call fnc_clearWaypoints;
+
 				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
 				_rtbWP setWaypointType "GETOUT";
 			};
@@ -114,94 +154,132 @@ private _rtbAltitude = 80;
 	};
 };
 
-// Auto-replace dead pilot
-{
-	_x addEventHandler ["HandleDamage", {
-		params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex"];
-		private _currentDamage = damage _unit;
-		private _newDamage = _currentDamage + _damage;
+// move a unit to a specific role (optionally a turret seat path)
+fnc_moveToRole = {
+	params ["_man", "_veh", "_role", "_seatPath"];
 
-		// if incoming damage will result in death
-		if (((_newDamage >= 1) && {
-			alive _unit
-		}) || (lifeState _unit == "INCAPACITATED")) then {
-			private _veh = vehicle _unit;
-			private _roleInfo = assignedVehicleRole _unit;
-			private _roleType = toLower (_roleInfo select 0);
+	switch (toLower _role) do {
+		case "driver": {
+			_man moveInDriver _veh
+		};
+		case "cargo": {
+			_man moveInCargo _veh
+		};
+		case "turret": {
+			_man moveInTurret [_veh, _seatPath]
+		};
+		default {};
+	};
+};
 
-			switch (_roleType) do {
-				case "driver": {
-					// Move to cargo if they're in the heli
-					private _replacement = objNull;
-					{
-						if (_x != _unit && alive _x && {
-							lifeState _x != "INCAPACITATED"
-						}) exitWith {
-							_replacement = _x;
-						};
-					} forEach (crew _veh);
+// Generic swap: define BOTH new roles (and seats if turret)
+fnc_swapPositions = {
+	// _unit = the one going down; _replacement = the one taking over
+	params ["_unit", "_replacement", "_veh", "_unitNewRole", "_replacementNewRole", "_unitTurretSeat", "_replacementTurretSeat"];
 
-					if (!isNull _replacement) then {
-						private _replacementRole = assignedVehicleRole _replacement select 0;
-						switch (toLower _replacementRole) do {
-							case "turret": {
-								private _seat = assignedVehicleRole _replacement select 1;
-								unassignVehicle _unit;
-								moveOut _unit;
-								unassignVehicle _replacement;
-								moveOut _replacement;
-								_unit moveInTurret[_veh, _seat];
-								_replacement moveInDriver _veh;
-							};
-							case "cargo": {
-								unassignVehicle _unit;
-								moveOut _unit;
-								unassignVehicle _replacement;
-								moveOut _replacement;
-								// join the replacement from cargo to the group of the vehicle
-								[_replacement] joinSilent (group _unit);
-								_unit moveInCargo _veh;
-								_replacement moveInDriver _veh;
-							};
-						};
+	// Evict both, then place them in target seats
+	{
+		unassignVehicle _x;
+		moveOut _x;
+	} forEach [_unit, _replacement];
+
+	// Keep team cohesion
+	[_replacement] joinSilent (group _unit);
+
+	// Place them
+	[_unit, _veh, _unitNewRole, _unitTurretSeat] call fnc_moveToRole;
+	[_replacement, _veh, _replacementNewRole, _replacementTurretSeat] call fnc_moveToRole;
+};
+
+// find a valid replacement matching any of the allowed role types
+fnc_findReplacement = {
+	params ["_unit", "_veh", "_allowedRoles"]; // e.g., ["cargo", "turret"]
+
+	private _r = objNull;
+	{
+		if (
+		_x != _unit &&
+		alive _x &&
+		lifeState _x != "INCAPACITATED" &&
+		(toLower ((assignedVehicleRole _x) select 0)) in _allowedRoles) exitWith {
+			_r = _x
+		};
+	} forEach (crew _veh);
+
+	_r
+};
+
+// driver down → try turret first (keep guns manned), then cargo
+fnc_handleDriverDown = {
+	params ["_unit", "_veh"];
+
+	private _replacement = [_unit, _veh, ["turret", "cargo"]] call fnc_findReplacement;
+	if (isNull _replacement) exitWith {};
+
+	private _repRole = toLower ((assignedVehicleRole _replacement) select 0);
+
+	switch (_repRole) do {
+		case "turret": {
+			// Turret path comes from the REPLACEMENT (they vacate that seat)
+			private _turretPath = (assignedVehicleRole _replacement) select 1;
+			// New positions: UNIT → that turret seat, REPLACEMENT → driver
+			[_unit, _replacement, _veh, "turret", "driver", _turretPath, []] call fnc_swapPositions;
+		};
+		case "cargo": {
+			// New positions: UNIT → cargo, REPLACEMENT → driver
+			[_unit, _replacement, _veh, "cargo", "driver", [], []] call fnc_swapPositions;
+		};
+	};
+};
+
+// Turret down → pull from cargo into THIS unit's turret seat
+fnc_handleTurretDown = {
+	params ["_unit", "_veh"];
+
+	private _replacement = [_unit, _veh, ["cargo"]] call fnc_findReplacement;
+	if (isNull _replacement) exitWith {};
+
+	// Turret path from the UNIT (the seat that just got vacated)
+	private _unitTurretPath = (assignedVehicleRole _unit) select 1;
+
+	// New positions: UNIT → cargo, REPLACEMENT → that turret seat
+	[_unit, _replacement, _veh, "cargo", "turret", [], _unitTurretPath] call fnc_swapPositions;
+};
+
+// HandleDamage event: trigger replacement on kill/incapacitation
+fnc_startDamageHandlers = {
+	params ["_chopper"];
+	{
+		_x addEventHandler ["HandleDamage", {
+			params ["_unit", "_selection", "_damage"];
+			private _currentDamage = damage _unit;
+			private _newDamage = _currentDamage + _damage;
+
+			if ((_newDamage >= 1 && alive _unit) ||
+			{
+				lifeState _unit == "INCAPACITATED"
+			}
+			) then {
+				private _veh = vehicle _unit;
+				private _roleType = toLower ((assignedVehicleRole _unit) select 0);
+
+				switch (_roleType) do {
+					case "driver": {
+						[_unit, _veh] call fnc_handleDriverDown
 					};
-				};
-				case "turret": {
-					private _replacement = objNull;
-					{
-						if (_x != _unit && alive _x &&
-						(lifeState _x != "INCAPACITATED") &&
-						(tolower((assignedVehicleRole _x) select 0) == "cargo")) exitWith {
-							_replacement = _x;
-						};
-					} forEach (crew _veh);
-
-					if (!isNull _replacement) then {
-						private _replacementRole = assignedVehicleRole _replacement select 0;
-						switch (toLower _replacementRole) do {
-							case "cargo": {
-								private _seat = assignedVehicleRole _unit select 1;
-								unassignVehicle _unit;
-								moveOut _unit;
-								unassignVehicle _replacement;
-								moveOut _replacement;
-								// join the replacement from cargo to the group of the vehicle
-								[_replacement] joinSilent (group _unit);
-								_unit moveInCargo _veh;
-								_replacement moveInTurret[_veh, _seat];
-							};
-						};
+					case "turret": {
+						[_unit, _veh] call fnc_handleTurretDown
 					};
 				};
 			};
-		};
-		_newDamage
-	}];
-} forEach crew _chopper;
+			_newDamage
+		}];
+	} forEach crew _chopper;
+};
 
 // When all units are dead, destroy the heli
-[_chopper] spawn {
-	params["_chopper"];
+fnc_startMonitoringHeliStatus = {
+	params ["_chopper"];
 
 	waitUntil {
 		({
@@ -228,3 +306,15 @@ private _rtbAltitude = 80;
 	} forEach units _grp;
 	deleteGroup _grp;
 };
+
+// Main entry 
+[_chopper] call fnc_startDamageHandlers;
+[_chopper] spawn fnc_startMonitoringHeliStatus;
+[
+	_chopper,
+	_heliPilot,
+	_aiPilotGroup,
+	_sideEnemy,
+	_basePos,
+	_rtbAltitude
+] spawn fnc_flyInChopper;
