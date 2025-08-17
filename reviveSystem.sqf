@@ -147,14 +147,9 @@ fnc_getBestMedic = {
 
 	// Enemy revival logic if friendlies too far
 	if ((_nearestEnemyDist < _nearestMedicDist) && (_nearestMedicDist > FRIENDLY_MEDIC_FAR_THRESHOLD)) exitWith {
-		_nearestEnemy globalChat format ["%1 will revive %2", name _nearestEnemy, name _injured];
 		_nearestEnemy
 	};
 
-	// default: nearest friendly medic or fallback
-	if (!isNull _nearestMedic) then {
-		_nearestMedic globalChat format ["%1 will revive %2", name _nearestMedic, name _injured];
-	};
 	_nearestMedic
 };
 
@@ -353,15 +348,11 @@ fnc_handleHeal = {
 
 	// if revived by an enemy, drop the weapon become a captive
 	if (((side _medic) getFriend (side _injured)) < 0.6) then {
-		_medic globalChat format ["%1 has become captive", name _injured];
 		[_injured, _medic] call fnc_surrender;
 		[_injured] call fnc_dropAllWeapons;
 	};
 
 	[_injured, true] call fnc_setRevived;
-	if (!isNull _medic) then {
-		_medic globalChat format ["%1 has successfully revive %2", name _medic, name _injured];
-	};
 };
 
 // ===============================
@@ -417,18 +408,12 @@ fnc_reviveLoop = {
 		};
 		// Skip if already being revived
 		if ([_injured] call fnc_isBeingRevived) then {
-			if (!isNull _medic) then {
-				_medic globalChat format ["%1 is being revived.", name _injured];
-			};
 			continue
 		};
 
 		// find best medic
 		_medic = [_injured] call fnc_getBestMedic;
 		if (isNull _medic || !alive _medic) then {
-			if (!isNull _medic) then {
-				_medic globalChat format ["%1, a chosen medic to revive %2 has died.", name _medic, name _injured];
-			};
 			continue
 		};
 
@@ -441,9 +426,6 @@ fnc_reviveLoop = {
 		private _arrived = [_medic, _injured] call fnc_waitForMedicArrival;
 		// If medic didn't arrive in time or died or incapacitated
 		if (!_arrived) then {
-			if (!isNull _medic) then {
-				_medic globalChat format ["%1 has failed to come to revive %2.", name _medic, name _injured];
-			};
 			[_medic, _injured] call fnc_unlockReviveState;
 			continue;
 		};
@@ -472,7 +454,6 @@ fnc_reviveLoop = {
 				|| (time > _animTime)
 			};
 			if (!([_medic] call fnc_isUnitGood)) then {
-				_medic globalChat format ["%1 was incapacitated or died while reviving %2.", name _medic, name _injured];
 				[_medic, _injured] call fnc_unlockReviveState;
 				continue;
 			};
