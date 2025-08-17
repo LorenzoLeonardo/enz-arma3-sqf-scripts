@@ -1,8 +1,6 @@
 #include "commonFunctions.sqf"
 
-params ["_group", "_grpName"];
-
-_group setGroupId [_grpName];
+params ["_group"];
 
 // Save original unit types and loadouts
 private _originalLoadouts = [_group] call save_original_loadouts;
@@ -18,7 +16,7 @@ while { true } do {
 	};
 
 	private _radioUnit = [_group] call get_quiet_unit;
-	private _markerName = [_radioUnit, _grpName] call set_support_marker_and_radio;
+	private _markerName = [_radioUnit, groupId _group] call set_support_marker_and_radio;
 
 	// Signal: Flare & Smoke
 	private _flrObj = "F_40mm_Red" createVehicle (_radioUnit modelToWorld [0, 0, 200]);
