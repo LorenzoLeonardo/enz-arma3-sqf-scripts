@@ -75,6 +75,19 @@ fnc_clearWaypoints = {
 	};
 };
 
+fnc_createMarker = {
+	params ["_target", "_text", "_type", "_color"];
+	private _markerName = format ["airstrikeMarker_%1", diag_tickTime];
+
+	private _marker = createMarker [_markerName, _target];
+	_marker setMarkerShape "ICON";
+	_marker setMarkerType _type;
+	_marker setMarkerColor _color;
+	_marker setMarkerText _text;
+
+	_markerName
+};
+
 fnc_engageEnemies = {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy"];
 
@@ -95,8 +108,14 @@ fnc_engageEnemies = {
 			_wp setWaypointBehaviour "AWARE";
 			_wp setWaypointCombatMode "RED";
 			_wp setWaypointSpeed "FULL";
-
+			private _markerName = [
+				getPos _target,
+				"Air Strike Here!",
+				"mil_objective",
+				"ColorBlack"
+			] call fnc_createMarker;
 			sleep 20;
+			deleteMarker _markerName;
 		};
 		sleep 1;
 	};
@@ -105,14 +124,14 @@ fnc_engageEnemies = {
 fnc_flyInChopper = {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
 
-	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 0.75);
+	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 1);
 
 	    // Remove cargo from group
 	[_chopper] call fnc_removeCargoFromGroup;
 
 	    // Wait until enemy count drops
 	waitUntil {
-		([_sideEnemy] call fnc_getEnemyCount) < _threshHoldCount && alive _chopper
+		([_sideEnemy] call fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
 	};
 
 	if (alive _chopper) then {
@@ -146,9 +165,16 @@ fnc_flyInChopper = {
 
 			if (alive _chopper) then {
 				[_aiPilotGroup] call fnc_clearWaypoints;
-
+				private _markerName = [
+					_basePos,
+					"Going Home",
+					"mil_objective",
+					"ColorBlack"
+				] call fnc_createMarker;
 				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
 				_rtbWP setWaypointType "GETOUT";
+				sleep 60;
+				deleteMarker _markerName;
 			};
 		};
 	};
@@ -287,6 +313,13 @@ fnc_startMonitoringHeliStatus = {
 		} count crew _chopper == 0) || !(alive _chopper)
 	};
 	_chopper setDamage 1;
+
+	private _markerName = [
+		getPosATL _chopper,
+		"Heli Crash Site",
+		"mil_objective",
+		"ColorBlack"
+	] call fnc_createMarker;
 
 	private _grp = createGroup west;
 	private _unit = _grp createUnit ["B_Soldier_F", [0, 0, 0], [], 0, "NONE"];
