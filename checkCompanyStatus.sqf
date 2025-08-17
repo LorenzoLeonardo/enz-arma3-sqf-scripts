@@ -26,5 +26,5 @@ while { true } do {
 	"SmokeShellRed" createVehicle (position _radioUnit);
 
 	// call support
-	[_radioUnit, 350, 300, 8000, 400, _markerName, _originalLoadouts] call call_support_team;
+	[_radioUnit, 150, 300, 8000, 400, _markerName, _originalLoadouts] call call_support_team;
 };
