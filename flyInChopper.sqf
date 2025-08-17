@@ -13,11 +13,10 @@ private _rtbAltitude = 80;
 
 [_chopper, _heliPilot, _aiPilotGroup, _sideEnemy, _basePos, _rtbAltitude] spawn {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
-	// Calculate half of current enemy count
-	private _halfEnemyCount = floor ((count (allUnits select {
+	// Calculate 75% of current enemy count
+	private _threshHoldCount = floor ((count (allUnits select {
 		side _x == _sideEnemy && alive _x
-	})) / 2);
-	_chopper allowCrewInImmobile true;
+	})) * 0.75);
 
 	// Remove all men in cargo from group, so that the pilot cannot command them later to disembark.
 	{
@@ -30,10 +29,11 @@ private _rtbAltitude = 80;
 	waitUntil {
 		((count (allUnits select {
 			side _x == _sideEnemy && alive _x
-		})) < _halfEnemyCount) && alive _chopper
+		})) < _threshHoldCount) && alive _chopper
 	};
 
 	if (alive _chopper) then {
+		hint "Tactical airstrike is coming your location.";
 		// Send radio message to ground units
 		_heliPilot sideRadio "RadioHeliTacticalStrike";
 
@@ -64,8 +64,6 @@ private _rtbAltitude = 80;
 			// Add SAD waypoint to enemy position
 			private _wp1 = _aiPilotGroup addWaypoint [_enemyPos, 0];
 			_wp1 setWaypointType "SAD";
-			_wp1 setWaypointStatements ["true", "hint 'Chopper en route to enemies';
-			"];
 
 			// Backup: Force movement if AI stuck
 			_heliPilot doMove _enemyPos;
@@ -109,18 +107,7 @@ private _rtbAltitude = 80;
 				};
 				// Return to base when all enemy unit are dead.
 				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
-				_rtbWP setWaypointType "MOVE";
-				_rtbWP setWaypointStatements [
-					"true",
-					"
-					hint 'All enemies dead - RTB';
-					_chopper land 'LAND';
-					{
-						unassignVehicle _x;
-						_x action ['GetOut', _chopper]
-					} forEach units _aiPilotGroup;
-					"
-				];
+				_rtbWP setWaypointType "GETOUT";
 			};
 		};
 	};
@@ -223,7 +210,7 @@ private _rtbAltitude = 80;
 	_chopper setDamage 1;
 
 	private _grp = createGroup west;
-	private _unit = _grp createUnit ["B_Soldier_F", getPos player, [], 0, "NONE"];
+	private _unit = _grp createUnit ["B_Soldier_F", [0,0,0], [], 0, "NONE"];
 
 	// set group callsign
 	_grp setGroupIdGlobal ["November"];
