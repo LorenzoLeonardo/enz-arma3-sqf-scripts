@@ -115,10 +115,10 @@ fnc_getOriginalBackPack = {
 };
 
 fnc_initializePlane = {
-	params ["_pilotType", "_planeModel", "_dropPosition", "_initLocation", "_planeSpeed", "_planeGroupName"];
+	params ["_side", "_pilotType", "_planeModel", "_dropPosition", "_initLocation", "_planeSpeed", "_planeGroupName"];
 
 	// create a group of the plane
-	private _groupPlane = createGroup west;
+	private _groupPlane = createGroup _side;
 	// create Airplane
 	private _returnPlane = createVehicle [_planeModel, _initLocation, [], 0, "FLY"];
 	// create Pilot

@@ -166,7 +166,7 @@ fnc_setSupportMarkerAndRadio = {
 		// Initial location of the plane
 		private _initLocation = [_callerPosition select 0, (_callerPosition select 1) - _yDistance, _planeAltitude];
 		// Create the plane
-		private _plane = ["CUP_B_US_Pilot", "CUP_B_C47_USA", _callerPosition, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C47_USA", _callerPosition, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
 		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call fnc_createGroupFromTemplate;
 		// Add reviving characteristic of the newly created group.
