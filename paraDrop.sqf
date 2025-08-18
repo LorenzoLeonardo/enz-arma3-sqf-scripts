@@ -1,12 +1,16 @@
-params[
-	"_caller",
-	"_planeAltitude",
-	"_planeSpeed",
-	"_yDistance",
-	"_yDroppingRadius",
-	"_dropZoneMarkerName",
-	"_groupTemplate"
-];
+#define CALLBACK_PARA_DROP_STATUS "Callback_ParaDrop"
+#define PARA_DROP_PHASE_ACKNOWLEDGED "Acknowledged"
+#define PARA_DROP_PHASE_DROPPING "Dropping"
+#define PARA_DROP_PHASE_DONE "Done"
+
+fnc_callBackParaDropStatus = {
+	params ["_requestor", "_responder", "_phase"];
+
+	private _callBack = missionNamespace getVariable [CALLBACK_PARA_DROP_STATUS, nil];
+	if (! isNil "_callBack") then {
+		[_requestor, _responder, _phase] call (missionNamespace getVariable CALLBACK_PARA_DROP_STATUS);
+	};
+};
 
 fnc_executeParaDrop = {
 	params ["_caller", "_plane", "_planeAltitude", "_yDroppingRadius", "_paraDropMarkerName", "_groupToBeDropped"];
@@ -15,8 +19,8 @@ fnc_executeParaDrop = {
 	private _callerPosition = getMarkerPos _paraDropMarkerName;
 	private _groupBeforeJoin = units _groupToBeDropped;
 	private _groupCallerID = groupId _groupCaller;
-	hint format ["Requesting Reinforcements: %1", groupId _groupCaller];
-	((crew _plane) select 0) sideRadio "SupportOnWayStandBy";
+
+	[_caller, driver _plane, PARA_DROP_PHASE_ACKNOWLEDGED] call fnc_callBackParaDropStatus;
 	_groupToBeDropped copyWaypoints _groupCaller;
 
 	// Wait until plane reaches drop zone
@@ -24,7 +28,8 @@ fnc_executeParaDrop = {
 	private _backPack = [_groupToBeDropped] call fnc_setParachuteBackpack;
 
 	// drop troops
-	((crew _plane) select 0) sideRadio "RadioAirbaseDropPackage";
+	[_caller, driver _plane, PARA_DROP_PHASE_DROPPING] call fnc_callBackParaDropStatus;
+
 	[_groupToBeDropped, _plane, _backPack, 0.5] call fnc_ejectFromPlane;
 
 	// join or rename group
@@ -34,30 +39,10 @@ fnc_executeParaDrop = {
 		_groupToBeDropped setGroupId [_groupCallerID];
 	} else {
 		(units _groupToBeDropped) join _groupCaller;
-		switch (toLower _groupCallerID) do {
-			case "alpha": {
-				(leader _groupCaller) sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha";
-			};
-			case "bravo": {
-				(leader _groupCaller) sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo";
-			};
-			case "charlie": {
-				(leader _groupCaller) sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie";
-			};
-			case "delta": {
-				(leader _groupCaller) sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta";
-			};
-			case "echo": {
-				(leader _groupCaller) sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportEcho";
-			};
-			default {
-				(leader _groupCaller) sideRadio "Reinforcements have linked up.";
-			};
-		};
+		[_caller, driver _plane, PARA_DROP_PHASE_DONE] call fnc_callBackParaDropStatus;
 	};
 
 	[_groupToBeDropped] call fnc_waitUntilGroupOnGround;
-	deleteMarkerLocal _paraDropMarkerName;
 };
 
 fnc_saveOriginalGroupTemplates = {
@@ -129,95 +114,25 @@ fnc_getOriginalBackPack = {
 	} forEach _backPack;
 };
 
-fnc_setSupportMarkerAndRadio = {
-	params ["_unit", "_grpName"];
-	private _markerName = format ["paraDropMarker_%1", diag_tickTime];
-	private _markerText = format ["Requesting Paradrop Support (%1)", _grpName];
-	private _marker = createMarkerLocal [_markerName, position _unit];
-	_marker setMarkerSizeLocal [1, 1];
-	_marker setMarkerShapeLocal "ICON";
-	_marker setMarkerTypeLocal "mil_objective";
-	_marker setMarkerDirLocal 0;
-	_marker setMarkerTextLocal _markerText;
-
-	switch (toLower _grpName) do {
-		case "alpha": {
-			_marker setMarkerColorLocal "ColorBlue";
-			_unit sideRadio "RadioAlphaWipedOut";
-		};
-		case "bravo": {
-			_marker setMarkerColorLocal "ColorRed";
-			_unit sideRadio "RadioBravoWipedOut";
-		};
-		case "charlie":{
-			_marker setMarkerColorLocal "ColorGreen";
-			_unit sideRadio "RadioCharlieWipedOut";
-		};
-		case "delta": {
-			_marker setMarkerColorLocal "ColorYellow";
-			_unit sideRadio "RadioDeltaWipedOut";
-		};
-		case "echo": {
-			_marker setMarkerColorLocal "ColorOrange";
-			_unit sideRadio "RadioEchoWipedOut";
-		};
-		default {
-			_marker setMarkerColorLocal "ColorWhite";
-			_unit sideRadio "RadioUnknownGroupWipedOut";
-		};
-	};
-	_markerName
-};
-
-fnc_getAssignedPlane = {
-	private _teamName = _this select 0;
-	private _planeAssigned="";
-	switch (toLower _teamName) do {
-		case "alpha": {
-			_planeAssigned = "November 1";
-		};
-		case "bravo": {
-			_planeAssigned = "November 2";
-		};
-		case "charlie": {
-			_planeAssigned = "November 3";
-		};
-		case "delta": {
-			_planeAssigned = "November 4";
-		};
-		case "echo": {
-			_planeAssigned = "November 5";
-		};
-		default {
-			hint format["%1 is not a valid squad name. Please use Alpha, Bravo, Charlie, Delta", _teamName];
-		};
-	};
-	_planeAssigned
-};
-
 fnc_initializePlane = {
-	private _planeModel = _this select 0;
-	private _dropPosition = _this select 1;
-	private _initLocation = _this select 2;
-	private _planeSpeed = _this select 3;
-	private _planeGroupName = _this select 4;
+	params ["_pilotType", "_planeModel", "_dropPosition", "_initLocation", "_planeSpeed", "_planeGroupName"];
 
 	// create a group of the plane
-	private _groupC130J = createGroup west;
-	// create C130
+	private _groupPlane = createGroup west;
+	// create Airplane
 	private _returnPlane = createVehicle [_planeModel, _initLocation, [], 0, "FLY"];
 	// create Pilot
-	private _pilot = _groupC130J createUnit ["CUP_B_US_Pilot", _initLocation, [], 0, "CARGO"];
-	private _copilot = _groupC130J createUnit ["CUP_B_US_Pilot", _initLocation, [], 0, "CARGO"];
+	private _pilot = _groupPlane createUnit [_pilotType, _initLocation, [], 0, "CARGO"];
+	private _copilot = _groupPlane createUnit [_pilotType, _initLocation, [], 0, "CARGO"];
 	_returnPlane setPosASL [(_initLocation select 0), (_initLocation select 1), (_initLocation select 2)];
 	// move Pilot as plane driver
-	_pilot moveInDriver _returnPlane;// move pilot as driver of the plane
+	_pilot moveInDriver _returnPlane;
 	_copilot moveInAny _returnPlane;
 	addSwitchableUnit _copilot;
-	_groupC130J setGroupId [_planeGroupName];
+	_groupPlane setGroupId [_planeGroupName];
 
 	// change speed when almost reach drop zone
-	[_returnPlane, _groupC130J, _initLocation, _dropPosition, _planeSpeed] spawn fnc_setPlaneWayPoints;
+	[_returnPlane, _groupPlane, _initLocation, _dropPosition, _planeSpeed] spawn fnc_setPlaneWayPoints;
 	_returnPlane
 };
 
