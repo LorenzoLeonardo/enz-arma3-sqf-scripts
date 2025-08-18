@@ -24,7 +24,7 @@ fnc_getQuietUnit = {
 
 [_group, _originalGroupTemplate, _totalUnits] spawn {
 	params ["_group", "_originalGroupTemplate", "_totalUnits"];
-	sleep 2;
+	sleep 5;
 
 	while { true } do {
 		waitUntil {
