@@ -54,8 +54,9 @@ fnc_saveOriginalGroupTemplates = {
 		private _type = typeOf _x;
 		private _loadout = getUnitLoadout _x;
 		private _rank = rank _x;
+		private _skill = skill _x;
 
-		_originalLoadouts pushBack [_type, _loadout, _rank];
+		_originalLoadouts pushBack [_type, _loadout, _rank, _skill];
 	} forEach units _group;
 
 	_originalLoadouts
@@ -68,9 +69,11 @@ fnc_createGroupFromTemplate = {
 		private _type = _x select 0;
 		private _loadout = _x select 1;
 		private _rank = _x select 2;
+		private _skill = _x select 3;
 		private _unit = _group createUnit [_type, _spawnPos, [], 0, "NONE"];
 		_unit setUnitLoadout _loadout;
 		_unit setRank _rank;
+		_unit setSkill _skill;
 		_unit moveInCargo _plane;
 	} forEach _groupTemplate;
 	_group
