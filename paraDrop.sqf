@@ -27,8 +27,6 @@ fnc_executeParaDrop = {
 	((crew _plane) select 0) sideRadio "RadioAirbaseDropPackage";
 	[_groupToBeDropped, _plane, _backPack, 0.5] call fnc_ejectFromPlane;
 
-	// Optional: Add timeout here to verify drop success
-
 	// join or rename group
 	if (({
 		alive _x
@@ -68,11 +66,11 @@ fnc_saveOriginalGroupTemplates = {
 	private _originalLoadouts = [];
 
 	{
-		private _type  = typeOf _x;
-        private _loadout = getUnitLoadout _x;
-        private _rank = rank _x;
+		private _type = typeOf _x;
+		private _loadout = getUnitLoadout _x;
+		private _rank = rank _x;
 
-		_originalLoadouts pushBack [_type, _loadout,  _rank];
+		_originalLoadouts pushBack [_type, _loadout, _rank];
 	} forEach units _group;
 
 	_originalLoadouts
@@ -261,8 +259,7 @@ fnc_setPlaneWayPoints = {
 
 	waitUntil {
 		sleep 1;
-		_distance = sqrt(abs((_initLocation select 1) - (getPos _plane select 1))^2 + abs ((_initLocation select 0) - (getPos _plane select 0))^2);
-		_distance <= 100
+		(_initLocation distance2D (getPos _plane)) <= 100
 	};
 	[_plane] call fnc_uninitializePlane;
 };
@@ -274,8 +271,7 @@ fnc_waitUntilReachDropzone = {
 
 	waitUntil {
 		sleep 1;
-		_distance = sqrt(abs((_dropPosition select 1) - (getPos _plane select 1))^2 + abs ((_dropPosition select 0) - (getPos _plane select 0))^2);
-		_distance <= _droppingRadius
+		(_dropPosition distance2D (getPos _plane)) <= _droppingRadius
 	};
 };
 
