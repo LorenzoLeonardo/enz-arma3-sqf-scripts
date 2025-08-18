@@ -1,4 +1,4 @@
-#include "paraDrop.sqf"
+#include "paraDropHelpers.sqf"
 #include "reviveSystem.sqf"
 
 params ["_group"];
