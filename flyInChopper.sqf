@@ -46,9 +46,18 @@ fnc_getEnemyCount = {
 
 fnc_removeCargoFromGroup = {
 	params ["_chopper"];
+
+	private _replacementGrp = createGroup (side _chopper);
+	_replacementGrp setGroupIdGlobal ["Replacements"];
 	{
 		if (tolower((assignedVehicleRole _x) select 0) == "cargo") then {
-			[_x] joinSilent grpNull;
+			[_x] joinSilent _replacementGrp;
+			_x disableAI "MOVE";
+			_x disableAI "AUTOCOMBAT";
+			_x disableAI "TARGET";
+			_x disableAI "FSM";
+			_x assignAsCargo _chopper;
+			_x moveInCargo _chopper;
 		};
 	} forEach (crew _chopper);
 };
@@ -126,7 +135,7 @@ fnc_engageEnemies = {
 				getPos _target,
 				"Air Strike Here!",
 				"mil_objective",
-				"ColorBlack"
+				"ColorWEST"
 			] call fnc_createMarker;
 
 			waitUntil {
@@ -188,7 +197,7 @@ fnc_flyInChopper = {
 					_basePos,
 					"mil_end",
 					"mil_objective",
-					"ColorBlack"
+					"ColorWEST"
 				] call fnc_createMarker;
 				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
 				_rtbWP setWaypointType "GETOUT";
@@ -229,10 +238,13 @@ fnc_swapPositions = {
 
 	// Keep team cohesion
 	[_replacement] joinSilent (group _unit);
-
 	// Place them
 	[_unit, _veh, _unitNewRole, _unitTurretSeat] call fnc_moveToRole;
 	[_replacement, _veh, _replacementNewRole, _replacementTurretSeat] call fnc_moveToRole;
+
+	{
+		_replacement enableAI _x
+	} forEach ["MOVE", "AUTOCOMBAT", "TARGET", "FSM"];
 };
 
 // find a valid replacement matching any of the allowed role types
@@ -336,7 +348,7 @@ fnc_startMonitoringHeliStatus = {
 		getPosATL _chopper,
 		"Heli Crash Site",
 		"mil_destroy",
-		"ColorRed"
+		"ColorWEST"
 	] call fnc_createMarker;
 
 	private _grp = createGroup west;
