@@ -28,6 +28,8 @@ fnc_getQuietUnit = {
 missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 	params ["_requestor", "_responder", "_phase"];
 	private _groupCallerID = groupId (group _requestor);
+	_requestor setVariable ["isRadioBusy", true];
+	_responder setVariable ["isRadioBusy", true];
 	switch (_phase) do {
 		case PARA_DROP_PHASE_ACKNOWLEDGED: {
 			hint format ["Requesting Reinforcements: %1", _groupCallerID];
@@ -63,6 +65,8 @@ missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 			hint "Unsupported phase!";
 		};
 	};
+	_requestor setVariable ["isRadioBusy", false];
+	_responder setVariable ["isRadioBusy", false];
 }];
 
 fnc_getAssignedPlane = {
@@ -93,6 +97,7 @@ fnc_getAssignedPlane = {
 
 fnc_setSupportMarkerAndRadio = {
 	params ["_unit", "_grpName", "_papaBear"];
+	private _responder = [_papaBear] call fnc_getQuietUnit;
 	private _markerName = format ["paraDropMarker_%1", diag_tickTime];
 	private _markerText = format ["Requesting Paradrop Support (%1)", _grpName];
 	private _marker = createMarkerLocal [_markerName, position _unit];
@@ -101,6 +106,9 @@ fnc_setSupportMarkerAndRadio = {
 	_marker setMarkerTypeLocal "mil_objective";
 	_marker setMarkerDirLocal 0;
 	_marker setMarkerTextLocal _markerText;
+
+	_unit setVariable ["isRadioBusy", true];
+	_responder setVariable ["isRadioBusy", true];
 
 	switch (toLower _grpName) do {
 		case "alpha": {
@@ -129,9 +137,10 @@ fnc_setSupportMarkerAndRadio = {
 		};
 	};
 	sleep 15;
-	private _responder = [_papaBear] call fnc_getQuietUnit;
 	_responder sideRadio "RadioPapaBearReplyWipedOut";
 	sleep 8;
+	_unit setVariable ["isRadioBusy", false];
+	_responder setVariable ["isRadioBusy", false];
 	_markerName
 };
 
@@ -149,13 +158,13 @@ fnc_setSupportMarkerAndRadio = {
 		};
 
 		private _radioUnit = [_group] call fnc_getQuietUnit;
-		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call fnc_setSupportMarkerAndRadio;
-
 		// Signal: Flare & Smoke
 		private _flrObj = "F_40mm_Red" createVehicle (_radioUnit modelToWorld [0, 0, 200]);
+
 		_flrObj setVelocity [0, 0, -1];
 		"SmokeShellRed" createVehicle (position _radioUnit);
 
+		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call fnc_setSupportMarkerAndRadio;
 		// Plane's cruising altitude
 		private _planeAltitude = 200;
 		// Plan starts at 8, 000 meters south of the drop zone
