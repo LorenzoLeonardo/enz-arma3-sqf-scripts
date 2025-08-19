@@ -1,7 +1,7 @@
 #include "paraDropHelpers.sqf"
 #include "reviveSystem.sqf"
 
-params ["_group"];
+params ["_group", "_papaBear"];
 
 // Save original unit types and loadouts
 private _originalGroupTemplate = [_group] call fnc_saveOriginalGroupTemplates;
@@ -92,7 +92,7 @@ fnc_getAssignedPlane = {
 };
 
 fnc_setSupportMarkerAndRadio = {
-	params ["_unit", "_grpName"];
+	params ["_unit", "_grpName", "_papaBear"];
 	private _markerName = format ["paraDropMarker_%1", diag_tickTime];
 	private _markerText = format ["Requesting Paradrop Support (%1)", _grpName];
 	private _marker = createMarkerLocal [_markerName, position _unit];
@@ -129,13 +129,14 @@ fnc_setSupportMarkerAndRadio = {
 		};
 	};
 	sleep 15;
-	[west, "HQ"] sideRadio "RadioPapaBearReplyWipedOut";
+	private _responder = [_papaBear] call fnc_getQuietUnit;
+	_responder sideRadio "RadioPapaBearReplyWipedOut";
 	sleep 8;
 	_markerName
 };
 
-[_group, _originalGroupTemplate, _totalUnits] spawn {
-	params ["_group", "_originalGroupTemplate", "_totalUnits"];
+[_group, _originalGroupTemplate, _totalUnits, _papaBear] spawn {
+	params ["_group", "_originalGroupTemplate", "_totalUnits", "_papaBear"];
 	sleep 5;
 
 	while { true } do {
@@ -148,7 +149,7 @@ fnc_setSupportMarkerAndRadio = {
 		};
 
 		private _radioUnit = [_group] call fnc_getQuietUnit;
-		private _paraDropMarkerName = [_radioUnit, groupId _group] call fnc_setSupportMarkerAndRadio;
+		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call fnc_setSupportMarkerAndRadio;
 
 		// Signal: Flare & Smoke
 		private _flrObj = "F_40mm_Red" createVehicle (_radioUnit modelToWorld [0, 0, 200]);
