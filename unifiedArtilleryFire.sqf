@@ -349,11 +349,11 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 	switch (_phase) do {
 		case GUN_BARRAGE_PHASE_REQUEST: {
 			_requestor sideRadio format["ArtyRequest%1", _index select 0]; // plays sound
-			_requestor sideChat format ["Requesting immediate artillery support at the designated coordinates [%1]. Over!", _grid];
+			_requestor sideChat format ["Requesting immediate fire support at the designated coordinates [%1]. Over!", _grid];
 		};
 		case GUN_BARRAGE_PHASE_SHOT : {
 			_responder sideRadio format["ArtyResponse%1", _index select 1];
-			_responder sideChat "Target location received, order is inbound. Out!";
+			_responder sideChat "Target location received, ordnance is inbound. Out!";
 		};
 		case GUN_BARRAGE_PHASE_SPLASH : {
 			_responder sideRadio format["ArtySplash%1", _index select 1];
