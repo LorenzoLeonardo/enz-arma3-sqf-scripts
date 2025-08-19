@@ -14,7 +14,7 @@ fnc_getQuietUnit = {
 	private _quietUnit = objNull;
 
 	{
-		if ((alive _x) && !isPlayer _x && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
+		if ((alive _x) && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
 			_quietUnit = _x;
 		};
 	} forEach (units _group);
@@ -70,19 +70,19 @@ fnc_getAssignedPlane = {
 	private _planeAssigned="";
 	switch (toLower _teamName) do {
 		case "alpha": {
-			_planeAssigned = "November 1";
+			_planeAssigned = "November (Alpha)";
 		};
 		case "bravo": {
-			_planeAssigned = "November 2";
+			_planeAssigned = "November (Bravo)";
 		};
 		case "charlie": {
-			_planeAssigned = "November 3";
+			_planeAssigned = "November (Charlie)";
 		};
 		case "delta": {
-			_planeAssigned = "November 4";
+			_planeAssigned = "November (Delta)";
 		};
 		case "echo": {
-			_planeAssigned = "November 5";
+			_planeAssigned = "November (Echo)";
 		};
 		default {
 			hint format["%1 is not a valid squad name. Please use Alpha, Bravo, Charlie, Delta", _teamName];
@@ -128,6 +128,9 @@ fnc_setSupportMarkerAndRadio = {
 			_unit sideRadio "RadioUnknownGroupWipedOut";
 		};
 	};
+	sleep 15;
+	[west, "HQ"] sideRadio "RadioPapaBearReplyWipedOut";
+	sleep 8;
 	_markerName
 };
 
