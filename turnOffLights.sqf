@@ -1,0 +1,117 @@
+// [object] execVM "turnOffLights.sqf";
+
+params ["_object"];
+
+_nearLights = nearestObjects [
+	_object,
+	[
+		// street & city lamps
+		"Lamps_base_F",
+		"Land_LampAirport_F",
+		"Land_LampDecor_F",
+		"Land_LampHalogen_F",
+		"Land_LampShabby_F",
+		"Land_LampStreet_F",
+		"Land_LampStreet_small_F",
+		"Land_LampSolar_F",
+
+		// buildings / houses (many variants)
+		"House",
+		"House_Small",
+		"Building",
+		"Land_i_House_Big_01_V1_F",
+		"Land_i_House_Big_02_V1_F",
+		"Land_i_House_Small_01_V1_F",
+		"Land_i_House_Small_02_V1_F",
+		"Land_u_House_Big_01_V1_F",
+		"Land_u_House_Small_01_V1_F",
+		"Land_d_House_Big_01_V1_F",
+		"Land_d_House_Small_01_V1_F",
+
+		// fuel stations
+		"Land_FuelStation_Build_F",
+		"Land_FuelStation_Shed_F",
+		"Land_FuelStation_Feed_F",
+		"Land_FuelStation_Feed_F",
+		"Land_fs_feed_F",
+		"Land_FuelStation_01_pump_malevil_F",
+		"Land_FuelStation_01_pump_F",
+		"Land_FuelStation_01_shop_F",
+		"Land_FuelStation_02_shop_F",
+
+		// power stuff
+		"PowerLines_base_F",
+		"PowerLines_Small_base_F",
+		"Land_PowerPoleWooden_L_F",
+		"Land_PowerPoleWooden_F",
+		"Land_PowerPoleConcrete_L_F",
+		"Land_PowerPoleConcrete_F",
+		"Land_PowerStation_F",
+
+		// airport specific
+		"Land_runway_edgelight",
+		"Land_runway_edgelight_blue_F",
+		"Land_runway_edgelight_red_F",
+		"Land_runway_edgelight_white_F",
+		"Land_Runway_PAPI",
+		"Land_Flush_Light_yellow_F",
+		"Land_Flush_Light_green_F",
+		"Land_Flush_Light_red_F",
+		"Land_Flush_Light_white_F",
+
+		"Land_NavigLight",
+		"Land_NavigLight_3_F",
+		"Land_NavigLight_4_F",
+		"Land_RunwayLight",
+		"Land_TaxiwayLight",
+		"Land_Airport_01_controlTower_F",
+		"Land_Airport_01_terminal_F",
+		"Land_Airport_02_controlTower_F",
+		"Land_Airport_02_terminal_F",
+
+		"Land_LampStreet_small_F",
+		"Land_LampStreet_F",
+		"Land_LampStreet_02_double_F",
+		"Land_LampStreet_02_triple_F",
+		"Land_LampStreet_02_quad_F",
+		"Land_LampStreet_02_F",
+		"Land_LampStreet_02_small_F",
+
+		"Land_StreetLamp_F",
+		"Land_LampHarbour_F",
+		"Land_LampIndustrial_F",
+		"Land_LampTower_F",
+
+		"Land_LampWall_F",
+		"Land_LampCeiling_F",
+		"Land_LampGarden_F",
+
+		"Land_FuelStation_01_roof_malevil_F",
+		"Land_FuelStation_02_roof_F",
+		"Land_FuelStation_02_pump_F",
+
+		"Land_Runway_PAPI_4", // some maps use this instead of Land_Runway_PAPI
+		"Land_RunwayLight_01_F",
+		"Land_TaxiwayLight_01_F",
+
+		"Land_NavigLight_1_F", // red/green standalone nav lights
+		"Land_NavigLight_2_F",
+
+		"Land_LampHalogen_off_F", // halogen lamps (different variants)
+		"Land_LampSolar_off_F", // solar street lamp variants
+		"Land_LampAirport_off_F",
+
+		"Land_PortableLight_single_F", // construction site light
+		"Land_PortableLight_double_F", // twin construction floodlight
+		"Land_PortableLight_01_double_F",
+		"Land_PortableLight_01_single_F",
+
+		"Land_FuelStation_02_big_F", // large fuel station structures
+		"Land_FuelStation_02_roof_malevil_F"
+	],
+	50000
+];
+
+{
+	hideObjectGlobal _x;
+} forEach _nearLights;
