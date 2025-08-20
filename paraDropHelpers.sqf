@@ -233,3 +233,26 @@ fnc_waitUntilGroupOnGround = {
 		_onGround >= (count units _grp * 0.7)
 	};
 };
+
+fnc_loadGroupToPlane = {
+	params ["_plane", "_group"];
+	if (isNull _plane || isNull _group || !alive _plane) exitWith {
+		false
+	};
+
+	private _freeSeatCount = {
+		isNull (_x select 0)
+	} count (fullCrew [_plane, "cargo", true]);
+
+	private _groupCount = count (units _group);
+
+	if (_groupCount > _freeSeatCount) exitWith {
+		false
+	};
+
+	{
+		_x moveInCargo _plane;
+	} forEach (units _group);
+
+	true
+};
