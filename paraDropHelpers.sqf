@@ -4,43 +4,32 @@
 #define PARA_DROP_PHASE_DONE "Done"
 
 fnc_callBackParaDropStatus = {
-	params ["_requestor", "_responder", "_phase"];
+	params ["_requestor", "_responder", "_paraDropGroup", "_phase"];
 
 	private _callBack = missionNamespace getVariable [CALLBACK_PARA_DROP_STATUS, nil];
 	if (! isNil "_callBack") then {
-		[_requestor, _responder, _phase] call (missionNamespace getVariable CALLBACK_PARA_DROP_STATUS);
+		[_requestor, _responder, _paraDropGroup, _phase] call (missionNamespace getVariable CALLBACK_PARA_DROP_STATUS);
 	};
 };
 
 fnc_executeParaDrop = {
-	params ["_caller", "_plane", "_planeAltitude", "_yDroppingRadius", "_paraDropMarkerName", "_groupToBeDropped"];
+	params ["_caller", "_plane", "_planeAltitude", "_yDroppingRadius", "_dropDropLocation", "_groupToBeDropped"];
 
-	private _groupCaller = group _caller;
-	private _callerPosition = getMarkerPos _paraDropMarkerName;
-	private _groupBeforeJoin = units _groupToBeDropped;
-	private _groupCallerID = groupId _groupCaller;
-
-	[_caller, driver _plane, PARA_DROP_PHASE_ACKNOWLEDGED] call fnc_callBackParaDropStatus;
-	_groupToBeDropped copyWaypoints _groupCaller;
-
-	// Wait until plane reaches drop zone
-	[_plane, _callerPosition, _yDroppingRadius, _planeAltitude] call fnc_waitUntilReachDropzone;
+	// save the original backpack after swapping for a parachute backpack.
 	private _backPack = [_groupToBeDropped] call fnc_setParachuteBackpack;
 
-	// drop troops
-	[_caller, driver _plane, PARA_DROP_PHASE_DROPPING] call fnc_callBackParaDropStatus;
+	// acknowledge the request for para drop.
+	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_ACKNOWLEDGED] call fnc_callBackParaDropStatus;
 
+	// wait until plane reaches drop zone
+	[_plane, _dropDropLocation, _yDroppingRadius, _planeAltitude] call fnc_waitUntilReachDropzone;
+
+	// drop troops
+	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DROPPING] call fnc_callBackParaDropStatus;
 	[_groupToBeDropped, _plane, _backPack, 0.5] call fnc_ejectFromPlane;
 
-	// join or rename group
-	if (({
-		alive _x
-	} count units _groupCaller) == 0) then {
-		_groupToBeDropped setGroupId [_groupCallerID];
-	} else {
-		(units _groupToBeDropped) join _groupCaller;
-		[_caller, driver _plane, PARA_DROP_PHASE_DONE] call fnc_callBackParaDropStatus;
-	};
+	// ejecting from plane done
+	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DONE] call fnc_callBackParaDropStatus;
 
 	[_groupToBeDropped] call fnc_waitUntilGroupOnGround;
 };

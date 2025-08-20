@@ -26,7 +26,7 @@ fnc_getQuietUnit = {
 };
 
 missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
-	params ["_requestor", "_responder", "_phase"];
+	params ["_requestor", "_responder", "_groupToBeDropped", "_phase"];
 	private _groupCallerID = groupId (group _requestor);
 	_requestor setVariable ["isRadioBusy", true];
 	_responder setVariable ["isRadioBusy", true];
@@ -34,12 +34,20 @@ missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 		case PARA_DROP_PHASE_ACKNOWLEDGED: {
 			hint format ["Requesting Reinforcements: %1", _groupCallerID];
 			_responder sideRadio "SupportOnWayStandBy";
+			_groupToBeDropped copyWaypoints (group _requestor);
 		};
 		case PARA_DROP_PHASE_DROPPING: {
 			_responder sideRadio "RadioAirbaseDropPackage";
 		};
 		case PARA_DROP_PHASE_DONE: {
 			private _quietUnit = [group _requestor] call fnc_getQuietUnit;
+			if (({
+				alive _x
+			} count units _requestor) == 0) then {
+				_groupToBeDropped setGroupId [_groupCallerID];
+			} else {
+				(units _groupToBeDropped) join (group _requestor);
+			};
 			switch (toLower _groupCallerID) do {
 				case "alpha": {
 					_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha";
@@ -175,17 +183,17 @@ fnc_setSupportMarkerAndRadio = {
 		private _yDroppingRadius = 400;
 		// Get Assigned plane's name
 		private _planeGroupName = [groupId _group] call fnc_getAssignedPlane;
-		private _callerPosition = getMarkerPos _paraDropMarkerName;
+		private _paraDropLocation = getMarkerPos _paraDropMarkerName;
 		// Initial location of the plane
-		private _initLocation = [_callerPosition select 0, (_callerPosition select 1) - _yDistance, _planeAltitude];
+		private _initLocation = [_paraDropLocation select 0, (_paraDropLocation select 1) - _yDistance, _planeAltitude];
 		// Create the plane
-		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C47_USA", _callerPosition, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C47_USA", _paraDropLocation, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
 		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call fnc_createGroupFromTemplate;
 		// Add reviving characteristic of the newly created group.
 		[_groupToBeDropped] execVM "reviveSystem.sqf";
 		// Start executing the paradrop system.
-		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropMarkerName, _groupToBeDropped] call fnc_executeParaDrop;
+		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropLocation, _groupToBeDropped] call fnc_executeParaDrop;
 		deleteMarkerLocal _paraDropMarkerName;
 	};
 };
