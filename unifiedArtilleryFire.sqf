@@ -451,30 +451,47 @@ fnc_fireGun = {
 	sleep 2;
 	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
-	// --- Wait until the gun finishes firing ---
+	// Variable to track for first projectile to hit the ground
+	// to sync when calling "Splash out"
+	_gun setVariable ["splashed", false, true];
+	// list of number of shells to hit the ground to sync when
+	// when calling Rounds complete
+	_gun setVariable ["firedShells", [], true];
+
+	_gun addEventHandler ["Fired", {
+		params ["_unit", "_weapon", "_muzzle", "_mode", "_ammo", "_mag", "_projectile"];
+
+		[_projectile, _unit] spawn {
+			params ["_proj", "_unit"];
+
+			waitUntil {
+				!alive _proj
+			};
+			_unit setVariable ["splashed", true, true];
+
+			private _shells = _unit getVariable ["firedShells", []];
+			_shells pushBack _proj;
+			_unit setVariable ["firedShells", _shells];
+		};
+	}];
+	// call splash after the first shell hits the ground.
 	waitUntil {
-		sleep 1;
-		(currentCommand _gun) == ""
+		_gun getVariable ["splashed", false] ||
+		([_gun, _ammoType] call fnc_getAmmoCount == 0)
 	};
-
-	// Estimate shell flight time based on distance
-	private _distance = _gun distance2D _finalPos;
-	private _shellSpeed = 300;  // Average for mortars; use ~400 for howitzers
-	private _flightTime = _distance / _shellSpeed;
-
-	 // --- 4. Splash call (always) ---
-	private _wait = 0.5;
-	if (_flightTime > 5) then {
-		_wait = _flightTime - 5;
-	};
-	sleep _wait;
 	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
-	// --- 5. Rounds Complete (after impact) ---
-	sleep (_flightTime + 2);
+	// call rounds complete until all projectiles hit the ground.
+	waitUntil {
+		private _shells = _gun getVariable ["firedShells", []];
+		(count _shells == _rounds) ||
+		([_gun, _ammoType] call fnc_getAmmoCount == 0)
+	};
 	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	deleteMarker _marker;
+
+	_gun removeEventHandler ["Fired", 0];
 	true
 };
 
