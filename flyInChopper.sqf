@@ -188,9 +188,7 @@ fnc_flyInChopper = {
 
 			// SAD waypoint to enemy cluster
 			private _wp1 = _aiPilotGroup addWaypoint [_enemyPos, 0];
-			_wp1 setWaypointType "SAD";
-
-			_heliPilot doMove _enemyPos;
+			_wp1 setWaypointType "DESTROY";
 
 			// Engage loop
 			[_chopper, _sideEnemy] call fnc_engageEnemies;
@@ -200,15 +198,25 @@ fnc_flyInChopper = {
 				_aiPilotGroup = group _heliPilot;
 				[_aiPilotGroup] call fnc_clearWaypoints;
 				_heliPilot sideRadio "RadioHeliMissionAccomplished";
+				// Ensure AI can move
+				{
+					_x enableAI "MOVE"
+				} forEach units _aiPilotGroup;
+
+				// Add RTB waypoint
+				private _wpRTB = _aiPilotGroup addWaypoint [_basePos, 0];
+				_wpRTB setWaypointType "LAND";
+				_wpRTB setWaypointSpeed "FULL";
+				_wpRTB setWaypointBehaviour "CARELESS";
+				_wpRTB setWaypointCombatMode "GREEN";
+
+				// Optional: create marker for landing
 				private _markerName = [
 					_basePos,
-					"mil_end",
+					"Return to Base",
 					"mil_objective",
 					"ColorWEST"
 				] call fnc_createMarker;
-				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
-				_rtbWP setWaypointType "GETOUT";
-				sleep 60;
 			};
 		};
 	};
