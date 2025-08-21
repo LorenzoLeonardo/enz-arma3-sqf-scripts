@@ -110,7 +110,8 @@ fnc_engageEnemies = {
 		alive _chopper &&
 		(({
 			alive _x
-		} count units (group _chopper)) > 1)
+		} count units (group _chopper)) > 1) &&
+		canMove _chopper
 	} do {
 		_heliPilot = driver _chopper;
 		_aiPilotGroup = group _heliPilot;
@@ -142,7 +143,8 @@ fnc_engageEnemies = {
 				(!alive _target) || (lifeState _target == "INCAPACITATED") ||
 				(({
 					alive _x
-				} count units (group _chopper)) <= 1)
+				} count units (group _chopper)) <= 1) ||
+				!(canMove _chopper)
 			};
 			deleteMarker _markerName;
 		};
@@ -193,7 +195,7 @@ fnc_flyInChopper = {
 			// Engage loop
 			[_chopper, _sideEnemy] call fnc_engageEnemies;
 
-			if (alive _chopper) then {
+			if (alive _chopper && canMove _chopper) then {
 				_heliPilot = driver _chopper;
 				_aiPilotGroup = group _heliPilot;
 				[_aiPilotGroup] call fnc_clearWaypoints;
@@ -345,7 +347,7 @@ fnc_startMonitoringHeliStatus = {
 	waitUntil {
 		({
 			alive _x
-		} count _heliUnits == 0) || !(alive _chopper)
+		} count _heliUnits == 0) || !(alive _chopper) || !(canMove _chopper)
 	};
 	_chopper setDamage 1;
 
