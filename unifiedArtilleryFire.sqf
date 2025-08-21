@@ -413,19 +413,20 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 // =========================
 fnc_fireGun = {
 	params ["_caller", "_gun", "_targetPos", "_accuracyRadius", "_ammoType", "_rounds"];
-	if (!canFire _gun) exitWith {
+	private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
+	if (!canFire _gun || (_ammoLeft == 0)) exitWith {
 		false
+	};
+
+	if (_ammoLeft < _rounds) then {
+		_rounds = _ammoLeft;
 	};
 
 	private _finalPos = _targetPos;
 	if (_accuracyRadius > 0) then {
-		private _angle = random 360;
+		private _angle = random (2 * pi);
 		private _dist = random _accuracyRadius;
-		_finalPos = [
-			(_targetPos select 0) + (sin _angle * _dist),
-			(_targetPos select 1) + (cos _angle * _dist),
-			0
-		];
+		_finalPos = _targetPos vectorAdd [(sin _angle * _dist), (cos _angle * _dist), 0];
 	};
 	// Choose a responder (gunner or commander)
 	private _base = [group _gun] call fnc_getQuietUnit;
@@ -445,11 +446,6 @@ fnc_fireGun = {
 		deleteMarker _marker;
 		false
 	};
-	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
-
-	// --- 3. Shot call ---
-	sleep 2;
-	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// Variable to track for first projectile to hit the ground
 	// to sync when calling "Splash out"
@@ -458,40 +454,47 @@ fnc_fireGun = {
 	// when calling Rounds complete
 	_gun setVariable ["firedShells", [], true];
 
-	_gun addEventHandler ["Fired", {
+	private _eventIndex = _gun addEventHandler ["Fired", {
 		params ["_unit", "_weapon", "_muzzle", "_mode", "_ammo", "_mag", "_projectile"];
 
 		[_projectile, _unit] spawn {
 			params ["_proj", "_unit"];
 
+			private _startTime = time; // record current time
 			waitUntil {
-				!alive _proj
+				!alive _proj || (time > (_startTime + 60))
 			};
-			_unit setVariable ["splashed", true, true];
+			if !(_unit getVariable ["splashed", false]) then {
+				_unit setVariable ["splashed", true, true];
+			};
 
 			private _shells = _unit getVariable ["firedShells", []];
 			_shells pushBack _proj;
 			_unit setVariable ["firedShells", _shells];
 		};
 	}];
+	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
+
+	// --- 3. Shot call ---
+	sleep 2;
+	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
+
 	// call splash after the first shell hits the ground.
 	waitUntil {
-		_gun getVariable ["splashed", false] ||
-		([_gun, _ammoType] call fnc_getAmmoCount == 0)
+		_gun getVariable ["splashed", false]
 	};
 	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// call rounds complete until all projectiles hit the ground.
 	waitUntil {
 		private _shells = _gun getVariable ["firedShells", []];
-		(count _shells == _rounds) ||
-		([_gun, _ammoType] call fnc_getAmmoCount == 0)
+		(count _shells == _rounds)
 	};
 	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	deleteMarker _marker;
 
-	_gun removeEventHandler ["Fired", 0];
+	_gun removeEventHandler["Fired", _eventIndex];
 	true
 };
 
