@@ -117,17 +117,6 @@ class CfgRadio
 		// radio caption
 		title	= "This is November. Paratroopers are now enroute to your location. November out!";
 	};
-	class RadioAirbaseDropPackage
-	{
-		// display name Evan (US)
-		name	= "RadioAirbaseDropPackage";
-
-		// filename, volume, pitch
-		sound[]	= { "\sounds\RadioAirbaseDropPackage.ogg", db + 100, 1.0 };
-
-		// radio caption
-		title	= "November dropping the package. Out!";
-	};
 	class RadioAmmoSupplyRequestAlpha
 	{
 		// display name
@@ -398,7 +387,40 @@ class CfgRadio
 
 		// radio caption
 		title	= "We linked up with the reinforcements, thanks for the support!";			
-	}	
+	}
+	class RadioAirbaseDropPackage
+	{
+		// display name Evan (US)
+		name	= "RadioAirbaseDropPackage";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\RadioAirbaseDropPackage.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "November dropping the package. Out!";
+	};
+	class RadioAirbasePackageOnGround
+	{
+		// display name Evan (US)
+		name	= "RadioAirbasePackageOnGround";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\showcase_slingloading_40_infantrydropped_PIL_0.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Eagle November, boots on the ground.";
+	};
+	class RadioAirbasePackageOnGroundReply
+	{
+		// display name Evan (US)
+		name	= "RadioAirbasePackageOnGroundReply";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\reinforcements\showcase_slingloading_40_infantrydropped_TOW_0.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Copy November, RTB. Out!";
+	};
 	class SupportOnWayStandBy
 	{
 		name	= "SupportOnWayStandBy";
@@ -683,7 +705,7 @@ class CfgRadio
 		sound[]	= { "\sounds\helicopter\mp_groundsupport_70_tacticalstrikeinbound_BHQ_3.ogg", db + 100, 1.0 };
 
 		// radio caption
-		title	= "All callsigns friendly tactical strike incoming.";
+		title	= "All callsigns, be advised. Friendly tactical strike incoming.";
 	}
 
 

@@ -197,6 +197,9 @@ fnc_setSupportMarkerAndRadio = {
 		[_groupToBeDropped] execVM "reviveSystem.sqf";
 		// Start executing the paradrop system.
 		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropLocation, _groupToBeDropped] call fnc_executeParaDrop;
+		(driver _plane) sideRadio "RadioAirbasePackageOnGround";
+		sleep 3;
+		([_papaBear] call fnc_getQuietUnit) sideRadio "RadioAirbasePackageOnGroundReply";
 		deleteMarkerLocal _paraDropMarkerName;
 	};
 };
