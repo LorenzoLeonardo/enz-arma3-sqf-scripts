@@ -52,12 +52,6 @@ fnc_removeCargoFromGroup = {
 	{
 		if (tolower((assignedVehicleRole _x) select 0) == "cargo") then {
 			[_x] joinSilent _replacementGrp;
-			_x disableAI "MOVE";
-			_x disableAI "AUTOCOMBAT";
-			_x disableAI "TARGET";
-			_x disableAI "FSM";
-			_x assignAsCargo _chopper;
-			_x moveInCargo _chopper;
 		};
 	} forEach (crew _chopper);
 };
@@ -248,10 +242,6 @@ fnc_swapPositions = {
 	// Place them
 	[_unit, _veh, _unitNewRole, _unitTurretSeat] call fnc_moveToRole;
 	[_replacement, _veh, _replacementNewRole, _replacementTurretSeat] call fnc_moveToRole;
-
-	{
-		_replacement enableAI _x
-	} forEach ["MOVE", "AUTOCOMBAT", "TARGET", "FSM"];
 };
 
 // find a valid replacement matching any of the allowed role types
@@ -323,16 +313,22 @@ fnc_startDamageHandlers = {
 				lifeState _unit == "INCAPACITATED"
 			}
 			) then {
-				private _veh = vehicle _unit;
-				private _roleType = toLower ((assignedVehicleRole _unit) select 0);
+				if (!(missionNamespace getVariable["isStillSwapping", false])) then {
+					missionNamespace setVariable["isStillSwapping", true, true];
+					private _veh = vehicle _unit;
+					private _roleType = toLower ((assignedVehicleRole _unit) select 0);
 
-				switch (_roleType) do {
-					case "driver": {
-						[_unit, _veh] call fnc_handleDriverDown
+					switch (_roleType) do {
+						case "driver": {
+							[_unit, _veh] call fnc_handleDriverDown;
+						};
+						case "turret": {
+							[_unit, _veh] call fnc_handleTurretDown;
+						};
 					};
-					case "turret": {
-						[_unit, _veh] call fnc_handleTurretDown
-					};
+					missionNamespace setVariable["isStillSwapping", false, true];
+				} else {
+					_newDamage = 0;
 				};
 			};
 			_newDamage
