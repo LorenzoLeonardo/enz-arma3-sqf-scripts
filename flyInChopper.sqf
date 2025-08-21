@@ -154,6 +154,7 @@ fnc_flyInChopper = {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
 
 	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 0.75);
+	_chopper allowCrewInImmobile true;
 
 	// Remove cargo from group
 	[_chopper] call fnc_removeCargoFromGroup;
