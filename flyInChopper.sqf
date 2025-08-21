@@ -110,7 +110,7 @@ fnc_engageEnemies = {
 		alive _chopper &&
 		(({
 			alive _x
-		} count crew _chopper) > 1)
+		} count units (group _chopper)) > 1)
 	} do {
 		_heliPilot = driver _chopper;
 		_aiPilotGroup = group _heliPilot;
@@ -139,7 +139,10 @@ fnc_engageEnemies = {
 			] call fnc_createMarker;
 
 			waitUntil {
-				(!alive _target) || (lifeState _target == "INCAPACITATED")
+				(!alive _target) || (lifeState _target == "INCAPACITATED") ||
+				(({
+					alive _x
+				} count units (group _chopper)) <= 1)
 			};
 			deleteMarker _markerName;
 		};
@@ -193,6 +196,7 @@ fnc_flyInChopper = {
 				_heliPilot = driver _chopper;
 				_aiPilotGroup = group _heliPilot;
 				[_aiPilotGroup] call fnc_clearWaypoints;
+				_heliPilot sideRadio "RadioHeliMissionAccomplished";
 				private _markerName = [
 					_basePos,
 					"mil_end",
@@ -336,11 +340,11 @@ fnc_startDamageHandlers = {
 // When all units are dead, destroy the heli
 fnc_startMonitoringHeliStatus = {
 	params ["_chopper"];
-
+	private _heliUnits = units (group _chopper);
 	waitUntil {
 		({
 			alive _x
-		} count crew _chopper == 0) || !(alive _chopper)
+		} count _heliUnits == 0) || !(alive _chopper)
 	};
 	_chopper setDamage 1;
 
