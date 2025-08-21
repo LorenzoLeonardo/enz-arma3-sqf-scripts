@@ -72,13 +72,15 @@ while {
 		};
 		hint format ["Objective Updated: Hunt %1 remaining enemies.", count _aliveEnemies];
 		// Wait until that specific target is dead before moving on
+		private _timeNow = time;
 		waitUntil {
 			sleep 2;
 			!alive _target ||
 			(lifeState _target == "INCAPACITATED") ||
 			(({
 				alive _x && side _x == _enemySide
-			} count allUnits) == 0)
+			} count allUnits) == 0) ||
+			(time > (_timeNow + 60))
 		};
 	};
 };
