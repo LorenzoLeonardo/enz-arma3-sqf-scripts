@@ -175,10 +175,10 @@ fnc_setSupportMarkerAndRadio = {
 		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call fnc_setSupportMarkerAndRadio;
 		// Plane's cruising altitude
 		private _planeAltitude = 200;
-		// Plan starts at 8, 000 meters south of the drop zone
-		private _yDistance = 8000;
+		// Plan starts at 5, 000 meters south of the drop zone
+		private _yDistance = 5000;
 		// Plane's speed
-		private _planeSpeed = 300;
+		private _planeSpeed = 150;
 		// Radius of from the center of the drop where to start dropping troops.
 		private _yDroppingRadius = 400;
 		// Get Assigned plane's name
@@ -187,7 +187,7 @@ fnc_setSupportMarkerAndRadio = {
 		// Initial location of the plane
 		private _initLocation = [_paraDropLocation select 0, (_paraDropLocation select 1) - _yDistance, _planeAltitude];
 		// Create the plane
-		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C47_USA", _paraDropLocation, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C130J_USMC", _paraDropLocation, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
 		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call fnc_createGroupFromTemplate;
 		// Add reviving characteristic of the newly created group.
