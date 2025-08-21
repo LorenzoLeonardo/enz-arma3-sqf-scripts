@@ -39,7 +39,11 @@ if ({
 	side _x == _enemySide && alive _x
 } count allUnits == 0) exitWith {};
 
-[west, "Base"] sideRadio "RadioPapaBearToAllUnitsClearArea";
+// Radio only once
+if (!(missionNamespace getVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", false])) then {
+	[west, "Base"] sideRadio "RadioPapaBearToAllUnitsClearArea";
+	missionNamespace setVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", true, true];
+};
 
 // Dynamic hunt loop
 while {
