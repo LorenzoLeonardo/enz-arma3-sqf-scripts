@@ -149,9 +149,10 @@ fnc_setPlaneWayPoints = {
 	// initialize plane in the right altitude
 	_plane flyInHeightASL [(_initLocation select 2), (_initLocation select 2), (_initLocation select 2)];
 	_plane setVelocity [(sin (direction _plane) * _planeSpeed), ( cos (direction _plane) * _planeSpeed), 0];
+
 	// set plane waypoint yDistance ahead of the dropzone position.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) - _distanceBeforeAndAfterDroplocation, _planeAltitude];
-	[_group, _planeWPPos, "FULL", "MOVE", "DIAMOND", "CARELESS", 0] call fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 0] call fnc_createWaypoint;
 
 	// set plane waypoint at exact location of the drop zone.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1), _dropPosition select 2];
