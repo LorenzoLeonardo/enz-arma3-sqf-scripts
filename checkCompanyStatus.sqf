@@ -188,6 +188,9 @@ fnc_setSupportMarkerAndRadio = {
 		private _initLocation = [_paraDropLocation select 0, (_paraDropLocation select 1) - _yDistance, _planeAltitude];
 		// Create the plane
 		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C130J_USMC", _paraDropLocation, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+		// Always Turn off lights
+		_plane setCollisionLight false;
+		_plane disableAI "LIGHTS";
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
 		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call fnc_createGroupFromTemplate;
 		// Add reviving characteristic of the newly created group.
