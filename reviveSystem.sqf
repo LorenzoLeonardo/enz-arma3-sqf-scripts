@@ -363,20 +363,54 @@ fnc_dropAllWeapons = {
 	private _pos = getPosATL _unit;
 	private _holder = createVehicle ["GroundWeaponHolder", _pos, [], 0, "CAN_COLLIDE"];
 
-	// move all weapons to the ground
+	// drop weapons
 	{
 		_unit removeWeapon _x;
 		_holder addWeaponCargoGlobal [_x, 1];
 	} forEach weapons _unit;
 
-	// move all magazines for those weapons
+	// drop magazines
 	{
 		_unit removeMagazine _x;
 		_holder addMagazineCargoGlobal [_x, 1];
 	} forEach magazines _unit;
 
-	removeBackpack _unit; // remove backpack too
-	removeAllItems _unit;
+	// drop assigned items (map, compass, NVG, etc.)
+	{
+		_unit unlinkItem _x;
+		_holder addItemCargoGlobal [_x, 1];
+	} forEach assignedItems _unit;
+
+	// drop general items
+	{
+		_unit removeItem _x;
+		_holder addItemCargoGlobal [_x, 1];
+	} forEach items _unit;
+
+	// drop vest items
+	{
+		_unit removeItemFromVest _x;
+		_holder addItemCargoGlobal [_x, 1];
+	} forEach vestItems _unit;
+
+	// drop backpack items
+	{
+		_unit removeItemFromBackpack _x;
+		_holder addItemCargoGlobal [_x, 1];
+	} forEach backpackItems _unit;
+
+	// drop uniform items
+	{
+		_unit removeItemFromUniform _x;
+		_holder addItemCargoGlobal [_x, 1];
+	} forEach uniformItems _unit;
+
+	// Finally strip containers/clothes
+	removeBackpack _unit;
+	removeVest _unit;
+	removeUniform _unit;
+	removeHeadgear _unit;
+	removeGoggles _unit;
 };
 
 // ===============================
