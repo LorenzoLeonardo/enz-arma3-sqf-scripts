@@ -25,13 +25,17 @@ private _initialEnemies = allUnits select {
 private _initialCount = count _initialEnemies;
 if (_initialCount <= 0) exitWith {};
 
-// Wait until enemy count drops to 50% or less
+fnc_getEnemyCount = {
+	params ["_sideEnemy"];
+	count (allUnits select {
+		side _x == _sideEnemy && alive _x
+	})
+};
+
+// Wait until enemy count drops to 75% or less
+private _threshHoldCount = floor (([_enemySide] call fnc_getEnemyCount) * 0.75);
 waitUntil {
-	sleep 5;
-	private _aliveCount = {
-		side _x == _enemySide && alive _x
-	} count allUnits;
-	(_aliveCount > 0 && _aliveCount <= (_initialCount / 2)) || (_aliveCount == 0)
+	([_enemySide] call fnc_getEnemyCount) <= _threshHoldCount
 };
 
 // exit early if no enemies left
