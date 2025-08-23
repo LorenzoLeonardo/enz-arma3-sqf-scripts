@@ -1,12 +1,12 @@
 /*
 	    moveCaptives.sqf
-	    Usage: [getMarkerPos "prison_area"] execVM "moveCaptives_poll.sqf";
+	    Usage: [getMarkerPos "prison_area", 180] execVM "moveCaptives.sqf";
 */
 
-params ["_prisonLocation"];
+params ["_prisonLocation", "_rotation"];
 
-[_prisonLocation] spawn {
-	params ["_prisonLocation"];
+[_prisonLocation, _rotation] spawn {
+	params ["_prisonLocation", "_rotation"];
 	private _handled = [];
 	private _seatIndex = 0;
 	while { true } do {
@@ -28,8 +28,8 @@ params ["_prisonLocation"];
 				_x doMove _seatPos;
 
 				// keep them moving until they arrive
-				[_x, _seatPos] spawn {
-					params ["_unit", "_loc"];
+				[_x, _seatPos, _rotation] spawn {
+					params ["_unit", "_loc", "_rotation"];
 					waitUntil {
 						sleep 3;
 						(_unit distance _loc) < 4 || !alive _unit
@@ -37,8 +37,8 @@ params ["_prisonLocation"];
 					if (alive _unit) then {
 						_unit disableAI "PATH";
 						_unit setPosATL _loc;
-						_unit setDir 180;
-						_unit switchMove "Acts_AidlPsitMstpSsurWnonDnon_loop";
+						_unit setDir _rotation;
+						_unit switchMove "AmovPercMstpSsurWnonDnon";
 					};
 				};
 			};
