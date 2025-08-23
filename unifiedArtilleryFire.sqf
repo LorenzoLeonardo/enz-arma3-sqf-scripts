@@ -317,16 +317,19 @@ fnc_getIndexOfGroup = {
 
 	switch (toLower(groupId _group)) do {
 		case "alpha" : {
-			[1, 2]
+			[1, 6]
 		};
 		case "bravo" : {
-			[3, 4]
+			[2, 7]
 		};
 		case "charlie" : {
-			[5, 6]
+			[3, 8]
 		};
 		case "delta" : {
-			[7, 8]
+			[4, 9]
+		};
+		case "echo" : {
+			[5, 10]
 		};
 		default {
 			[11, 12]
@@ -348,24 +351,24 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 	_responder setVariable ["isRadioBusy", true];
 	switch (_phase) do {
 		case GUN_BARRAGE_PHASE_REQUEST: {
-			_requestor sideRadio format["ArtyRequest%1", _index select 0]; // plays sound
-			_requestor sideChat format ["Requesting immediate fire support at the designated coordinates [%1]. Over!", _grid];
+			private _request = selectRandom [
+				format ["ArtyRequest%1", _index select 0],
+				format ["CUPArtyRequestHE%1", _index select 0],
+				format ["CUPArtyRequestWP%1", _index select 0]
+			];
+			_requestor sideRadio _request;
 		};
 		case GUN_BARRAGE_PHASE_SHOT : {
 			_responder sideRadio format["ArtyResponse%1", _index select 1];
-			_responder sideChat "Target location received, ordnance is inbound. Out!";
 		};
 		case GUN_BARRAGE_PHASE_SPLASH : {
 			_responder sideRadio format["ArtySplash%1", _index select 1];
-			_responder sideChat "Splash. Out!";
 		};
 		case GUN_BARRAGE_PHASE_DONE : {
 			_responder sideRadio format["ArtyComplete%1", _index select 1];
-			_responder sideChat "Rounds complete. Out!";
 		};
 		case GUN_BARRAGE_PHASE_INVALID_RANGE :{
 			_responder sideRadio format["ArtyRangeError%1", _index select 1];
-			_responder sideChat "Cannot execute. That's outside our firing envelope!";
 		};
 		default {
 			systemChat format ["Invalid artillery call phase: %1", _phase];
@@ -403,7 +406,7 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 			_marker setMarkerColor "ColorWhite";
 		};
 	};
-	_marker setMarkerText format["Fire Mission %1!!!", groupId (group _requestor)];
+	_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPost];
 
 	_marker
 }];

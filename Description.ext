@@ -707,6 +707,16 @@ class CfgRadio
 		// radio caption
 		title	= "All callsigns, be advised. Friendly tactical strike incoming.";
 	}
+	class RadioHeliMissionAccomplished
+	{
+		name	= "RadioHeliMissionAccomplished";
+
+		// filename, volume, pitch
+		sound[]	= { "\sounds\helicopter\MissionAccomplished.ogg", db + 100, 1.0 };
+
+		// radio caption
+		title	= "Papa Bear, we're done here, we are RTB. Out!";
+	}
 
 
 
@@ -718,309 +728,370 @@ class CfgRadio
 	class ArtyRequest1 {
 		name	= "ArtyRequest1";
 		sound[]	= {"\sounds\artillery\Male01ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest2 {
 		name	= "ArtyRequest2";
 		sound[]	= {"\sounds\artillery\Male02ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest3 {
 		name	= "ArtyRequest3";
 		sound[]	= {"\sounds\artillery\Male03ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest4 {
 		name	= "ArtyRequest4";
 		sound[]	= {"\sounds\artillery\Male04ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest5 {
 		name	= "ArtyRequest5";
 		sound[]	= {"\sounds\artillery\Male05ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest6 {
 		name	= "ArtyRequest6";
 		sound[]	= {"\sounds\artillery\Male06ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest7 {
 		name	= "ArtyRequest7";
 		sound[]	= {"\sounds\artillery\Male07ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest8 {
 		name	= "ArtyRequest8";
 		sound[]	= {"\sounds\artillery\Male08ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest9 {
 		name	= "ArtyRequest9";
 		sound[]	= {"\sounds\artillery\Male09ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest10 {
 		name	= "ArtyRequest10";
 		sound[]	= {"\sounds\artillery\Male10ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest11 {
 		name	= "ArtyRequest11";
 		sound[]	= {"\sounds\artillery\Male11ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 	class ArtyRequest12 {
 		name	= "ArtyRequest12";
 		sound[]	= {"\sounds\artillery\Male12ENG\SupportRequestRGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Requesting immediate fire support at the designated coordinates. Over?";
 	}
 
 	// Response
 	class ArtyResponse1 {
 		name	= "ArtyResponse1";
 		sound[]	= {"\sounds\artillery\Male01ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse2 {
 		name	= "ArtyResponse2";
 		sound[]	= {"\sounds\artillery\Male02ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse3 {
 		name	= "ArtyResponse3";
 		sound[]	= {"\sounds\artillery\Male03ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse4 {
 		name	= "ArtyResponse4";
 		sound[]	= {"\sounds\artillery\Male04ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse5 {
 		name	= "ArtyResponse5";
 		sound[]	= {"\sounds\artillery\Male05ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse6 {
 		name	= "ArtyResponse6";
 		sound[]	= {"\sounds\artillery\Male06ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse7 {
 		name	= "ArtyResponse7";
 		sound[]	= {"\sounds\artillery\Male07ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse8 {
 		name	= "ArtyResponse8";
 		sound[]	= {"\sounds\artillery\Male08ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse9 {
 		name	= "ArtyResponse9";
 		sound[]	= {"\sounds\artillery\Male09ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse10 {
 		name	= "ArtyResponse10";
 		sound[]	= {"\sounds\artillery\Male10ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse11 {
 		name	= "ArtyResponse11";
 		sound[]	= {"\sounds\artillery\Male11ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 	class ArtyResponse12 {
 		name	= "ArtyResponse12";
 		sound[]	= {"\sounds\artillery\Male12ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Target location received, ordnance is inbound. Out!";
 	}
 
 	// Splash
 	class ArtySplash1 {
 		name	= "ArtySplash1";
 		sound[]	= {"\sounds\artillery\Male01ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash2 {
 		name	= "ArtySplash2";
 		sound[]	= {"\sounds\artillery\Male02ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash3 {
 		name	= "ArtySplash3";
 		sound[]	= {"\sounds\artillery\Male03ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash4 {
 		name	= "ArtySplash4";
 		sound[]	= {"\sounds\artillery\Male04ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash5 {
 		name	= "ArtySplash5";
 		sound[]	= {"\sounds\artillery\Male05ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash6 {
 		name	= "ArtySplash6";
 		sound[]	= {"\sounds\artillery\Male06ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash7 {
 		name	= "ArtySplash7";
 		sound[]	= {"\sounds\artillery\Male07ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash8 {
 		name	= "ArtySplash8";
 		sound[]	= {"\sounds\artillery\Male08ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash9 {
 		name	= "ArtySplash9";
 		sound[]	= {"\sounds\artillery\Male09ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash10 {
 		name	= "ArtySplash10";
 		sound[]	= {"\sounds\artillery\Male10ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash11 {
 		name	= "ArtySplash11";
 		sound[]	= {"\sounds\artillery\Male11ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 	class ArtySplash12 {
 		name	= "ArtySplash12";
 		sound[]	= {"\sounds\artillery\Male12ENG\RequestAccomplishedSGArty.ogg",db+0,1};
-		title	= "";
+		title	= "Splash. Out!";
 	}
 
 	// Rounds Complete
 	class ArtyComplete1 {
 		name	= "ArtyComplete1";
 		sound[]	= {"\sounds\artillery\Male01ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete2 {
 		name	= "ArtyComplete2";
 		sound[]	= {"\sounds\artillery\Male02ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete3 {
 		name	= "ArtyComplete3";
 		sound[]	= {"\sounds\artillery\Male03ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete4 {
 		name	= "ArtyComplete4";
 		sound[]	= {"\sounds\artillery\Male04ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete5 {
 		name	= "ArtyComplete5";
 		sound[]	= {"\sounds\artillery\Male05ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete6 {
 		name	= "ArtyComplete6";
 		sound[]	= {"\sounds\artillery\Male06ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete7 {
 		name	= "ArtyComplete7";
 		sound[]	= {"\sounds\artillery\Male07ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete8 {
 		name	= "ArtyComplete8";
 		sound[]	= {"\sounds\artillery\Male08ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete9 {
 		name	= "ArtyComplete9";
 		sound[]	= {"\sounds\artillery\Male09ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete10 {
 		name	= "ArtyComplete10";
 		sound[]	= {"\sounds\artillery\Male10ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete11 {
 		name	= "ArtyComplete11";
 		sound[]	= {"\sounds\artillery\Male11ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 	class ArtyComplete12 {
 		name	= "ArtyComplete12";
 		sound[]	= {"\sounds\artillery\Male12ENG\ArtySGSupportRoundsComplete.ogg",db+0,1};
-		title	= "";
+		title	= "Rounds complete. Out!";
 	}
 
 	// Range Error
 	class ArtyRangeError1 {
 		name	= "ArtyRangeError1";
 		sound[]	= {"\sounds\artillery\Male01ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError2 {
 		name	= "ArtyRangeError2";
 		sound[]	= {"\sounds\artillery\Male02ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError3 {
 		name	= "ArtyRangeError3";
 		sound[]	= {"\sounds\artillery\Male03ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError4 {
 		name	= "ArtyRangeError4";
 		sound[]	= {"\sounds\artillery\Male04ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError5 {
 		name	= "ArtyRangeError5";
 		sound[]	= {"\sounds\artillery\Male05ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError6 {
 		name	= "ArtyRangeError6";
 		sound[]	= {"\sounds\artillery\Male06ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError7 {
 		name	= "ArtyRangeError7";
 		sound[]	= {"\sounds\artillery\Male07ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError8 {
 		name	= "ArtyRangeError8";
 		sound[]	= {"\sounds\artillery\Male08ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError9 {
 		name	= "ArtyRangeError9";
 		sound[]	= {"\sounds\artillery\Male09ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError10 {
 		name	= "ArtyRangeError10";
 		sound[]	= {"\sounds\artillery\Male10ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError11 {
 		name	= "ArtyRangeError11";
 		sound[]	= {"\sounds\artillery\Male11ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
 	}
 	class ArtyRangeError12 {
 		name	= "ArtyRangeError12";
 		sound[]	= {"\sounds\artillery\Male12ENG\CannotExecuteOutsideEnvelope.ogg",db+0,1};
-		title	= "";
+		title	= "Cannot execute. That's outside our firing envelope!";
+	}
+
+
+	class CUPArtyRequestHE1 {
+		name	= "CUPArtyRequestHE1";
+		sound[]	= {"\sounds\artillery\CUP\Male01EN\DEFAULT\SOM\RequestingImmediateArtillerySuppressionHighExplosiveHowCopyQ.ogg",db+0,1};
+		title	= "Requesting immediate artillery suppression High Explosive how copy?";
+	}
+
+	class CUPArtyRequestWP1 {
+		name	= "CUPArtyRequestWP1";
+		sound[]	= {"\sounds\artillery\CUP\Male01EN\DEFAULT\SOM\RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ.ogg",db+0,1};
+		title	= "Requesting fire support at the target location, Willie Pete in effect how copy?";
+	}
+
+	class CUPArtyRequestHE2 {
+		name	= "CUPArtyRequestHE2";
+		sound[]	= {"\sounds\artillery\CUP\Male02EN\DEFAULT\SOM\RequestingImmediateArtillerySuppressionHighExplosiveHowCopyQ.ogg",db+0,1};
+		title	= "Requesting immediate artillery suppression High Explosive how copy?";
+	}
+
+	class CUPArtyRequestWP2 {
+		name	= "CUPArtyRequestWP2";
+		sound[]	= {"\sounds\artillery\CUP\Male02EN\DEFAULT\SOM\RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ.ogg",db+0,1};
+		title	= "Requesting fire support at the target location, Willie Pete in effect how copy?";
+	}
+
+	class CUPArtyRequestHE3 {
+		name	= "CUPArtyRequestHE3";
+		sound[]	= {"\sounds\artillery\CUP\Male03EN\DEFAULT\SOM\RequestingImmediateArtillerySuppressionHighExplosiveHowCopyQ.ogg",db+0,1};
+		title	= "Requesting immediate artillery suppression High Explosive how copy?";
+	}
+
+	class CUPArtyRequestWP3 {
+		name	= "CUPArtyRequestWP3";
+		sound[]	= {"\sounds\artillery\CUP\Male03EN\DEFAULT\SOM\RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ.ogg",db+0,1};
+		title	= "Requesting fire support at the target location, Willie Pete in effect how copy?";
+	}
+	
+	class CUPArtyRequestHE4 {
+		name	= "CUPArtyRequestHE4";
+		sound[]	= {"\sounds\artillery\CUP\Male04EN\DEFAULT\SOM\RequestingImmediateArtillerySuppressionHighExplosiveHowCopyQ.ogg",db+0,1};
+		title	= "Requesting immediate artillery suppression High Explosive how copy?";
+	}
+
+	class CUPArtyRequestWP4 {
+		name	= "CUPArtyRequestWP4";
+		sound[]	= {"\sounds\artillery\CUP\Male04EN\DEFAULT\SOM\RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ.ogg",db+0,1};
+		title	= "Requesting fire support at the target location, Willie Pete in effect how copy?";
+	}
+
+	class CUPArtyRequestHE5 {
+		name	= "CUPArtyRequestHE5";
+		sound[]	= {"\sounds\artillery\CUP\Male05EN\DEFAULT\SOM\RequestingImmediateArtillerySuppressionHighExplosiveHowCopyQ.ogg",db+0,1};
+		title	= "Requesting immediate artillery suppression High Explosive how copy?";
+	}
+
+	class CUPArtyRequestWP5 {
+		name	= "CUPArtyRequestWP5";
+		sound[]	= {"\sounds\artillery\CUP\Male05EN\DEFAULT\SOM\RequestingFireSupportAtTheTargetLocationWilliePeteInEffectHowCopyQ.ogg",db+0,1};
+		title	= "Requesting fire support at the target location, Willie Pete in effect how copy?";
 	}
 };
