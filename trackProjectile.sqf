@@ -61,7 +61,7 @@ _artillery addEventHandler ["Fired", {
 
 				// Impact whistle (only once, when descending + low enough)
 				if (!_impactSoundPlayed && {
-					_alt < 1000 && {
+					_alt < 1500 && {
 						_vel select 2 < 0
 					}
 				}) then {
