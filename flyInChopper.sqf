@@ -3,7 +3,8 @@
 	    Usage: [this] execVM "flyInChopper.sqf";
 */
 
-params ["_chopper"];
+private _chopper = _this param [0];
+private _rtbAltitude = _this param [1, 80];
 
 fnc_getEnemySide = {
 	params ["_chopper"];
@@ -33,7 +34,6 @@ private _heliPilot = driver _chopper;
 private _aiPilotGroup = group _heliPilot;
 private _sideEnemy = [_chopper] call fnc_getEnemySide;
 private _basePos = getPos _chopper;
-private _rtbAltitude = 80;
 
 _chopper setVariable["basePosition", _basePos, true];
 
@@ -73,6 +73,28 @@ fnc_getAverageEnemyPos = {
 	}
 };
 
+// Generate a random position near average
+fnc_getRandomPosNearEnemy = {
+	params ["_sideEnemy", ["_radius", 500]]; // default radius = 500m
+
+	private _avgPos = [_sideEnemy] call fnc_getAverageEnemyPos;
+
+	if (_avgPos isEqualTo [0, 0, 0]) exitWith {
+		[0, 0, 0]
+	}; // no enemies
+
+	private _angle = random 360;
+	private _dist = random _radius;
+
+	private _offset = [
+		_dist * cos _angle,
+		_dist * sin _angle,
+		0
+	];
+
+	_avgPos vectorAdd _offset
+};
+
 fnc_clearWaypoints = {
 	params ["_group"];
 	while { (count waypoints _group) > 0 } do {
@@ -82,7 +104,7 @@ fnc_clearWaypoints = {
 
 fnc_createMarker = {
 	params ["_target", "_text", "_type", "_color"];
-	private _markerName = format ["airstrikeMarker_%1", diag_tickTime];
+	private _markerName = format ["airstrikeMarker_%1_%2", diag_tickTime, mapGridPosition _target];
 
 	private _marker = createMarker [_markerName, _target];
 	_marker setMarkerShape "ICON";
@@ -91,6 +113,23 @@ fnc_createMarker = {
 	_marker setMarkerText _text;
 
 	_markerName
+};
+
+fnc_createWaypoint = {
+	private _group = _this select 0;
+	private _destinationPosition = _this select 1;
+	private _wayPointSpeed = _this select 2;
+	private _wayPointType = _this select 3;
+	private _wayPointFormation = _this select 4;
+	private _wayPointBehaviour = _this select 5;
+	private _wayPointNumber = _this select 6;
+	private _teamWP = _group addWaypoint [_destinationPosition, _wayPointNumber];
+	_teamWP setWaypointSpeed _wayPointSpeed;
+	_teamWP setWaypointType _wayPointType;
+	_teamWP setWaypointFormation _wayPointFormation;
+	_teamWP setWaypointBehaviour _wayPointBehaviour;
+	_teamWP setWaypointCombatMode "RED";
+	_teamWP
 };
 
 fnc_engageEnemies = {
@@ -104,7 +143,7 @@ fnc_engageEnemies = {
 		alive _chopper &&
 		(({
 			alive _x
-		} count units (group _chopper)) > 1) &&
+		} count units (group _chopper)) > 2) &&
 		canMove _chopper
 	} do {
 		_heliPilot = driver _chopper;
@@ -116,16 +155,13 @@ fnc_engageEnemies = {
 		private _aliveEnemies = allUnits select {
 			(side _x == _sideEnemy) && (alive _x) && (lifeState _x != "INCAPACITATED")
 		};
-		private _target = _aliveEnemies param [0, objNull];
+
+		private _target = selectRandom _aliveEnemies;
 
 		if (!isNull _target) then {
 			[_aiPilotGroup] call fnc_clearWaypoints;
 
-			private _wp = _aiPilotGroup addWaypoint [getPos _target, 0];
-			_wp setWaypointType "SAD";
-			_wp setWaypointBehaviour "AWARE";
-			_wp setWaypointCombatMode "RED";
-			_wp setWaypointSpeed "FULL";
+			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "AWARE", 0] call fnc_createWaypoint;
 			private _markerName = [
 				getPos _target,
 				"Air Strike Here!",
@@ -137,7 +173,7 @@ fnc_engageEnemies = {
 				(!alive _target) || (lifeState _target == "INCAPACITATED") ||
 				(({
 					alive _x
-				} count units (group _chopper)) <= 1) ||
+				} count units (group _chopper)) <= 2) ||
 				!(canMove _chopper)
 			};
 			deleteMarker _markerName;
@@ -149,7 +185,7 @@ fnc_engageEnemies = {
 fnc_flyInChopper = {
 	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
 
-	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 0.75);
+	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 1);
 	_chopper allowCrewInImmobile true;
 
 	// Remove cargo from group
@@ -161,8 +197,11 @@ fnc_flyInChopper = {
 	};
 
 	if (alive _chopper) then {
-		hint "Tactical airstrike is coming your location.";
-		_heliPilot sideRadio "RadioHeliTacticalStrike";
+		if (isNil "RadioTacticalStrike") then {
+			missionNamespace setVariable["RadioTacticalStrike", true, true];
+			hint "Tactical airstrike is coming your location.";
+			_heliPilot sideRadio "RadioHeliTacticalStrike";
+		};
 
 		_chopper engineOn true;
 		_chopper flyInHeight _rtbAltitude;
@@ -173,19 +212,24 @@ fnc_flyInChopper = {
 			_x enableAI "MOVE"
 		} forEach units _aiPilotGroup;
 
-		private _enemyPos = [_sideEnemy] call fnc_getAverageEnemyPos;
+		private _enemyPos = [_sideEnemy] call fnc_getRandomPosNearEnemy;
 
 		if (_enemyPos isNotEqualTo [0, 0, 0]) then {
-			// Add TAKEOFF move waypoint
-			private _wp0 = _aiPilotGroup addWaypoint [getPos _chopper, 0];
-			_wp0 setWaypointType "MOVE";
+			private _markerName = [
+				_enemyPos,
+				"Air Strike Here!",
+				"mil_objective",
+				"ColorWEST"
+			] call fnc_createMarker;
 
-			// SAD waypoint to enemy cluster
-			private _wp1 = _aiPilotGroup addWaypoint [_enemyPos, 0];
-			_wp1 setWaypointType "SAD";
+			// Add TAKEOFF move waypoint
+			[_aiPilotGroup, getPos _chopper, "FULL", "MOVE", "DIAMOND", "AWARE", 0] call fnc_createWaypoint;
+
+			// move waypoint to enemy cluster
+			[_aiPilotGroup, _enemyPos, "FULL", "MOVE", "DIAMOND", "AWARE", 1] call fnc_createWaypoint;
 
 			_heliPilot doMove _enemyPos;
-
+			deleteMarker _markerName;
 			// Engage loop
 			[_chopper, _sideEnemy] call fnc_engageEnemies;
 
@@ -339,13 +383,16 @@ fnc_startDamageHandlers = {
 // When all units are dead, destroy the heli
 fnc_startMonitoringHeliStatus = {
 	params ["_chopper"];
-	private _heliUnits = units (group _chopper);
+	private _group = (group _chopper);
+	private _heliUnits = units _group;
+	private _groupID = groupId _group;
 	waitUntil {
 		({
 			alive _x
 		} count _heliUnits == 0) || !(alive _chopper) || !(canMove _chopper)
 	};
 	_chopper setDamage 1;
+	deleteGroup _group;
 
 	private _markerName = [
 		getPosATL _chopper,
@@ -358,7 +405,7 @@ fnc_startMonitoringHeliStatus = {
 	private _unit = _grp createUnit ["B_Soldier_F", [0, 0, 0], [], 0, "NONE"];
 
 	// set group callsign
-	_grp setGroupIdGlobal ["November"];
+	_grp setGroupIdGlobal [_groupID];
 
 	_unit sideRadio "RadioHeliMayday";
 	sleep 3;
