@@ -44,9 +44,13 @@ _artillery addEventHandler ["Fired", {
 				"a3\sounds_f\weapons\falling_bomb\fall_01.wss",
 				"a3\sounds_f\weapons\falling_bomb\fall_02.wss",
 				"a3\sounds_f\weapons\falling_bomb\fall_03.wss",
-				"a3\sounds_f\weapons\falling_bomb\fall_04.wss"
+				"a3\sounds_f\weapons\falling_bomb\fall_04.wss",
+				"a3\sounds_f\arsenal\sfx\falling_bomb\fall_01.wss",
+				"a3\sounds_f\arsenal\sfx\falling_bomb\fall_02.wss",
+				"a3\sounds_f\arsenal\sfx\falling_bomb\fall_03.wss",
+				"a3\sounds_f\arsenal\sfx\falling_bomb\fall_04.wss"
 			];
-			private _pitch = selectRandom [0.9, 1.0, 1.1];
+			private _pitch = selectRandom [0.8, 0.9, 1.0];
 			private _impactSoundPlayed = false;
 
 			while { alive _proj } do {
