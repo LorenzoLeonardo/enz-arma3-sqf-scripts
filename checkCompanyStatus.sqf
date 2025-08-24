@@ -40,34 +40,7 @@ missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 			_responder sideRadio "RadioAirbaseDropPackage";
 		};
 		case PARA_DROP_PHASE_DONE: {
-			private _quietUnit = [group _requestor] call fnc_getQuietUnit;
-			if (({
-				alive _x
-			} count units _requestor) == 0) then {
-				_groupToBeDropped setGroupId [_groupCallerID];
-			} else {
-				(units _groupToBeDropped) join (group _requestor);
-			};
-			switch (toLower _groupCallerID) do {
-				case "alpha": {
-					_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha";
-				};
-				case "bravo": {
-					_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo";
-				};
-				case "charlie": {
-					_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie";
-				};
-				case "delta": {
-					_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta";
-				};
-				case "echo": {
-					_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportEcho";
-				};
-				default {
-					_quietUnit sideRadio "Reinforcements have linked up.";
-				};
-			};
+			hint format ["Reinforcements has arrived for %1.", _groupCallerID];
 		};
 		default {
 			hint "Unsupported phase!";
@@ -152,6 +125,41 @@ fnc_setSupportMarkerAndRadio = {
 	_markerName
 };
 
+fnc_joinReinforcementToGroup = {
+	params ["_group", "_groupCallerID", "_reinforcements"];
+	private _quietUnit = [_group] call fnc_getQuietUnit;
+	if (({
+		alive _x
+	} count units _group) == 0) then {
+		deleteGroup _group;
+		_reinforcements setGroupId [_groupCallerID];
+		_group = _reinforcements;
+	} else {
+		(units _reinforcements) join _group;
+	};
+	switch (toLower _groupCallerID) do {
+		case "alpha": {
+			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha";
+		};
+		case "bravo": {
+			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo";
+		};
+		case "charlie": {
+			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie";
+		};
+		case "delta": {
+			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta";
+		};
+		case "echo": {
+			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportEcho";
+		};
+		default {
+			_quietUnit sideRadio "Reinforcements have linked up.";
+		};
+	};
+	_group
+};
+
 [_group, _originalGroupTemplate, _totalUnits, _papaBear] spawn {
 	params ["_group", "_originalGroupTemplate", "_totalUnits", "_papaBear"];
 	sleep 5;
@@ -166,6 +174,7 @@ fnc_setSupportMarkerAndRadio = {
 		};
 
 		private _radioUnit = [_group] call fnc_getQuietUnit;
+		private _groupCallerID = groupId _group;
 		// Signal: Flare & Smoke
 		private _flrObj = "F_40mm_Red" createVehicle (_radioUnit modelToWorld [0, 0, 200]);
 
@@ -200,6 +209,8 @@ fnc_setSupportMarkerAndRadio = {
 		(driver _plane) sideRadio "RadioAirbasePackageOnGround";
 		sleep 3;
 		([_papaBear] call fnc_getQuietUnit) sideRadio "RadioAirbasePackageOnGroundReply";
+		_group = [_group, _groupCallerID, _groupToBeDropped] call fnc_joinReinforcementToGroup;
+
 		deleteMarkerLocal _paraDropMarkerName;
 	};
 };

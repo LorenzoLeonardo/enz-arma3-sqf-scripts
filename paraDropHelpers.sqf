@@ -27,11 +27,9 @@ fnc_executeParaDrop = {
 	// drop troops
 	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DROPPING] call fnc_callBackParaDropStatus;
 	[_groupToBeDropped, _plane, _backPack, 0.5] call fnc_ejectFromPlane;
-
+	[_groupToBeDropped] call fnc_waitUntilGroupOnGround;
 	// ejecting from plane done
 	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DONE] call fnc_callBackParaDropStatus;
-
-	[_groupToBeDropped] call fnc_waitUntilGroupOnGround;
 };
 
 fnc_saveOriginalGroupTemplates = {
