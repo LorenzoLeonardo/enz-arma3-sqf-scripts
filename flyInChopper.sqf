@@ -98,9 +98,9 @@ fnc_getRandomPosNearEnemy = {
 
 fnc_clearWaypoints = {
 	params ["_group"];
-	while { (count waypoints _group) > 0 } do {
-		deleteWaypoint [_group, 0];
-	};
+	{
+		deleteWaypoint _x
+	} forEachReversed waypoints _group;
 };
 
 fnc_createMarker = {
@@ -253,8 +253,7 @@ fnc_flyInChopper = {
 					"mil_objective",
 					"ColorWEST"
 				] call fnc_createMarker;
-				private _rtbWP = _aiPilotGroup addWaypoint [_basePos, 0];
-				_rtbWP setWaypointType "GETOUT";
+				[_aiPilotGroup, _basePos, "FULL", "GETOUT", "DIAMOND", "CARELESS", 0] call fnc_createWaypoint;
 				sleep 60;
 			};
 		};
