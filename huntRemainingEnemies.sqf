@@ -86,11 +86,15 @@ while {
 	} count allUnits) > 0
 } do {
 	private _aliveEnemies = allUnits select {
-		side _x == _enemySide && alive _x
+		side _x == _enemySide && alive _x && (lifeState _x != "INCAPACITATED")
 	};
 	private _target = _aliveEnemies param [0, objNull];
 
-	if (!isNull _target) then {
+	if (!isNull _target && {
+		alive _target
+	} && (getPos _target != [0, 0, 0])) then {
+		private _targetPos = getPos _target;
+
 		// Clear waypoints
 		while { (count waypoints _squad) > 0 } do {
 			deleteWaypoint [_squad, 0];
@@ -104,7 +108,6 @@ while {
 		_wp setWaypointBehaviour "AWARE";
 		_wp setWaypointCombatMode "RED";
 		_wp setWaypointSpeed "FULL";
-		_wp setWaypointDescription "DESTROY";
 
 		_aliveEnemies = allUnits select {
 			side _x == _enemySide && alive _x
@@ -121,5 +124,8 @@ while {
 			} count allUnits) == 0) ||
 			(time > (_timeNow + 60))
 		};
+	} else {
+		// Target is invalid, just wait a moment
+		sleep 1;
 	};
 };
