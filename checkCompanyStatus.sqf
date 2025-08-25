@@ -83,7 +83,7 @@ fnc_setSupportMarkerAndRadio = {
 	private _marker = createMarkerLocal [_markerName, position _unit];
 	_marker setMarkerSizeLocal [1, 1];
 	_marker setMarkerShapeLocal "ICON";
-	_marker setMarkerTypeLocal "mil_objective";
+	_marker setMarkerTypeLocal "respawn_para";
 	_marker setMarkerDirLocal 0;
 	_marker setMarkerTextLocal _markerText;
 
