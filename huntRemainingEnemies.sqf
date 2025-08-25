@@ -4,7 +4,7 @@
 	        [mySquad] execVM "huntRemainingEnemies.sqf";
 */
 
-params ["_squad"];
+params ["_squad", ["_tolerance", 0.75]];
 
 fnc_enemySide = {
 	params ["_group"];
@@ -42,8 +42,8 @@ fnc_allEnemies = {
 	}
 };
 
-[_squad] spawn {
-	params ["_squad"];
+[_squad, _tolerance] spawn {
+	params ["_squad", "_tolerance"];
 
 	private _enemySide = [_squad] call fnc_enemySide;
 	private _initialEnemies = [_enemySide] call fnc_allEnemies;
@@ -52,7 +52,7 @@ fnc_allEnemies = {
 	if (_initialCount <= 0) exitWith {};
 
 	// Wait until enemy count drops to 75% or less
-	private _threshHoldCount = floor (_initialCount * 1);
+	private _threshHoldCount = floor (_initialCount * _tolerance);
 	waitUntil {
 		([_enemySide] call fnc_enemyCount) <= _threshHoldCount
 	};
@@ -113,9 +113,7 @@ addMissionEventHandler ["Draw3D", {
 
 	// Build label
 	private _wpType = waypointType [_grp, _wpIndex];
-	if (_wpType isEqualTo "") then {
-		_wpType = "Waypoint"
-	};
+	if (_wpType isEqualTo "") exitWith {};
 	private _wpText = format ["%1 (%2 m)", _wpType, round (player distance _wpPos)];
 
 	// Draw icon + text
