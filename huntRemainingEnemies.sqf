@@ -6,6 +6,106 @@
 
 params ["_squad"];
 
+fnc_enemySide = {
+	params ["_group"];
+	private _mySide = side _group;
+
+	if (_mySide == west) then {
+		east
+	} else {
+		if (_mySide == east) then {
+			west
+		} else {
+			independent
+		};
+	};
+};
+
+fnc_enemyCount = {
+	params ["_sideEnemy"];
+	count (allUnits select {
+		(side _x == _sideEnemy) && (alive _x) && (lifeState _x != "INCAPACITATED")
+	})
+};
+
+fnc_clearWP = {
+	params ["_group"];
+	{
+		deleteWaypoint _x
+	} forEachReversed waypoints _group;
+};
+
+fnc_allEnemies = {
+	params ["_enemySide"];
+	allUnits select {
+		(side _x == _enemySide) && (alive _x) && (lifeState _x != "INCAPACITATED")
+	}
+};
+
+[_squad] spawn {
+	params ["_squad"];
+
+	private _enemySide = [_squad] call fnc_enemySide;
+	private _initialEnemies = [_enemySide] call fnc_allEnemies;
+	private _initialCount = count _initialEnemies;
+
+	if (_initialCount <= 0) exitWith {};
+
+	// Wait until enemy count drops to 75% or less
+	private _threshHoldCount = floor (_initialCount * 1);
+	waitUntil {
+		([_enemySide] call fnc_enemyCount) <= _threshHoldCount
+	};
+
+	// exit early if no enemies left
+	if (([_enemySide] call fnc_enemyCount) == 0) exitWith {};
+
+	// Radio only once
+	if (!(missionNamespace getVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", false])) then {
+		[west, "Base"] sideRadio "RadioPapaBearToAllUnitsClearArea";
+		missionNamespace setVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", true, true];
+	};
+
+	// Dynamic hunt loop
+	while { ([_enemySide] call fnc_enemyCount) > 0 } do {
+		private _aliveEnemies = [_enemySide] call fnc_allEnemies;
+		private _target = _aliveEnemies param [0, objNull];
+
+		if (!(isNull _target) && alive _target) then {
+			private _targetPos = getPos _target;
+			// Clear waypoints
+			[_squad] call fnc_clearWP;
+
+			// Add new waypoint to target
+			private _wp = _squad addWaypoint [getPos _target, 0];
+			_wp setWaypointType "DESTROY"; // could also use "SAD"
+			_wp setWaypointBehaviour "AWARE";
+			_wp setWaypointCombatMode "RED";
+			_wp setWaypointSpeed "FULL";
+
+			_aliveEnemies = allUnits select {
+				side _x == _enemySide && alive _x
+			};
+			hint format ["Objective Updated: Hunt %1 remaining enemies.", count _aliveEnemies];
+			// Wait until that specific target is dead before moving on
+			private _timeNow = time;
+			waitUntil {
+				sleep 2;
+				!alive _target ||
+				(lifeState _target == "INCAPACITATED") ||
+				(({
+					alive _x && side _x == _enemySide
+				} count allUnits) == 0) ||
+				(time > (_timeNow + 60))
+			};
+		} else {
+			// Target is invalid, just wait a moment
+			systemChat "Target invalid, waiting...";
+			sleep 1;
+		};
+	};
+};
+
 addMissionEventHandler ["Draw3D", {
 	private _grp = group player;
 	private _wpIndex = currentWaypoint _grp;
@@ -35,100 +135,3 @@ addMissionEventHandler ["Draw3D", {
 		-0.04 // textShiftY (lift text above icon)
 	];
 }];
-
-// Detect enemy side automatically
-private _mySide = side _squad;
-private _enemySide = if (_mySide == west) then {
-	east
-} else {
-	if (_mySide == east) then {
-		west
-	} else {
-		independent
-	};
-};
-
-// Record original enemy count
-private _initialEnemies = allUnits select {
-	side _x == _enemySide && alive _x
-};
-private _initialCount = count _initialEnemies;
-if (_initialCount <= 0) exitWith {};
-
-fnc_getEnemyCount = {
-	params ["_sideEnemy"];
-	count (allUnits select {
-		side _x == _sideEnemy && alive _x
-	})
-};
-
-fnc_clearWaypoints = {
-	params ["_group"];
-	{
-		deleteWaypoint _x
-	} forEachReversed waypoints _group;
-};
-
-// Wait until enemy count drops to 75% or less
-private _threshHoldCount = floor (([_enemySide] call fnc_getEnemyCount) * 0.75);
-waitUntil {
-	([_enemySide] call fnc_getEnemyCount) <= _threshHoldCount
-};
-
-// exit early if no enemies left
-if ({
-	side _x == _enemySide && alive _x
-} count allUnits == 0) exitWith {};
-
-// Radio only once
-if (!(missionNamespace getVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", false])) then {
-	[west, "Base"] sideRadio "RadioPapaBearToAllUnitsClearArea";
-	missionNamespace setVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", true, true];
-};
-
-// Dynamic hunt loop
-while {
-	({
-		side _x == _enemySide && alive _x
-	} count allUnits) > 0
-} do {
-	private _aliveEnemies = allUnits select {
-		side _x == _enemySide && alive _x && (lifeState _x != "INCAPACITATED")
-	};
-	private _target = _aliveEnemies param [0, objNull];
-
-	if (!isNull _target && {
-		alive _target
-	} && (getPos _target != [0, 0, 0])) then {
-		private _targetPos = getPos _target;
-
-		// Clear waypoints
-		[_squad] call fnc_clearWaypoints;
-
-		// Add new waypoint to target
-		private _wp = _squad addWaypoint [getPos _target, 0];
-		_wp setWaypointType "DESTROY"; // could also use "SAD"
-		_wp setWaypointBehaviour "AWARE";
-		_wp setWaypointCombatMode "RED";
-		_wp setWaypointSpeed "FULL";
-
-		_aliveEnemies = allUnits select {
-			side _x == _enemySide && alive _x
-		};
-		hint format ["Objective Updated: Hunt %1 remaining enemies.", count _aliveEnemies];
-		// Wait until that specific target is dead before moving on
-		private _timeNow = time;
-		waitUntil {
-			sleep 2;
-			!alive _target ||
-			(lifeState _target == "INCAPACITATED") ||
-			(({
-				alive _x && side _x == _enemySide
-			} count allUnits) == 0) ||
-			(time > (_timeNow + 60))
-		};
-	} else {
-		// Target is invalid, just wait a moment
-		sleep 1;
-	};
-};
