@@ -205,6 +205,9 @@ fnc_unlockReviveState = {
 			_medic doFollow _ldr;
 		};
 		[_medic, false] call fnc_setReviving;
+		if (_medic == player) then {
+			player setVariable ["injuredToRevive", objNull, true];
+		};
 	};
 
 	if (!isNull _injured) then {
@@ -220,6 +223,9 @@ fnc_lockReviveState = {
 	// lock injured and medic
 	if (!isNull _medic) then {
 		[_medic, true] call fnc_setReviving;
+		if (_medic == player) then {
+			player setVariable ["injuredToRevive", _injured, true];
+		};
 	};
 
 	if (!isNull _injured) then {
@@ -634,3 +640,31 @@ fnc_handleDamage = {
 		[_unit, false] call fnc_setRevived;
 	}];
 } forEach units _group;
+
+addMissionEventHandler ["Draw3D", {
+	private _injured = player getVariable ["injuredToRevive", objNull];
+
+	if (isNull _injured || !alive _injured) exitWith {};
+
+	private _wpPos = getPos _injured;
+
+	// Build label
+	private _wpText = format ["Revive Injured (%1 m)", round (player distance _wpPos)];
+
+	// Draw icon + text
+	drawIcon3D [
+		"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+		[0, 1, 1, 1],
+		_wpPos, // position
+		0.5, 0.5, // icon size
+		180, // icon angle
+		_wpText, // text
+		2, // shadow
+		0.035, // text size
+		"PuristaBold", // font
+		"center", // align
+		true, // drawThrough
+		0, // textShiftX
+		-0.04 // textShiftY (lift text above icon)
+	];
+}];
