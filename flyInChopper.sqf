@@ -246,8 +246,8 @@ fnc_flyInChopper = {
 				_heliPilot sideRadio "RadioHeliMissionAccomplished";
 				private _markerName = [
 					_basePos,
+					"RTB Here",
 					"mil_end",
-					"mil_objective",
 					"ColorWEST"
 				] call fnc_createMarker;
 				[_aiPilotGroup, _basePos, "FULL", "GETOUT", "DIAMOND", "CARELESS", 0] call fnc_createWaypoint;
@@ -401,8 +401,8 @@ fnc_startMonitoringHeliStatus = {
 
 	private _markerName = [
 		getPosATL _chopper,
-		"Heli Crash Site",
-		"mil_destroy",
+		format["Heli Crash Site: %1", _groupID],
+		"mil_unknown",
 		"ColorWEST"
 	] call fnc_createMarker;
 
