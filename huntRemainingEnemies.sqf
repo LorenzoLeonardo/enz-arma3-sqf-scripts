@@ -6,6 +6,36 @@
 
 params ["_squad"];
 
+addMissionEventHandler ["Draw3D", {
+	private _grp = group player;
+	private _wpIndex = currentWaypoint _grp;
+	private _wpPos = waypointPosition [_grp, _wpIndex];
+
+	// Build label
+	private _wpType = waypointType [_grp, _wpIndex];
+	if (_wpType isEqualTo "") then {
+		_wpType = "Waypoint"
+	};
+	private _wpText = format ["%1 (%2 m)", _wpType, round (player distance _wpPos)];
+
+	// Draw icon + text
+	drawIcon3D [
+		"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+		[0, 1, 0, 1],
+		_wpPos, // position
+		0.5, 0.5, // icon size
+		180, // icon angle
+		_wpText, // text
+		2, // shadow
+		0.035, // text size
+		"PuristaBold", // font
+		"center", // align
+		true, // drawThrough
+		0, // textShiftX
+		-0.04 // textShiftY (lift text above icon)
+	];
+}];
+
 // Detect enemy side automatically
 private _mySide = side _squad;
 private _enemySide = if (_mySide == west) then {
@@ -74,6 +104,7 @@ while {
 		_wp setWaypointBehaviour "AWARE";
 		_wp setWaypointCombatMode "RED";
 		_wp setWaypointSpeed "FULL";
+		_wp setWaypointDescription "DESTROY";
 
 		_aliveEnemies = allUnits select {
 			side _x == _enemySide && alive _x
