@@ -159,6 +159,18 @@ fnc_joinReinforcementToGroup = {
 	_group
 };
 
+fnc_spawnDistressSmokeSignal = {
+	params ["_radioUnit"];
+	private _pos = position _radioUnit;
+	private _posFlare = _pos vectorAdd [0, 0, 150];
+	{
+		private _flrObj = "F_40mm_red" createVehicle _posFlare;
+		_flrObj setVelocity [0, 0, -1];
+		"SmokeShellRed" createVehicle _pos;
+		sleep 30;
+	} forEach [1, 2, 3];
+};
+
 [_group, _originalGroupTemplate, _totalUnits, _papaBear] spawn {
 	params ["_group", "_originalGroupTemplate", "_totalUnits", "_papaBear"];
 	sleep 5;
@@ -175,10 +187,7 @@ fnc_joinReinforcementToGroup = {
 		private _radioUnit = [_group] call fnc_getQuietUnit;
 		private _groupCallerID = groupId _group;
 		// Signal: Flare & Smoke
-		private _flrObj = "F_40mm_Red" createVehicle (_radioUnit modelToWorld [0, 0, 200]);
-
-		_flrObj setVelocity [0, 0, -1];
-		"SmokeShellRed" createVehicle (position _radioUnit);
+		[_radioUnit] spawn fnc_spawnDistressSmokeSignal;
 
 		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call fnc_setSupportMarkerAndRadio;
 		// Plane's cruising altitude
