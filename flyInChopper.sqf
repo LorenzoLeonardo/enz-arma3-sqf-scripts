@@ -206,11 +206,8 @@ fnc_flyInChopper = {
 	};
 
 	if (alive _chopper) then {
-		if (isNil "RadioTacticalStrike") then {
-			missionNamespace setVariable["RadioTacticalStrike", true, true];
-			hint "Tactical airstrike is coming your location.";
-			_heliPilot sideRadio "RadioHeliTacticalStrike";
-		};
+		hint "Tactical airstrike is coming your location.";
+		_heliPilot sideRadio "RadioHeliTacticalStrike";
 
 		_chopper engineOn true;
 		_chopper flyInHeight _rtbAltitude;
