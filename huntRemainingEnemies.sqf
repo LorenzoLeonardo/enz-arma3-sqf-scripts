@@ -62,6 +62,13 @@ fnc_getEnemyCount = {
 	})
 };
 
+fnc_clearWaypoints = {
+	params ["_group"];
+	{
+		deleteWaypoint _x
+	} forEachReversed waypoints _group;
+};
+
 // Wait until enemy count drops to 75% or less
 private _threshHoldCount = floor (([_enemySide] call fnc_getEnemyCount) * 0.75);
 waitUntil {
@@ -96,12 +103,8 @@ while {
 		private _targetPos = getPos _target;
 
 		// Clear waypoints
-		while { (count waypoints _squad) > 0 } do {
-			deleteWaypoint [_squad, 0];
-		};
+		[_squad] call fnc_clearWaypoints;
 
-		_squad setFormation "WEDGE";
-		_squad setCombatMode "YELLOW";
 		// Add new waypoint to target
 		private _wp = _squad addWaypoint [getPos _target, 0];
 		_wp setWaypointType "DESTROY"; // could also use "SAD"
