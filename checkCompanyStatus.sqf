@@ -27,11 +27,12 @@ fnc_getQuietUnit = {
 
 missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 	params ["_requestor", "_responder", "_groupToBeDropped", "_phase"];
-	private _groupCallerID = groupId (group _requestor);
+
 	_requestor setVariable ["isRadioBusy", true];
 	_responder setVariable ["isRadioBusy", true];
 	switch (_phase) do {
 		case PARA_DROP_PHASE_ACKNOWLEDGED: {
+			private _groupCallerID = groupId (group _requestor);
 			hint format ["Requesting Reinforcements: %1", _groupCallerID];
 			_responder sideRadio "SupportOnWayStandBy";
 			_groupToBeDropped copyWaypoints (group _requestor);
@@ -39,9 +40,7 @@ missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 		case PARA_DROP_PHASE_DROPPING: {
 			_responder sideRadio "RadioAirbaseDropPackage";
 		};
-		case PARA_DROP_PHASE_DONE: {
-			hint format ["Reinforcements has arrived for %1.", _groupCallerID];
-		};
+		case PARA_DROP_PHASE_DONE: {};
 		default {
 			hint "Unsupported phase!";
 		};
@@ -211,6 +210,8 @@ fnc_joinReinforcementToGroup = {
 		([_papaBear] call fnc_getQuietUnit) sideRadio "RadioAirbasePackageOnGroundReply";
 		_group = [_group, _groupCallerID, _groupToBeDropped] call fnc_joinReinforcementToGroup;
 
+		_groupCallerID = groupId (_group);
+		hint format ["Reinforcements has arrived for %1.", _groupCallerID];
 		deleteMarkerLocal _paraDropMarkerName;
 	};
 };
