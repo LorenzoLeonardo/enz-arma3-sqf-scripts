@@ -5,6 +5,7 @@
 
 private _chopper = _this param [0];
 private _rtbAltitude = _this param [1, 80];
+private _percentEnemyLeft = _this param [2, 0.75];
 
 fnc_getEnemySide = {
 	params ["_chopper"];
@@ -20,10 +21,10 @@ fnc_getEnemySide = {
 		};
 		case independent: {
 			west
-		};   // often fight blufor
+		};
 		case civilian: {
 			east
-		};      // optional: treat civilians as hostile to opfor
+		};
 		default {
 			independent
 		};
@@ -183,9 +184,17 @@ fnc_engageEnemies = {
 };
 
 fnc_flyInChopper = {
-	params ["_chopper", "_heliPilot", "_aiPilotGroup", "_sideEnemy", "_basePos", "_rtbAltitude"];
+	params [
+		"_chopper",
+		"_heliPilot",
+		"_aiPilotGroup",
+		"_sideEnemy",
+		"_basePos",
+		"_rtbAltitude",
+		"_percentEnemyLeft"
+	];
 
-	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * 1);
+	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * _percentEnemyLeft);
 	_chopper allowCrewInImmobile true;
 
 	// Remove cargo from group
@@ -429,5 +438,6 @@ fnc_startMonitoringHeliStatus = {
 	_aiPilotGroup,
 	_sideEnemy,
 	_basePos,
-	_rtbAltitude
+	_rtbAltitude,
+	_percentEnemyLeft
 ] spawn fnc_flyInChopper;
