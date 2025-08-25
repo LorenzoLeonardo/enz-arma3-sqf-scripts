@@ -42,7 +42,19 @@ fnc_allEnemies = {
 	}
 };
 
-[_squad, _tolerance] spawn {
+fnc_waitUntilTargetDead = {
+	params ["_target", "_enemySide"];
+	private _timeNow = time;
+	waitUntil {
+		sleep 2;
+		!alive _target ||
+		(lifeState _target == "INCAPACITATED") ||
+		(([_enemySide] call fnc_enemyCount) == 0) ||
+		(time > (_timeNow + 60))
+	};
+};
+
+fnc_mainLogicHuntRemainingEnemies = {
 	params ["_squad", "_tolerance"];
 
 	private _enemySide = [_squad] call fnc_enemySide;
@@ -71,6 +83,7 @@ fnc_allEnemies = {
 		private _aliveEnemies = [_enemySide] call fnc_allEnemies;
 		private _target = _aliveEnemies param [0, objNull];
 
+		hint format ["Objective Updated: Hunt %1 remaining enemies.", count _aliveEnemies];
 		if (!(isNull _target) && alive _target) then {
 			private _targetPos = getPos _target;
 			// Clear waypoints
@@ -83,21 +96,7 @@ fnc_allEnemies = {
 			_wp setWaypointCombatMode "RED";
 			_wp setWaypointSpeed "FULL";
 
-			_aliveEnemies = allUnits select {
-				side _x == _enemySide && alive _x
-			};
-			hint format ["Objective Updated: Hunt %1 remaining enemies.", count _aliveEnemies];
-			// Wait until that specific target is dead before moving on
-			private _timeNow = time;
-			waitUntil {
-				sleep 2;
-				!alive _target ||
-				(lifeState _target == "INCAPACITATED") ||
-				(({
-					alive _x && side _x == _enemySide
-				} count allUnits) == 0) ||
-				(time > (_timeNow + 60))
-			};
+			[_target, _enemySide] call fnc_waitUntilTargetDead;
 		} else {
 			// Target is invalid, just wait a moment
 			systemChat "Target invalid, waiting...";
@@ -133,3 +132,5 @@ addMissionEventHandler ["Draw3D", {
 		-0.04 // textShiftY (lift text above icon)
 	];
 }];
+
+[_squad, _tolerance] spawn fnc_mainLogicHuntRemainingEnemies;
