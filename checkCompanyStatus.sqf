@@ -171,9 +171,19 @@ fnc_spawnDistressSmokeSignal = {
 	} forEach [1, 2, 3];
 };
 
+fnc_isGroupAlive = {
+	params ["_group"];
+	private _aliveCount = {
+		alive _x && {
+			lifeState _x != "INCAPACITATED"
+		}
+	} count (units _group);
+	_aliveCount > 0
+};
+
 [_group, _originalGroupTemplate, _totalUnits, _papaBear] spawn {
 	params ["_group", "_originalGroupTemplate", "_totalUnits", "_papaBear"];
-	sleep 5;
+	private _groupCallerID = groupId _group;
 
 	while { true } do {
 		waitUntil {
@@ -184,8 +194,11 @@ fnc_spawnDistressSmokeSignal = {
 			_aliveCount <= (_totalUnits / 3)
 		};
 
+		if (!([_group] call fnc_isGroupAlive)) exitWith {
+			hint format ["Lost contact with %1 team!", _groupCallerID];
+		};
+
 		private _radioUnit = [_group] call fnc_getQuietUnit;
-		private _groupCallerID = groupId _group;
 		// Signal: Flare & Smoke
 		[_radioUnit] spawn fnc_spawnDistressSmokeSignal;
 
@@ -222,5 +235,32 @@ fnc_spawnDistressSmokeSignal = {
 		_groupCallerID = groupId (_group);
 		hint format ["Reinforcements has arrived for %1.", _groupCallerID];
 		deleteMarkerLocal _paraDropMarkerName;
+	};
+};
+
+[_group, _papaBear] spawn {
+	params ["_group", "_papaBear"];
+	private _groupCallerID = groupId _group;
+	waitUntil {
+		!([_group] call fnc_isGroupAlive)
+	};
+	private _hqUnit = [_papaBear] call fnc_getQuietUnit;
+
+	switch (toLower _groupCallerID) do {
+		case "alpha": {
+			_hqUnit sideRadio "LostContactWithAlphaTeam";
+		};
+		case "bravo": {
+			_hqUnit sideRadio "LostContactWithBravoTeam";
+		};
+		case "charlie": {
+			_hqUnit sideRadio "LostContactWithCharlieTeam";
+		};
+		case "delta": {
+			_hqUnit sideRadio "LostContactWithDeltaTeam";
+		};
+		default {
+			_hqUnit sideRadio "LostContactWithUnknownTeam";
+		};
 	};
 };
