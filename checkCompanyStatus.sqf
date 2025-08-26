@@ -127,6 +127,7 @@ fnc_setSupportMarkerAndRadio = {
 fnc_joinReinforcementToGroup = {
 	params ["_group", "_groupCallerID", "_reinforcements"];
 	private _quietUnit = [_group] call fnc_getQuietUnit;
+	_quietUnit setVariable ["isRadioBusy", true];
 	if (({
 		alive _x
 	} count units _group) == 0) then {
@@ -156,6 +157,7 @@ fnc_joinReinforcementToGroup = {
 			_quietUnit sideRadio "Reinforcements have linked up.";
 		};
 	};
+	_quietUnit setVariable ["isRadioBusy", false];
 	_group
 };
 
@@ -191,7 +193,7 @@ fnc_isGroupAlive = {
 			private _aliveCount = {
 				alive _x && (lifeState _x != "INCAPACITATED")
 			} count units _group;
-			_aliveCount <= (_totalUnits / 3)
+			_aliveCount <= (_totalUnits / 4)
 		};
 
 		if (!([_group] call fnc_isGroupAlive)) exitWith {
@@ -245,6 +247,7 @@ fnc_isGroupAlive = {
 		!([_group] call fnc_isGroupAlive)
 	};
 	private _hqUnit = [_papaBear] call fnc_getQuietUnit;
+	_hqUnit setVariable ["isRadioBusy", true];
 
 	switch (toLower _groupCallerID) do {
 		case "alpha": {
@@ -263,4 +266,6 @@ fnc_isGroupAlive = {
 			_hqUnit sideRadio "LostContactWithUnknownTeam";
 		};
 	};
+	sleep 5;
+	_hqUnit setVariable ["isRadioBusy", false];
 };
