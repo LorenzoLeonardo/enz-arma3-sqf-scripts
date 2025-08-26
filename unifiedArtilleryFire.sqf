@@ -357,18 +357,23 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 				format ["CUPArtyRequestWP%1", _index select 0]
 			];
 			_requestor sideRadio _request;
+			sleep 3;
 		};
 		case GUN_BARRAGE_PHASE_SHOT : {
 			_responder sideRadio format["ArtyResponse%1", _index select 1];
+			sleep 2;
 		};
 		case GUN_BARRAGE_PHASE_SPLASH : {
 			_responder sideRadio format["ArtySplash%1", _index select 1];
+			sleep 1;
 		};
 		case GUN_BARRAGE_PHASE_DONE : {
 			_responder sideRadio format["ArtyComplete%1", _index select 1];
+			sleep 1;
 		};
 		case GUN_BARRAGE_PHASE_INVALID_RANGE :{
 			_responder sideRadio format["ArtyRangeError%1", _index select 1];
+			sleep 3;
 		};
 		default {
 			systemChat format ["Invalid artillery call phase: %1", _phase];
@@ -439,13 +444,11 @@ fnc_fireGun = {
 	private _marker = [_caller, _finalPos] call (missionNamespace getVariable GUN_MARKER_CALLBACK);
 	// --- 1. Standby call ---
 	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
-	sleep 3;  // small delay before firing
 
 	// --- 2. fire the artillery ---
 	private _canReach = _finalPos inRangeOfArtillery [[_gun], _ammoType];
 	if (!_canReach) exitWith {
 		[_caller, _base, GUN_BARRAGE_PHASE_INVALID_RANGE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
-		sleep 2;
 		deleteMarker _marker;
 		false
 	};
@@ -479,7 +482,6 @@ fnc_fireGun = {
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
-	sleep 2;
 	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// call splash after the first shell hits the ground.
