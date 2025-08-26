@@ -466,9 +466,8 @@ fnc_fireGun = {
 		[_projectile, _unit] spawn {
 			params ["_proj", "_unit"];
 
-			private _startTime = time; // record current time
 			waitUntil {
-				!alive _proj || (time > (_startTime + 60))
+				(isNull _proj) || !(alive _proj)
 			};
 			if !(_unit getVariable ["splashed", false]) then {
 				_unit setVariable ["splashed", true, true];
