@@ -564,8 +564,7 @@ fnc_setReviving = {
 // ===============================
 fnc_handleDamage = {
 	params ["_unit", "_selection", "_damage", "_source", "_projectile"];
-	private _currentDamage = damage _unit;
-	private _newDamage = _currentDamage + _damage;
+	private _result = _damage;
 
 	// Allow lethal finishers if already down
 	if (lifeState _unit == "INCAPACITATED") exitWith {
@@ -591,7 +590,7 @@ fnc_handleDamage = {
 	};
 
 	// Incapacitate on near-lethal total damage
-	if (_newDamage >= 0.95) then {
+	if (_damage >= 0.95) then {
 		// if the injured is in a vehicle or static weapon, remove them
 		private _vehicle = objectParent _unit;
 		if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
@@ -625,10 +624,9 @@ fnc_handleDamage = {
 			};
 		};
 
-		0.9
-	} else {
-		_damage
+		_result = 0.9
 	};
+	_result
 };
 
 // ===============================
