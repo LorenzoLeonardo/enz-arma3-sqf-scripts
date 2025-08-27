@@ -212,6 +212,9 @@ fnc_unlockReviveState = {
 
 	if (!isNull _injured) then {
 		[_injured, false] call fnc_setBeingRevived;
+		if (_injured == player) then {
+			player setVariable ["reviverAssigned", objNull, true];
+		};
 	};
 };
 
@@ -230,6 +233,9 @@ fnc_lockReviveState = {
 
 	if (!isNull _injured) then {
 		[_injured, true] call fnc_setBeingRevived;
+		if (_injured == player) then {
+			player setVariable ["reviverAssigned", _medic, true];
+		};
 	};
 
 	doStop _medic;
@@ -642,29 +648,55 @@ fnc_handleDamage = {
 } forEach units _group;
 
 addMissionEventHandler ["Draw3D", {
+	// --- case 1: player is reviver
 	private _injured = player getVariable ["injuredToRevive", objNull];
+	if (!isNull _injured && alive _injured) then {
+		private _wpPos = getPos _injured;
+		private _wpText = format ["Revive Injured (%1 m)", round (player distance _wpPos)];
 
-	if (isNull _injured || !alive _injured) exitWith {};
+		drawIcon3D [
+			"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+			[0, 1, 1, 1],
+			_wpPos,
+			0.5, 0.5,
+			180,
+			_wpText,
+			2,
+			0.035,
+			"PuristaBold",
+			"center",
+			true,
+			0,
+			-0.04
+		];
+	};
 
-	private _wpPos = getPos _injured;
+	// --- case 2: player is injured
+	private _reviver = player getVariable ["reviverAssigned", objNull];
+	if (!isNull _reviver && alive _reviver) then {
+		private _revPos = getPosATL _reviver;
+		// +2 meters above head
+		_revPos set [2, (_revPos select 2) + 2];
 
-	// Build label
-	private _wpText = format ["Revive Injured (%1 m)", round (player distance _wpPos)];
+		private _revText = format [
+			"Medic (%1 m)",
+			round (player distance _reviver)
+		];
 
-	// Draw icon + text
-	drawIcon3D [
-		"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
-		[0, 1, 1, 1],
-		_wpPos, // position
-		0.5, 0.5, // icon size
-		180, // icon angle
-		_wpText, // text
-		2, // shadow
-		0.035, // text size
-		"PuristaBold", // font
-		"center", // align
-		true, // drawThrough
-		0, // textShiftX
-		-0.04 // textShiftY (lift text above icon)
-	];
+		drawIcon3D [
+			"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+			[0, 1, 1, 1],
+			_revPos,
+			0.6, 0.6,
+			180,
+			_revText,
+			2,
+			0.035,
+			"PuristaBold",
+			"center",
+			true,
+			0,
+			-0.04
+		];
+	};
 }];
