@@ -74,6 +74,7 @@ fnc_mainLogicHuntRemainingEnemies = {
 
 	// Radio only once
 	if (!(missionNamespace getVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", false])) then {
+		["TaskUpdated", ["Enemy Hunt", "Eliminate all hostile forces in the area."]] call BIS_fnc_showNotification;
 		[west, "Base"] sideRadio "RadioPapaBearToAllUnitsClearArea";
 		missionNamespace setVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", true, true];
 	};
