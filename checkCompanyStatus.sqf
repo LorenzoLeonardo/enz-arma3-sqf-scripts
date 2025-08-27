@@ -1,8 +1,9 @@
 #include "paraDropHelpers.sqf"
 #include "reviveSystem.sqf"
 
-params ["_group", "_papaBear"];
-
+private _group = _this param [0];
+private _papaBear = _this param [1];
+private _callRetries = _this param [2, 3];
 // Save original unit types and loadouts
 private _originalGroupTemplate = [_group] call fnc_saveOriginalGroupTemplates;
 private _totalUnits = count units _group;
@@ -157,6 +158,7 @@ fnc_joinReinforcementToGroup = {
 			_quietUnit sideRadio "Reinforcements have linked up.";
 		};
 	};
+	sleep 5;
 	_quietUnit setVariable ["isRadioBusy", false];
 	_group
 };
@@ -183,11 +185,11 @@ fnc_isGroupAlive = {
 	_aliveCount > 0
 };
 
-[_group, _originalGroupTemplate, _totalUnits, _papaBear] spawn {
-	params ["_group", "_originalGroupTemplate", "_totalUnits", "_papaBear"];
+[_group, _originalGroupTemplate, _totalUnits, _papaBear, _callRetries] spawn {
+	params ["_group", "_originalGroupTemplate", "_totalUnits", "_papaBear", "_callRetries"];
 	private _groupCallerID = groupId _group;
 
-	while { true } do {
+	for "_i" from 0 to _callRetries do {
 		waitUntil {
 			sleep 2;
 			private _aliveCount = {
