@@ -149,8 +149,6 @@ fnc_engageEnemies = {
 	} do {
 		_heliPilot = driver _chopper;
 		_aiPilotGroup = group _heliPilot;
-
-		hint format ["Remaining enemies: %1", ([_sideEnemy] call fnc_getEnemyCount)];
 		_chopper setVehicleAmmo 1;
 
 		private _aliveEnemies = allUnits select {
@@ -162,7 +160,7 @@ fnc_engageEnemies = {
 		if (!isNull _target) then {
 			[_aiPilotGroup] call fnc_clearWaypoints;
 
-			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "AWARE", 0] call fnc_createWaypoint;
+			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "COMBAT", 0] call fnc_createWaypoint;
 			private _markerName = [
 				getPos _target,
 				"Air Strike Here!",
@@ -170,13 +168,7 @@ fnc_engageEnemies = {
 				"ColorWEST"
 			] call fnc_createMarker;
 
-			waitUntil {
-				(!alive _target) || (lifeState _target == "INCAPACITATED") ||
-				(({
-					alive _x
-				} count units (group _chopper)) <= 2) ||
-				!(canMove _chopper)
-			};
+			sleep 30;
 			deleteMarker _markerName;
 		};
 		sleep 1;
@@ -206,6 +198,8 @@ fnc_flyInChopper = {
 	};
 
 	if (alive _chopper) then {
+		private _message = format["%1 is coming your location.", groupId _aiPilotGroup];
+		["TaskUpdated", ["Tactical Strike Force", _message]] call BIS_fnc_showNotification;
 		hint "Tactical airstrike is coming your location.";
 		_heliPilot sideRadio "RadioHeliTacticalStrike";
 
