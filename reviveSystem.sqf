@@ -362,6 +362,11 @@ fnc_handleHeal = {
 	if (((side _medic) getFriend (side _injured)) < 0.6) then {
 		[_injured, _medic] call fnc_surrender;
 		[_injured] call fnc_dropAllWeapons;
+	} else {
+		if (rating _injured <= -2000) then {
+			[_injured, _medic] call fnc_surrender;
+			[_injured] call fnc_dropAllWeapons;
+		};
 	};
 
 	[_injured, true] call fnc_setRevived;
