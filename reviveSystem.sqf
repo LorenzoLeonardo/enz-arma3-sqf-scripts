@@ -594,8 +594,14 @@ fnc_handleDamage = {
 		}; // near-lethal
 	};
 
-	// Incapacitate on near-lethal total damage
-	if (_damage >= 0.95) then {
+	// Incapacitate on near-lethal total damage and
+	// Prevent multiple revive loops from stacking
+	if (_damage >= 0.95 && !([_unit] call fnc_isInReviveProcess)) then {
+		[_unit, true] call fnc_setReviveProcess;
+		// Reset revive state for NEW incapacitation
+		[_unit, false] call fnc_setRevived;
+		[_unit, false] call fnc_setBeingRevived;
+
 		// if the injured is in a vehicle or static weapon, remove them
 		private _vehicle = objectParent _unit;
 		if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
@@ -607,28 +613,19 @@ fnc_handleDamage = {
 			_unit disableAI _x
 		} forEach ["MOVE", "ANIM"];
 		_unit setCaptive true;
-		// Reset revive state for NEW incapacitation
-		[_unit, false] call fnc_setRevived;
-		[_unit, false] call fnc_setBeingRevived;
 		_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
 
-		// Prevent multiple revive loops from stacking
-		if (!([_unit] call fnc_isInReviveProcess)) then {
-			[_unit, true] call fnc_setReviveProcess;
+		// Bleeding out timer
+		[_unit] spawn fnc_bleedoutTimer;
 
-			// Bleeding out timer
-			[_unit] spawn fnc_bleedoutTimer;
+		// AI revive logic
+		[_unit] spawn {
+			params ["_injured"];
+			[_injured] call fnc_reviveLoop;
 
-			// AI revive logic
-			[_unit] spawn {
-				params ["_injured"];
-				[_injured] call fnc_reviveLoop;
-
-				// Reset the process flag after loop ends
-				[_injured, false] call fnc_setReviveProcess;
-			};
+			// Reset the process flag after loop ends
+			[_injured, false] call fnc_setReviveProcess;
 		};
-
 		_result = 0.9
 	};
 	_result
