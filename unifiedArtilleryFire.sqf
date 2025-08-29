@@ -309,7 +309,7 @@ fnc_getClusterCenter = {
 	private _sumZ = 0;
 
 	{
-		private _pos = getPosATL _x;
+		private _pos = getPosASL _x;
 		_sumX = _sumX + (_pos select 0);
 		_sumY = _sumY + (_pos select 1);
 		_sumZ = _sumZ + (_pos select 2);

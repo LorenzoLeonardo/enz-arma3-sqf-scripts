@@ -71,14 +71,14 @@ _artillery addEventHandler ["Fired", {
 			private _impactSoundPlayed = false;
 
 			while { alive _proj } do {
-				_lastPos = getPosATL _proj;
+				_lastPos = getPosASL _proj;
 				private _sound = selectRandom _soundList;
 				private _vel = velocity _proj;
 				private _alt = _lastPos select 2;
 
 				// Impact whistle (only once, when descending + low enough)
 				if (!_impactSoundPlayed && {
-					(_lastPos vectorDistance (getPosATL player)) <= 700 && {
+					(_lastPos vectorDistance (getPosASL player)) <= 700 && {
 						_vel select 2 < 0
 					}
 				}) then {
@@ -97,8 +97,8 @@ addMissionEventHandler ["Draw3D", {
 	{
 		private _proj = _x select 0;
 		if (!isNull _proj && alive _proj) then {
-			private _wpPos = getPosATL _proj;
-			private _wpText = format ["Shell (%1 m)", round ((getPosATL player) vectorDistance _wpPos)];
+			private _wpPos = getPosASL _proj;
+			private _wpText = format ["Shell (%1 m)", round ((getPosASL player) vectorDistance _wpPos)];
 
 			drawIcon3D [
 				"\A3\ui_f\data\map\markers\military\dot_CA.paa",
