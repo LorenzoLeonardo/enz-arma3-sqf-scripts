@@ -468,6 +468,9 @@ fnc_fireGun = {
 	};
 
 	private _finalPos = _targetPos;
+	// Create temporary "X" marker
+	private _marker = [_caller, _finalPos] call (missionNamespace getVariable GUN_MARKER_CALLBACK);
+
 	if (_accuracyRadius > 0) then {
 		private _angle = random 360;
 		private _dist = random _accuracyRadius;
@@ -477,8 +480,6 @@ fnc_fireGun = {
 	private _base = [group _gun] call fnc_getQuietUnit;
 	private _grid = mapGridPosition _finalPos;
 
-	// Create temporary "X" marker
-	private _marker = [_caller, _finalPos] call (missionNamespace getVariable GUN_MARKER_CALLBACK);
 	// --- 1. Standby call ---
 	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
