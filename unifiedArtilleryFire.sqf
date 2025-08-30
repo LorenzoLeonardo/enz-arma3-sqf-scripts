@@ -103,21 +103,18 @@ private _scoutGroup = objNull;
 
 switch (typeName _genericParam) do {
 	case "SCALAR": {
-		sleep 3; // Allow time for the gun to initialize
 		_mode = MODE_AUTO;
 		_detectionRange = _genericParam;
 		_scoutGroup = objNull; // No scout group in AUTO mode
 		hint format ["Artillery AUTO mode activated with detection range: %1 meters", _detectionRange];
 	};
 	case "GROUP": {
-		sleep 3; // Allow time for the gun to initialize
 		_mode = MODE_SCOUT;
 		_detectionRange = 0; // No detection range in SCOUT mode
 		_scoutGroup = _genericParam; // Use the provided object as the scout group
 		hint format ["Artillery SCOUT mode activated with scout group: %1", groupId _scoutGroup];
 	};
 	case "OBJECT": {
-		sleep 3; // Allow time for the gun to initialize
 		_mode = MODE_MAP;
 		_detectionRange = 0; // No detection range in SCOUT mode
 		_scoutGroup = objNull; // Use the provided object as the scout group
