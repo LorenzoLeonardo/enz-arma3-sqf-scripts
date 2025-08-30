@@ -465,7 +465,7 @@ fnc_fireGun = {
 
 	private _finalPos = _targetPos;
 	if (_accuracyRadius > 0) then {
-		private _angle = random (2 * pi);
+		private _angle = random 360;
 		private _dist = random _accuracyRadius;
 		_finalPos = _targetPos vectorAdd [(sin _angle * _dist), (cos _angle * _dist), 0];
 	};
