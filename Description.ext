@@ -20,6 +20,13 @@ class CfgDebriefing
 		subtitle = "You have died";
 		description = "";
 	};
+
+	class loading_error
+	{
+		title = "Initialization Error";
+		subtitle = "Error loading game . . .";
+		description = "";
+	};
 };
 
 class CfgRadio
@@ -817,25 +824,100 @@ class CfgRadio
 		sound[]	= {"\sounds\artillery\Male06ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
 		title	= "Target location received, ordnance is inbound. Out!";
 	}
+	class ArtyResponse6_6 {
+		name	= "ArtyResponse6_6";
+		sound[]	= {"\sounds\artillery\CUP\Male01EN\DEFAULT\SOM\FiringAtTargetLocation.ogg",db+0,1};
+		title	= "Firing at target location!";
+	}
+	class ArtyResponse6_6_6 {
+		name	= "ArtyResponse6_6_6";
+		sound[]	= {"\sounds\artillery\CUP\Male01EN\DEFAULT\SOM\WeCopyYouLoudAndClear.ogg",db+0,1};
+		title	= "We copy you loud and clear!";
+	}
+	class ArtyResponse6_6_6_6 {
+		name	= "ArtyResponse6_6_6_6";
+		sound[]	= {"\sounds\artillery\CUP\Male01EN\DEFAULT\SOM\ShotOver.ogg",db+0,1};
+		title	= "Shot, over!";
+	}
 	class ArtyResponse7 {
 		name	= "ArtyResponse7";
 		sound[]	= {"\sounds\artillery\Male07ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
 		title	= "Target location received, ordnance is inbound. Out!";
+	}
+	class ArtyResponse7_7 {
+		name	= "ArtyResponse7_7";
+		sound[]	= {"\sounds\artillery\CUP\Male02EN\DEFAULT\SOM\FiringAtTargetLocation.ogg",db+0,1};
+		title	= "Firing at target location!";
+	}
+	class ArtyResponse7_7_7 {
+		name	= "ArtyResponse7_7_7";
+		sound[]	= {"\sounds\artillery\CUP\Male02EN\DEFAULT\SOM\WeCopyYouLoudAndClear.ogg",db+0,1};
+		title	= "We copy you loud and clear!";
+	}
+	class ArtyResponse7_7_7_7 {
+		name	= "ArtyResponse7_7_7_7";
+		sound[]	= {"\sounds\artillery\CUP\Male02EN\DEFAULT\SOM\ShotOver.ogg",db+0,1};
+		title	= "Shot, over!";
 	}
 	class ArtyResponse8 {
 		name	= "ArtyResponse8";
 		sound[]	= {"\sounds\artillery\Male08ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
 		title	= "Target location received, ordnance is inbound. Out!";
 	}
+	class ArtyResponse8_8 {
+		name	= "ArtyResponse8_8";
+		sound[]	= {"\sounds\artillery\CUP\Male03EN\DEFAULT\SOM\FiringAtTargetLocation.ogg",db+0,1};
+		title	= "Firing at target location!";
+	}
+	class ArtyResponse8_8_8 {
+		name	= "ArtyResponse8_8_8";
+		sound[]	= {"\sounds\artillery\CUP\Male03EN\DEFAULT\SOM\WeCopyYouLoudAndClear.ogg",db+0,1};
+		title	= "We copy you loud and clear!";
+	}
+	class ArtyResponse8_8_8_8 {
+		name	= "ArtyResponse8_8_8_8";
+		sound[]	= {"\sounds\artillery\CUP\Male03EN\DEFAULT\SOM\ShotOver.ogg",db+0,1};
+		title	= "Shot, over!";
+	}
 	class ArtyResponse9 {
 		name	= "ArtyResponse9";
 		sound[]	= {"\sounds\artillery\Male09ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
 		title	= "Target location received, ordnance is inbound. Out!";
 	}
+	class ArtyResponse9_9 {
+		name	= "ArtyResponse9_9";
+		sound[]	= {"\sounds\artillery\CUP\Male04EN\DEFAULT\SOM\FiringAtTargetLocation.ogg",db+0,1};
+		title	= "Firing at target location!";
+	}
+	class ArtyResponse9_9_9 {
+		name	= "ArtyResponse9_9_9";
+		sound[]	= {"\sounds\artillery\CUP\Male04EN\DEFAULT\SOM\WeCopyYouLoudAndClear.ogg",db+0,1};
+		title	= "We copy you loud and clear!";
+	}
+	class ArtyResponse9_9_9_9 {
+		name	= "ArtyResponse9_9_9_9";
+		sound[]	= {"\sounds\artillery\CUP\Male04EN\DEFAULT\SOM\ShotOver.ogg",db+0,1};
+		title	= "Shot, over!";
+	}
 	class ArtyResponse10 {
 		name	= "ArtyResponse10";
 		sound[]	= {"\sounds\artillery\Male10ENG\RequestAcknowledgedSGArty.ogg",db+0,1};
 		title	= "Target location received, ordnance is inbound. Out!";
+	}
+	class ArtyResponse10_10 {
+		name	= "ArtyResponse10_10";
+		sound[]	= {"\sounds\artillery\CUP\Male05EN\DEFAULT\SOM\FiringAtTargetLocation.ogg",db+0,1};
+		title	= "Firing at target location!";
+	}
+	class ArtyResponse10_10_10 {
+		name	= "ArtyResponse10_10_10";
+		sound[]	= {"\sounds\artillery\CUP\Male05EN\DEFAULT\SOM\WeCopyYouLoudAndClear.ogg",db+0,1};
+		title	= "We copy you loud and clear!";
+	}
+	class ArtyResponse10_10_10_10 {
+		name	= "ArtyResponse10_10_10_10";
+		sound[]	= {"\sounds\artillery\CUP\Male05EN\DEFAULT\SOM\ShotOver.ogg",db+0,1};
+		title	= "Shot, over!";
 	}
 	class ArtyResponse11 {
 		name	= "ArtyResponse11";

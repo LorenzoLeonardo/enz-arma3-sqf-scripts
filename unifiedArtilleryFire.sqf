@@ -387,7 +387,13 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 			sleep 3;
 		};
 		case GUN_BARRAGE_PHASE_SHOT : {
-			_responder sideRadio format["ArtyResponse%1", _index select 1];
+			private _response = selectRandom [
+				format["ArtyResponse%1", _index select 1],
+				format["ArtyResponse%1_%1", _index select 1, _index select 1],
+				format["ArtyResponse%1_%1_%1", _index select 1, _index select 1, _index select 1],
+				format["ArtyResponse%1_%1_%1_%1", _index select 1, _index select 1, _index select 1, _index select 1]
+			];
+			_responder sideRadio _response;
 			sleep 2;
 		};
 		case GUN_BARRAGE_PHASE_SPLASH : {
