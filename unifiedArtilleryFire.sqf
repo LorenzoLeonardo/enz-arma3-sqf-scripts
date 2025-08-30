@@ -158,15 +158,19 @@ fnc_dynamicAccuracyRadius = {
 		private _maxScatter = 200;  // worst accuracy
 		private _minScatter = 5;    // best accuracy
 		if (_gun isKindOf "StaticMortar") then {
-			_maxScatter = 100;
-			_minScatter = 3;
+			_minScatter = 8;   // skilled mortar team
+			_maxScatter = 80;  // poorly trained / max range
 		} else {
-			_maxScatter = 200;
-			_minScatter = 10;
+			_minScatter = 15;  // skilled artillery crew
+			_maxScatter = 150; // poor crew / max range
 		};
 
-		// Map skill to scatter (higher skill → smaller radius)
-		_dynamicAccuracyRadius = _maxScatter - (_skill * (_maxScatter - _minScatter));
+		// skill reduces scatter (linear mapping)
+		private _baseScatter = _maxScatter - (_skill * (_maxScatter - _minScatter));
+
+		// Add random human imperfection (±20%)
+		private _variation = random [0.8, 1, 1.2];
+		_dynamicAccuracy = _baseScatter * _variation;
 	} else {
 		_dynamicAccuracyRadius = _accuracyRadius; // use specified radius
 	};
