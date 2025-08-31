@@ -564,6 +564,55 @@ fnc_setReviving = {
 // END: Getter/Setters for Revive States
 // =======================================================
 
+fnc_animateWounded = {
+	params ["_unit"];
+
+	    // Prevent multiple loops on the same unit
+	if (!isNil {
+		_unit getVariable "painJerks"
+	}) exitWith {};
+
+	private _anims = [
+		"UnconsciousFaceDown",
+		"UnconsciousFaceUp",
+		"UnconsciousFaceLeft",
+		"UnconsciousFaceRight",
+		"UnconsciousOutProne"
+	];
+
+	private _handle = [_unit, _anims] spawn {
+		params ["_u", "_list"];
+		private _i = 0;
+		private _count = count _list;
+
+		while { alive _u && lifeState _u == "INCAPACITATED" } do {
+			private _anim = _list select _i;
+
+			_u playMoveNow _anim;
+
+			// Wait until animation ends or timeout or unit state changes
+			private _endTime = time + 10; // max 10s per pose
+			waitUntil {
+				sleep 0.2;
+				!(alive _u && lifeState _u == "INCAPACITATED") ||
+				(animationState _u) != _anim
+				|| time > _endTime
+			};
+			// Cycle through animations using modulo
+			_i = (_i + 1) mod _count;
+		};
+		// Cleanup when loop ends
+		if (!alive _u) then {
+			diag_log format ["[fnc_animateWounded] %1 died, stopping pain jerks.", _u];
+		} else {
+			diag_log format ["[fnc_animateWounded] %1 revived, stopping pain jerks.", _u];
+		};
+		_u setVariable ["painJerks", nil];
+	};
+	// Store reference so we can terminate externally if needed
+	_unit setVariable ["painJerks", _handle];
+};
+
 // ===============================
 // FUNCTION: Handle damage
 // ===============================
@@ -613,7 +662,8 @@ fnc_handleDamage = {
 			_unit disableAI _x
 		} forEach ["MOVE", "ANIM"];
 		_unit setCaptive true;
-		_unit playMoveNow "AinjPpneMstpSnonWrflDnon"; // Flat injured
+		// animate wounded state
+		[_unit] spawn fnc_animateWounded;
 
 		// Bleeding out timer
 		[_unit] spawn fnc_bleedoutTimer;
