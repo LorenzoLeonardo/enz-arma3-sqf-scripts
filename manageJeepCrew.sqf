@@ -84,32 +84,22 @@ fnc_assignReplacement = {
 	private _assignedUnits = _vehicle getVariable ["assignedUnits", []];
 	private _replacement = [_vehicle] call fnc_getReplacement;
 
-	if (isNull _replacement) exitWith {
-		systemChat "No AI available to replace!";
-	};
-
-	systemChat format ["Assigning %1 to seat: %2", name _replacement, _role];
+	if (isNull _replacement) exitWith {};
 
 	switch (true) do {
 		case (_role == "driver"): {
-			systemChat format ["DRIVER: %1", _replacement];
 			_replacement moveInDriver _vehicle;
 		};
 		case (_role == "gunner"): {
-			systemChat format ["GUNNER: %1 PATH: %2", _replacement, _turretPath];
 			_replacement moveInTurret [_vehicle, _turretPath];
 		};
 		case (_role == "turret"): {
-			systemChat format ["TURRET: %1 PATH: %2", _replacement, _turretPath];
 			_replacement moveInTurret [_vehicle, _turretPath];
 		};
 		case (_role == "commander"): {
-			systemChat format ["COMMANDER: %1", _replacement];
 			_replacement moveInCommander _vehicle;
 		};
-		default {
-			systemChat format ["UNDEFINED ROLE: %1", _role];
-		};
+		default {};
 	};
 
 	_assignedUnits pushBackUnique _replacement;
@@ -152,5 +142,4 @@ _vehicle addEventHandler ["GetOut", {
 _vehicle addEventHandler ["Killed", {
 	params ["_veh"];
 	_veh setVariable ["assignedUnits", [], true];
-	systemChat format ["Vehicle %1 destroyed - crew list cleared", _veh];
 }];
