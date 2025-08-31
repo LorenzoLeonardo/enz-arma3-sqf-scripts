@@ -436,6 +436,7 @@ fnc_surrender = {
 	params ["_unit", "_medic"];
 	// AI won’t target them
 	_unit setCaptive true;
+	_unit setDamage 0.9;
 	// Add to player's group silently
 	[_unit] joinSilent (group _medic);
 	_unit doFollow (leader (group _medic));
