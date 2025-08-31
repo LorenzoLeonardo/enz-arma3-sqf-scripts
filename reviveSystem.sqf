@@ -733,31 +733,32 @@ fnc_handleDamage = {
 		}; // near-lethal within 15 meters
 	};
 
-	// Compute probability of chance to survive if hit in the head
-	if (_selection == "head" && !([_unit] call fnc_isInReviveProcess)) exitWith {
-		[_unit, _damage] call fnc_headshotDamageHandling
-	};
+	switch (true) do {
+		// ----- HEAD -----
+		case (_selection == "head" && !([_unit] call fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call fnc_headshotDamageHandling;
+		};
 
-	// Compute probability of chance to survive if hit in the head
-	if (_selection == "body" && !([_unit] call fnc_isInReviveProcess)) exitWith {
-		[_unit, _damage] call fnc_torsoDamageHandling
-	};
+		// ----- TORSO -----
+		case (_selection == "body" && !([_unit] call fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call fnc_torsoDamageHandling;
+		};
 
-	// Compute probability of chance to survive if hit in the arms
-	if ((_selection == "hand_l" || _selection == "hand_r" || _selection == "arm_l" || _selection == "arm_r") && !([_unit] call fnc_isInReviveProcess)) exitWith {
-		[_unit, _damage] call fnc_armDamageHandling
-	};
+		// ----- ARMS -----
+		case ((_selection in ["hand_l", "hand_r", "arm_l", "arm_r"]) && !([_unit] call fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call fnc_armDamageHandling;
+		};
 
-	// Compute probability of chance to survive if hit in the legs
-	if ((_selection == "leg_l" || _selection == "leg_r" || _selection == "foot_l" || _selection == "foot_r") && !([_unit] call fnc_isInReviveProcess)) exitWith {
-		[_unit, _damage] call fnc_armDamageHandling
-	};
+		// ----- LEGS -----
+		case ((_selection in ["leg_l", "leg_r", "foot_l", "foot_r"]) && !([_unit] call fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call fnc_legDamageHandling;
+		};
 
-	// Incapacitate on near-lethal total damage and
-	// Prevent multiple revive loops from stacking
-	if (_damage >= 0.95 && !([_unit] call fnc_isInReviveProcess)) then {
-		[_unit] call fnc_makeUnconscious;
-		_result = 0.9
+		// ----- GLOBAL NEAR-LETHAL CHECK -----
+		case ((_damage >= 0.95) && !([_unit] call fnc_isInReviveProcess)): {
+			[_unit] call fnc_makeUnconscious;
+			_result = 0.9;
+		};
 	};
 	_result
 };
