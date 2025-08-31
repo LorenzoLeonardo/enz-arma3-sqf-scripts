@@ -268,9 +268,9 @@ fnc_waitForMedicArrival = {
 	(_medic distance2D _injured) < REVIVE_RANGE
 };
 
-// ===============================
+// ==================================================
 // FUNCTION: Check if projectile is heavy explosive
-// ===============================
+// ==================================================
 fnc_isHeavyExplosive = {
 	params ["_projectile"];
 
@@ -280,29 +280,25 @@ fnc_isHeavyExplosive = {
 
 	private _projLower = toLower _projectile;
 
+	private _ignoreKeywords = [
+		"chemlight", "helmet", "wheel", "cheese"
+	];
+
+	if (_ignoreKeywords findIf {
+		_projLower find _x > -1
+	} > -1) exitWith {
+		false
+	};
+
 	private _explosiveKeywords = [
 		"_he", "_shell", "_bomb", "_satchel", "_mine", "_rocket",
 		"gbu", "mk82", "mo_", "rpg", "at_", "_missile", "_howitzer",
 		"_mortar", "_demolition"
 	];
 
-	private _ignoreKeywords = [
-		"chemlight", "helmet", "wheel", "cheese" // safety words
-	];
-
-	{
-		if ((_projLower find _x) > -1) exitWith {
-			false
-		}; // Ignore takes priority
-	} forEach _ignoreKeywords;
-
-	{
-		if ((_projLower find _x) > -1) exitWith {
-			true
-		};
-	} forEach _explosiveKeywords;
-
-	false
+	_explosiveKeywords findIf {
+		_projLower find _x > -1
+	} > -1
 };
 
 // ===============================
