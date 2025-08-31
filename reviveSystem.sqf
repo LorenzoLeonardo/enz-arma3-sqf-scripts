@@ -723,6 +723,19 @@ fnc_handleDamage = {
 		_damage
 	};
 
+	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
+
+	if (_isHeavyExplosive) then {
+		private _dist = _unit distance2D _source;
+
+		if (_dist <= 3) exitWith {
+			1
+		}; // lethal
+		if (_dist <= 6) exitWith {
+			0.95 max _damage
+		}; // near-lethal
+	};
+
 	// Compute probability of chance to survive if hit in the head
 	if (_selection == "head" && !([_unit] call fnc_isInReviveProcess)) exitWith {
 		[_unit, _damage] call fnc_headshotDamageHandling
@@ -741,19 +754,6 @@ fnc_handleDamage = {
 	// Compute probability of chance to survive if hit in the legs
 	if ((_selection == "leg_l" || _selection == "leg_r" || _selection == "foot_l" || _selection == "foot_r") && !([_unit] call fnc_isInReviveProcess)) exitWith {
 		[_unit, _damage] call fnc_armDamageHandling
-	};
-
-	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
-
-	if (_isHeavyExplosive) then {
-		private _dist = _unit distance2D _source;
-
-		if (_dist <= 3) exitWith {
-			1
-		}; // lethal
-		if (_dist <= 6) exitWith {
-			0.95 max _damage
-		}; // near-lethal
 	};
 
 	// Incapacitate on near-lethal total damage and
