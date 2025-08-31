@@ -731,9 +731,10 @@ fnc_handleDamage = {
 		if (_dist <= 3) exitWith {
 			1
 		}; // lethal
-		if (_dist <= 6) exitWith {
-			0.95 max _damage
-		}; // near-lethal
+		if (_dist <= 15 && !([_unit] call fnc_isInReviveProcess)) exitWith {
+			[_unit] call fnc_makeUnconscious;
+			0.95
+		}; // near-lethal within 15 meters
 	};
 
 	// Compute probability of chance to survive if hit in the head
