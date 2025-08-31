@@ -306,40 +306,95 @@ fnc_isHeavyExplosive = {
 };
 
 // ===============================
+// FUNCTION: Make Unconscious
+// ===============================
+fnc_makeUnconscious = {
+	params ["_unit"];
+
+	[_unit, true] call fnc_setReviveProcess;
+	// Reset revive state for NEW incapacitation
+	[_unit, false] call fnc_setRevived;
+	[_unit, false] call fnc_setBeingRevived;
+
+	// if the injured is in a vehicle or static weapon, remove them
+	private _vehicle = objectParent _unit;
+	if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
+		moveOut _unit;
+	};
+	// Make unit unconscious
+	_unit setUnconscious true;
+	{
+		_unit disableAI _x
+	} forEach ["MOVE"];
+	_unit setCaptive true;
+	// animate injury
+	_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
+
+	// Bleeding out timer
+	[_unit] spawn fnc_bleedoutTimer;
+
+	// AI revive logic
+	[_unit] spawn {
+		params ["_injured"];
+		[_injured] call fnc_reviveLoop;
+
+		// Reset the process flag after loop ends
+		[_injured, false] call fnc_setReviveProcess;
+	};
+};
+
+// ===============================
 // FUNCTION: Headshot damage Handling
 // ===============================
 fnc_headshotDamageHandling = {
 	params ["_unit", "_damage"];
 
-	// Base chance to survive headshot
-	private _baseSurviveChance = 0.3;
-	// Minimum damage to always kill
+	// ----- CONFIG -----
+	// default survival chance without helmet
+	private _baseSurviveChance = 0.2;
+	// threshold for instant-kill
 	private _minDamageToAlwaysKill = 0.85;
-	// Check if unit has a helmet
+	// helmet protection bonus
+	private _helmetBonus = 0.3;
+
+	// ----- HELMET CHECK -----
 	private _headgearClass = toLower (headgear _unit);
-	private _isHelmet = ((_headgearClass find "helmet" != -1) ||   // generic helmets
-	(_headgearClass find "cup_h" == 0) ||     // CUP helmets
-	(_headgearClass find "6b" != -1) ||       // Russian 6b helmets
-	(_headgearClass find "rus" != -1) ||      // Russian related helmets
-	(_headgearClass find "spetsnaz" != -1));    // Special forces helmets);
+	private _isHelmet = (
+	// vanilla helmets
+	(_headgearClass find "helmet" != -1) ||
+	// CUP helmets
+	(_headgearClass find "cup_h" == 0) ||
+	// Russian 6b series
+	(_headgearClass find "6b" != -1) ||
+	// Russian patterns
+	(_headgearClass find "rus" != -1) ||
+	// Special forces
+	(_headgearClass find "spetsnaz" != -1));
 
-	// if no headgear, no protection
-	private _helmetProtection = if (_isHelmet) then {
-		0.2
+	private _adjustedSurviveChance = if (_isHelmet) then {
+		_baseSurviveChance + _helmetBonus
 	} else {
-		0
+		_baseSurviveChance
 	};
-	private _adjustedSurviveChance = _baseSurviveChance + _helmetProtection;
 
-	if (_damage >= _minDamageToAlwaysKill) then {
+	// Clamp survival chance between 0 and 0.95 (avoid immortals)
+	_adjustedSurviveChance = _adjustedSurviveChance min 0.95 max 0;
+
+	// ----- damage OUTCOME -----
+	if (_damage >= _minDamageToAlwaysKill) exitWith {
+		// lethal
 		1
+	};
+
+	// Roll survival
+	private _roll = random 1;
+	if (_roll < _adjustedSurviveChance) then {
+		[_unit] call fnc_makeUnconscious;
+		// heavily injured, unconscious
+		0.9
 	} else {
-		private _roll = random 1;
-		if (_roll < _adjustedSurviveChance) then {
-			_damage
-		} else {
-			1
-		};
+		// failed survival roll = lethal
+		1
 	};
 };
 
@@ -563,44 +618,6 @@ fnc_setReviving = {
 // =======================================================
 // END: Getter/Setters for Revive States
 // =======================================================
-
-// ===============================
-// FUNCTION: Make Unconscious
-// ===============================
-fnc_makeUnconscious = {
-	params ["_unit"];
-
-	[_unit, true] call fnc_setReviveProcess;
-	// Reset revive state for NEW incapacitation
-	[_unit, false] call fnc_setRevived;
-	[_unit, false] call fnc_setBeingRevived;
-
-	// if the injured is in a vehicle or static weapon, remove them
-	private _vehicle = objectParent _unit;
-	if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
-		moveOut _unit;
-	};
-	// Make unit unconscious
-	_unit setUnconscious true;
-	{
-		_unit disableAI _x
-	} forEach ["MOVE"];
-	_unit setCaptive true;
-	// animate injury
-	_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
-
-	// Bleeding out timer
-	[_unit] spawn fnc_bleedoutTimer;
-
-	// AI revive logic
-	[_unit] spawn {
-		params ["_injured"];
-		[_injured] call fnc_reviveLoop;
-
-		// Reset the process flag after loop ends
-		[_injured, false] call fnc_setReviveProcess;
-	};
-};
 
 // ===============================
 // FUNCTION: Handle damage
