@@ -399,6 +399,57 @@ fnc_headshotDamageHandling = {
 };
 
 // ===============================
+// FUNCTION: Torso damage Handling
+// ===============================
+fnc_torsoDamageHandling = {
+	params ["_unit", "_damage"];
+
+	// ----- CONFIG -----
+	// default survival chance without vest
+	private _baseSurviveChance = 0.3;
+	// torso shots are a bit more survivable than head
+	private _minDamageToAlwaysKill = 0.9;
+	// ballistic vest bonus
+	private _vestBonus = 0.4;
+
+	// ----- vest CHECK -----
+	private _vestClass = toLower (vest _unit);
+	private _isVest = ((_vestClass find "vest" != -1) ||
+	(_vestClass find "plate" != -1) ||
+	(_vestClass find "armor" != -1) ||
+	(_vestClass find "carrier" != -1) ||
+	(_vestClass find "6b" != -1) ||
+	(_vestClass find "spetsnaz" != -1) ||
+	(_vestClass find "cup_v" == 0));
+
+	private _adjustedSurviveChance = if (_isVest) then {
+		_baseSurviveChance + _vestBonus
+	} else {
+		_baseSurviveChance
+	};
+
+	// Clamp survival chance
+	_adjustedSurviveChance = _adjustedSurviveChance min 0.95 max 0;
+
+	// ----- damage OUTCOME -----
+	if (_damage >= _minDamageToAlwaysKill) exitWith {
+		// lethal torso hit
+		1
+	};
+
+	    // Roll survival
+	private _roll = random 1;
+	if (_roll < _adjustedSurviveChance) then {
+		[_unit] call fnc_makeUnconscious;
+		// very injured, unconscious
+		0.85
+	} else {
+		// failed survival roll = lethal
+		1
+	};
+};
+
+// ===============================
 // FUNCTION: Handle Heal
 // ===============================
 fnc_handleHeal = {
@@ -632,8 +683,14 @@ fnc_handleDamage = {
 	};
 
 	// Compute probability of chance to survive if hit in the head
-	if (_selection == "head") exitWith {
+	if (_selection == "head" && !([_unit] call fnc_isInReviveProcess)) exitWith {
 		[_unit, _damage] call fnc_headshotDamageHandling
+	};
+
+	// Compute probability of chance to survive if hit in the head
+	if (_selection == "body" && !([_unit] call fnc_isInReviveProcess)) exitWith {
+		systemChat format ["Body hit %1", name _unit];
+		[_unit, _damage] call fnc_torsoDamageHandling
 	};
 
 	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
