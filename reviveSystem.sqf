@@ -565,6 +565,44 @@ fnc_setReviving = {
 // =======================================================
 
 // ===============================
+// FUNCTION: Make Unconscious
+// ===============================
+fnc_makeUnconscious = {
+	params ["_unit"];
+
+	[_unit, true] call fnc_setReviveProcess;
+	// Reset revive state for NEW incapacitation
+	[_unit, false] call fnc_setRevived;
+	[_unit, false] call fnc_setBeingRevived;
+
+	// if the injured is in a vehicle or static weapon, remove them
+	private _vehicle = objectParent _unit;
+	if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
+		moveOut _unit;
+	};
+	// Make unit unconscious
+	_unit setUnconscious true;
+	{
+		_unit disableAI _x
+	} forEach ["MOVE"];
+	_unit setCaptive true;
+	// animate injury
+	_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
+
+	// Bleeding out timer
+	[_unit] spawn fnc_bleedoutTimer;
+
+	// AI revive logic
+	[_unit] spawn {
+		params ["_injured"];
+		[_injured] call fnc_reviveLoop;
+
+		// Reset the process flag after loop ends
+		[_injured, false] call fnc_setReviveProcess;
+	};
+};
+
+// ===============================
 // FUNCTION: Handle damage
 // ===============================
 fnc_handleDamage = {
@@ -597,36 +635,7 @@ fnc_handleDamage = {
 	// Incapacitate on near-lethal total damage and
 	// Prevent multiple revive loops from stacking
 	if (_damage >= 0.95 && !([_unit] call fnc_isInReviveProcess)) then {
-		[_unit, true] call fnc_setReviveProcess;
-		// Reset revive state for NEW incapacitation
-		[_unit, false] call fnc_setRevived;
-		[_unit, false] call fnc_setBeingRevived;
-
-		// if the injured is in a vehicle or static weapon, remove them
-		private _vehicle = objectParent _unit;
-		if (!(isNull _vehicle) && isTouchingGround (_vehicle)) then {
-			moveOut _unit;
-		};
-		// Make unit unconscious
-		_unit setUnconscious true;
-		{
-			_unit disableAI _x
-		} forEach ["MOVE"];
-		_unit setCaptive true;
-		// animate injury
-		_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
-
-		// Bleeding out timer
-		[_unit] spawn fnc_bleedoutTimer;
-
-		// AI revive logic
-		[_unit] spawn {
-			params ["_injured"];
-			[_injured] call fnc_reviveLoop;
-
-			// Reset the process flag after loop ends
-			[_injured, false] call fnc_setReviveProcess;
-		};
+		[_unit] call fnc_makeUnconscious;
 		_result = 0.9
 	};
 	_result
