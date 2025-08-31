@@ -613,7 +613,7 @@ fnc_handleDamage = {
 			_unit disableAI _x
 		} forEach ["MOVE"];
 		_unit setCaptive true;
-		// Animate injury
+		// animate injury
 		_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
 
 		// Bleeding out timer
