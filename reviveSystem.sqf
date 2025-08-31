@@ -354,7 +354,7 @@ fnc_handleHeal = {
 		_injured enableAI _x
 	} forEach ["MOVE"];
 	_injured setCaptive false;
-	_injured setDamage 0; // FULL heal
+	_injured setDamage 0.25; // 75% health
 	_injured setUnitPos "AUTO";
 
 	// if revived by an enemy, drop the weapon become a captive
@@ -436,7 +436,6 @@ fnc_surrender = {
 	params ["_unit", "_medic"];
 	// AI won’t target them
 	_unit setCaptive true;
-	_unit setDamage 0.9;
 	// Add to player's group silently
 	[_unit] joinSilent (group _medic);
 	_unit doFollow (leader (group _medic));
