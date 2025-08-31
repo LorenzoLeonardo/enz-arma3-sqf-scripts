@@ -268,39 +268,6 @@ fnc_waitForMedicArrival = {
 	(_medic distance2D _injured) < REVIVE_RANGE
 };
 
-// ==================================================
-// FUNCTION: Check if projectile is heavy explosive
-// ==================================================
-fnc_isHeavyExplosive = {
-	params ["_projectile"];
-
-	if (_projectile isEqualTo "") exitWith {
-		false
-	};
-
-	private _projLower = toLower _projectile;
-
-	private _ignoreKeywords = [
-		"chemlight", "helmet", "wheel", "cheese"
-	];
-
-	if (_ignoreKeywords findIf {
-		_projLower find _x > -1
-	} > -1) exitWith {
-		false
-	};
-
-	private _explosiveKeywords = [
-		"_he", "_shell", "_bomb", "_satchel", "_mine", "_rocket",
-		"gbu", "mk82", "mo_", "rpg", "at_", "_missile", "_howitzer",
-		"_mortar", "_demolition"
-	];
-
-	_explosiveKeywords findIf {
-		_projLower find _x > -1
-	} > -1
-};
-
 // ===============================
 // FUNCTION: Make Unconscious
 // ===============================
@@ -717,20 +684,6 @@ fnc_handleDamage = {
 	// Allow lethal finishers if already down
 	if (lifeState _unit == "INCAPACITATED") exitWith {
 		_damage
-	};
-
-	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
-
-	if (_isHeavyExplosive) then {
-		private _dist = _unit distance2D _source;
-
-		if (_dist <= 3) exitWith {
-			1
-		}; // lethal
-		if (_dist <= 15 && !([_unit] call fnc_isInReviveProcess)) exitWith {
-			[_unit] call fnc_makeUnconscious;
-			0.95
-		}; // near-lethal within 15 meters
 	};
 
 	switch (true) do {
