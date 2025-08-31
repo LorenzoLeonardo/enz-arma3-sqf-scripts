@@ -356,6 +356,7 @@ fnc_handleHeal = {
 	_injured setCaptive false;
 	_injured setDamage 0.25; // 75% health
 	_injured setUnitPos "AUTO";
+	_injured playMoveNow "AmovPknlMstpSrasWrflDnon";
 
 	// if revived by an enemy, drop the weapon become a captive
 	if (((side _medic) getFriend (side _injured)) < 0.6) then {
