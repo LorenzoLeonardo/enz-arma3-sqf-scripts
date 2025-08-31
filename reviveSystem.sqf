@@ -449,6 +449,47 @@ fnc_torsoDamageHandling = {
 	};
 };
 
+// ================================
+// FUNCTION: Arms damage Handling
+// ================================
+fnc_armDamageHandling = {
+	params ["_unit", "_damage"];
+
+	if (_damage >= 0.8) then {
+		// 20% chance to get knocked out from shock
+		if (random 1 < 0.2) then {
+			[_unit] call fnc_makeUnconscious;
+			// not dead, but badly hurt
+			0.7
+		} else {
+			// normal severe arm injury
+			0.8
+		};
+	} else {
+		_damage
+	};
+};
+
+// ================================
+// FUNCTION: Legs damage Handling
+// ================================
+fnc_legDamageHandling = {
+	params ["_unit", "_damage"];
+
+	if (_damage >= 0.8) then {
+		// 15% chance to get knocked out from shock
+		if (random 1 < 0.15) then {
+			[_unit] call fnc_makeUnconscious;
+			0.75
+		} else {
+			// serious leg injury, but still alive
+			0.8
+		};
+	} else {
+		_damage
+	};
+};
+
 // ===============================
 // FUNCTION: Handle Heal
 // ===============================
@@ -689,8 +730,17 @@ fnc_handleDamage = {
 
 	// Compute probability of chance to survive if hit in the head
 	if (_selection == "body" && !([_unit] call fnc_isInReviveProcess)) exitWith {
-		systemChat format ["Body hit %1", name _unit];
 		[_unit, _damage] call fnc_torsoDamageHandling
+	};
+
+	// Compute probability of chance to survive if hit in the arms
+	if ((_selection == "hand_l" || _selection == "hand_r" || _selection == "arm_l" || _selection == "arm_r") && !([_unit] call fnc_isInReviveProcess)) exitWith {
+		[_unit, _damage] call fnc_armDamageHandling
+	};
+
+	// Compute probability of chance to survive if hit in the legs
+	if ((_selection == "leg_l" || _selection == "leg_r" || _selection == "foot_l" || _selection == "foot_r") && !([_unit] call fnc_isInReviveProcess)) exitWith {
+		[_unit, _damage] call fnc_armDamageHandling
 	};
 
 	private _isHeavyExplosive = [_projectile] call fnc_isHeavyExplosive;
