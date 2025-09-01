@@ -47,14 +47,16 @@ fnc_getEnemyCount = {
 
 fnc_removeCargoFromGroup = {
 	params ["_chopper"];
-
+	private _crew = (crew _chopper);
 	private _replacementGrp = createGroup (side _chopper);
 	_replacementGrp setGroupIdGlobal ["Replacements"];
 	{
 		if (tolower((assignedVehicleRole _x) select 0) == "cargo") then {
 			[_x] joinSilent _replacementGrp;
+			[_x] orderGetIn true;
+			_x assignAsCargo _chopper;
 		};
-	} forEach (crew _chopper);
+	} forEach _crew;
 };
 
 fnc_getAverageEnemyPos = {
@@ -185,12 +187,10 @@ fnc_flyInChopper = {
 		"_rtbAltitude",
 		"_percentEnemyLeft"
 	];
-
-	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * _percentEnemyLeft);
-	_chopper allowCrewInImmobile true;
-
 	// Remove cargo from group
 	[_chopper] call fnc_removeCargoFromGroup;
+
+	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * _percentEnemyLeft);
 
 	// Wait until enemy count drops
 	waitUntil {
@@ -420,7 +420,6 @@ fnc_startMonitoringHeliStatus = {
 };
 
 // Main entry 
-[_chopper] call fnc_startDamageHandlers;
 [_chopper] spawn fnc_startMonitoringHeliStatus;
 [
 	_chopper,
@@ -431,3 +430,4 @@ fnc_startMonitoringHeliStatus = {
 	_rtbAltitude,
 	_percentEnemyLeft
 ] spawn fnc_flyInChopper;
+[_chopper] call fnc_startDamageHandlers;
