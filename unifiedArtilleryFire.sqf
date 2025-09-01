@@ -418,10 +418,10 @@ missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 }];
 
 missionNamespace setVariable [GUN_MARKER_CALLBACK, {
-	params ["_requestor", "_targetPost"];
+	params ["_requestor", "_targetPos"];
 
 	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-	private _marker = createMarker [_markerId, _targetPost];
+	private _marker = createMarker [_markerId, _targetPos];
 	_marker setMarkerShape "ICON";
 	_marker setMarkerType "mil_warning";
 
@@ -445,7 +445,8 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 			_marker setMarkerColor "ColorWhite";
 		};
 	};
-	_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPost];
+	_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
+	[_targetPos] call fnc_spawnSmoke;
 
 	_marker
 }];
@@ -690,6 +691,36 @@ fnc_assignGunIndex = {
 		missionNamespace setVariable ["gunCount", _current + 1, true];
 	};
 	_gun setVariable["gunIndex", missionNamespace getVariable["gunCount", 0], true];
+};
+
+// =========================
+// spawn smoke to target location
+// =========================
+fnc_spawnSmoke = {
+	params [
+		["_centerPos", [0, 0, 0], [[]]],
+		["_radius", 0, [0]],
+		["_count", 1, [0]]
+	];
+
+	for "_i" from 1 to _count do {
+		private _angle = random 360;
+		private _dist = random _radius;
+
+		private _offsetX = _dist * cos _angle;
+		private _offsetY = _dist * sin _angle;
+
+		private _pos = [
+			(_centerPos select 0) + _offsetX,
+			(_centerPos select 1) + _offsetY,
+			(_centerPos select 2)
+		];
+
+		private _posSmoke = _centerPos vectorAdd [0, 0, 150];
+		private _proj = "Smoke_120mm_AMOS_White" createVehicle _posSmoke;
+
+		_proj setVelocity [0, 0, -100];
+	};
 };
 
 // =========================
