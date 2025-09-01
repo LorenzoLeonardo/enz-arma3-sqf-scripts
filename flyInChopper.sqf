@@ -7,7 +7,7 @@ private _chopper = _this param [0];
 private _rtbAltitude = _this param [1, 80];
 private _percentEnemyLeft = _this param [2, 0.75];
 
-fnc_getEnemySide = {
+ETCS_fnc_getEnemySide = {
 	params ["_chopper"];
 
 	private _side = side (driver _chopper);
@@ -33,19 +33,19 @@ fnc_getEnemySide = {
 
 private _heliPilot = driver _chopper;
 private _aiPilotGroup = group _heliPilot;
-private _sideEnemy = [_chopper] call fnc_getEnemySide;
+private _sideEnemy = [_chopper] call ETCS_fnc_getEnemySide;
 private _basePos = getPos _chopper;
 
 _chopper setVariable["basePosition", _basePos, true];
 
-fnc_getEnemyCount = {
+ETCS_fnc_getEnemyCount = {
 	params ["_sideEnemy"];
 	count (allUnits select {
 		side _x == _sideEnemy && alive _x
 	})
 };
 
-fnc_removeCargoFromGroup = {
+ETCS_fnc_removeCargoFromGroup = {
 	params ["_chopper"];
 	private _crew = (crew _chopper);
 	private _replacementGrp = createGroup (side _chopper);
@@ -59,7 +59,7 @@ fnc_removeCargoFromGroup = {
 	} forEach _crew;
 };
 
-fnc_getAverageEnemyPos = {
+ETCS_fnc_getAverageEnemyPos = {
 	params ["_sideEnemy"];
 	private _enemies = allUnits select {
 		side _x == _sideEnemy && alive _x
@@ -77,10 +77,10 @@ fnc_getAverageEnemyPos = {
 };
 
 // Generate a random position near average
-fnc_getRandomPosNearEnemy = {
+ETCS_fnc_getRandomPosNearEnemy = {
 	params ["_sideEnemy", ["_radius", 500]]; // default radius = 500m
 
-	private _avgPos = [_sideEnemy] call fnc_getAverageEnemyPos;
+	private _avgPos = [_sideEnemy] call ETCS_fnc_getAverageEnemyPos;
 
 	if (_avgPos isEqualTo [0, 0, 0]) exitWith {
 		[0, 0, 0]
@@ -98,14 +98,14 @@ fnc_getRandomPosNearEnemy = {
 	_avgPos vectorAdd _offset
 };
 
-fnc_clearWaypoints = {
+ETCS_fnc_clearWaypoints = {
 	params ["_group"];
 	{
 		deleteWaypoint _x
 	} forEachReversed waypoints _group;
 };
 
-fnc_createMarker = {
+ETCS_fnc_createMarker = {
 	params ["_target", "_text", "_type", "_color"];
 	private _markerName = format ["airstrikeMarker_%1_%2", diag_tickTime, mapGridPosition _target];
 
@@ -118,7 +118,7 @@ fnc_createMarker = {
 	_markerName
 };
 
-fnc_createWaypoint = {
+ETCS_fnc_createWaypoint = {
 	private _group = _this select 0;
 	private _destinationPosition = _this select 1;
 	private _wayPointSpeed = _this select 2;
@@ -135,14 +135,14 @@ fnc_createWaypoint = {
 	_teamWP
 };
 
-fnc_engageEnemies = {
+ETCS_fnc_engageEnemies = {
 	params ["_chopper", "_sideEnemy"];
 
 	private _heliPilot = driver _chopper;
 	private _aiPilotGroup = group _heliPilot;
 
 	while {
-		(([_sideEnemy] call fnc_getEnemyCount) > 0) &&
+		(([_sideEnemy] call ETCS_fnc_getEnemyCount) > 0) &&
 		alive _chopper &&
 		(({
 			alive _x
@@ -160,15 +160,15 @@ fnc_engageEnemies = {
 		private _target = selectRandom _aliveEnemies;
 
 		if (!isNull _target) then {
-			[_aiPilotGroup] call fnc_clearWaypoints;
+			[_aiPilotGroup] call ETCS_fnc_clearWaypoints;
 
-			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "COMBAT", 0] call fnc_createWaypoint;
+			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "COMBAT", 0] call ETCS_fnc_createWaypoint;
 			private _markerName = [
 				getPos _target,
 				"Air Strike Here!",
 				"mil_objective",
 				"ColorWEST"
-			] call fnc_createMarker;
+			] call ETCS_fnc_createMarker;
 
 			sleep 30;
 			deleteMarker _markerName;
@@ -177,7 +177,7 @@ fnc_engageEnemies = {
 	};
 };
 
-fnc_flyInChopper = {
+ETCS_fnc_flyInChopper = {
 	params [
 		"_chopper",
 		"_heliPilot",
@@ -188,13 +188,13 @@ fnc_flyInChopper = {
 		"_percentEnemyLeft"
 	];
 	// Remove cargo from group
-	[_chopper] call fnc_removeCargoFromGroup;
+	[_chopper] call ETCS_fnc_removeCargoFromGroup;
 
-	private _threshHoldCount = floor (([_sideEnemy] call fnc_getEnemyCount) * _percentEnemyLeft);
+	private _threshHoldCount = floor (([_sideEnemy] call ETCS_fnc_getEnemyCount) * _percentEnemyLeft);
 
 	// Wait until enemy count drops
 	waitUntil {
-		([_sideEnemy] call fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
+		([_sideEnemy] call ETCS_fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
 	};
 
 	if (alive _chopper) then {
@@ -212,7 +212,7 @@ fnc_flyInChopper = {
 			_x enableAI "MOVE"
 		} forEach units _aiPilotGroup;
 
-		private _enemyPos = [_sideEnemy] call fnc_getRandomPosNearEnemy;
+		private _enemyPos = [_sideEnemy] call ETCS_fnc_getRandomPosNearEnemy;
 
 		if (_enemyPos isNotEqualTo [0, 0, 0]) then {
 			private _markerName = [
@@ -220,31 +220,31 @@ fnc_flyInChopper = {
 				"Air Strike Here!",
 				"mil_objective",
 				"ColorWEST"
-			] call fnc_createMarker;
+			] call ETCS_fnc_createMarker;
 
 			// Add TAKEOFF move waypoint
-			[_aiPilotGroup, getPos _chopper, "FULL", "MOVE", "DIAMOND", "AWARE", 0] call fnc_createWaypoint;
+			[_aiPilotGroup, getPos _chopper, "FULL", "MOVE", "DIAMOND", "AWARE", 0] call ETCS_fnc_createWaypoint;
 
 			// move waypoint to enemy cluster
-			[_aiPilotGroup, _enemyPos, "FULL", "MOVE", "DIAMOND", "AWARE", 1] call fnc_createWaypoint;
+			[_aiPilotGroup, _enemyPos, "FULL", "MOVE", "DIAMOND", "AWARE", 1] call ETCS_fnc_createWaypoint;
 
 			_heliPilot doMove _enemyPos;
 			deleteMarker _markerName;
 			// Engage loop
-			[_chopper, _sideEnemy] call fnc_engageEnemies;
+			[_chopper, _sideEnemy] call ETCS_fnc_engageEnemies;
 
 			if (alive _chopper && canMove _chopper) then {
 				_heliPilot = driver _chopper;
 				_aiPilotGroup = group _heliPilot;
-				[_aiPilotGroup] call fnc_clearWaypoints;
+				[_aiPilotGroup] call ETCS_fnc_clearWaypoints;
 				_heliPilot sideRadio "RadioHeliMissionAccomplished";
 				private _markerName = [
 					_basePos,
 					"RTB Here",
 					"mil_end",
 					"ColorWEST"
-				] call fnc_createMarker;
-				[_aiPilotGroup, _basePos, "FULL", "GETOUT", "DIAMOND", "CARELESS", 0] call fnc_createWaypoint;
+				] call ETCS_fnc_createMarker;
+				[_aiPilotGroup, _basePos, "FULL", "GETOUT", "DIAMOND", "CARELESS", 0] call ETCS_fnc_createWaypoint;
 				sleep 60;
 			};
 		};
@@ -252,7 +252,7 @@ fnc_flyInChopper = {
 };
 
 // move a unit to a specific role (optionally a turret seat path)
-fnc_moveToRole = {
+ETCS_fnc_moveToRole = {
 	params ["_man", "_veh", "_role", "_seatPath"];
 
 	switch (toLower _role) do {
@@ -270,7 +270,7 @@ fnc_moveToRole = {
 };
 
 // Generic swap: define BOTH new roles (and seats if turret)
-fnc_swapPositions = {
+ETCS_fnc_swapPositions = {
 	// _unit = the one going down; _replacement = the one taking over
 	params ["_unit", "_replacement", "_veh", "_unitNewRole", "_replacementNewRole", "_unitTurretSeat", "_replacementTurretSeat"];
 
@@ -283,12 +283,12 @@ fnc_swapPositions = {
 	// Keep team cohesion
 	[_replacement] joinSilent (group _unit);
 	// Place them
-	[_unit, _veh, _unitNewRole, _unitTurretSeat] call fnc_moveToRole;
-	[_replacement, _veh, _replacementNewRole, _replacementTurretSeat] call fnc_moveToRole;
+	[_unit, _veh, _unitNewRole, _unitTurretSeat] call ETCS_fnc_moveToRole;
+	[_replacement, _veh, _replacementNewRole, _replacementTurretSeat] call ETCS_fnc_moveToRole;
 };
 
 // find a valid replacement matching any of the allowed role types
-fnc_findReplacement = {
+ETCS_fnc_findReplacement = {
 	params ["_unit", "_veh", "_allowedRoles"]; // e.g., ["cargo", "turret"]
 
 	private _r = objNull;
@@ -306,10 +306,10 @@ fnc_findReplacement = {
 };
 
 // driver down → try turret first (keep guns manned), then cargo
-fnc_handleDriverDown = {
+ETCS_fnc_handleDriverDown = {
 	params ["_unit", "_veh"];
 
-	private _replacement = [_unit, _veh, ["turret", "cargo"]] call fnc_findReplacement;
+	private _replacement = [_unit, _veh, ["turret", "cargo"]] call ETCS_fnc_findReplacement;
 	if (isNull _replacement) exitWith {};
 
 	private _repRole = toLower ((assignedVehicleRole _replacement) select 0);
@@ -319,31 +319,31 @@ fnc_handleDriverDown = {
 			// Turret path comes from the REPLACEMENT (they vacate that seat)
 			private _turretPath = (assignedVehicleRole _replacement) select 1;
 			// New positions: UNIT → that turret seat, REPLACEMENT → driver
-			[_unit, _replacement, _veh, "turret", "driver", _turretPath, []] call fnc_swapPositions;
+			[_unit, _replacement, _veh, "turret", "driver", _turretPath, []] call ETCS_fnc_swapPositions;
 		};
 		case "cargo": {
 			// New positions: UNIT → cargo, REPLACEMENT → driver
-			[_unit, _replacement, _veh, "cargo", "driver", [], []] call fnc_swapPositions;
+			[_unit, _replacement, _veh, "cargo", "driver", [], []] call ETCS_fnc_swapPositions;
 		};
 	};
 };
 
 // Turret down → pull from cargo into THIS unit's turret seat
-fnc_handleTurretDown = {
+ETCS_fnc_handleTurretDown = {
 	params ["_unit", "_veh"];
 
-	private _replacement = [_unit, _veh, ["cargo"]] call fnc_findReplacement;
+	private _replacement = [_unit, _veh, ["cargo"]] call ETCS_fnc_findReplacement;
 	if (isNull _replacement) exitWith {};
 
 	// Turret path from the UNIT (the seat that just got vacated)
 	private _unitTurretPath = (assignedVehicleRole _unit) select 1;
 
 	// New positions: UNIT → cargo, REPLACEMENT → that turret seat
-	[_unit, _replacement, _veh, "cargo", "turret", [], _unitTurretPath] call fnc_swapPositions;
+	[_unit, _replacement, _veh, "cargo", "turret", [], _unitTurretPath] call ETCS_fnc_swapPositions;
 };
 
 // HandleDamage event: trigger replacement on kill/incapacitation
-fnc_startDamageHandlers = {
+ETCS_fnc_startDamageHandlers = {
 	params ["_chopper"];
 	{
 		_x addEventHandler ["HandleDamage", {
@@ -363,10 +363,10 @@ fnc_startDamageHandlers = {
 
 					switch (_roleType) do {
 						case "driver": {
-							[_unit, _veh] call fnc_handleDriverDown;
+							[_unit, _veh] call ETCS_fnc_handleDriverDown;
 						};
 						case "turret": {
-							[_unit, _veh] call fnc_handleTurretDown;
+							[_unit, _veh] call ETCS_fnc_handleTurretDown;
 						};
 					};
 					missionNamespace setVariable["isStillSwapping", false, true];
@@ -380,7 +380,7 @@ fnc_startDamageHandlers = {
 };
 
 // When all units are dead, destroy the heli
-fnc_startMonitoringHeliStatus = {
+ETCS_fnc_startMonitoringHeliStatus = {
 	params ["_chopper"];
 	private _group = (group _chopper);
 	private _heliUnits = units _group;
@@ -398,7 +398,7 @@ fnc_startMonitoringHeliStatus = {
 		format["Heli Crash Site: %1", _groupID],
 		"mil_unknown",
 		"ColorWEST"
-	] call fnc_createMarker;
+	] call ETCS_fnc_createMarker;
 
 	private _grp = createGroup west;
 	private _unit = _grp createUnit ["B_Soldier_F", [0, 0, 0], [], 0, "NONE"];
@@ -420,7 +420,7 @@ fnc_startMonitoringHeliStatus = {
 };
 
 // Main entry 
-[_chopper] spawn fnc_startMonitoringHeliStatus;
+[_chopper] spawn ETCS_fnc_startMonitoringHeliStatus;
 [
 	_chopper,
 	_heliPilot,
@@ -429,5 +429,5 @@ fnc_startMonitoringHeliStatus = {
 	_basePos,
 	_rtbAltitude,
 	_percentEnemyLeft
-] spawn fnc_flyInChopper;
-[_chopper] call fnc_startDamageHandlers;
+] spawn ETCS_fnc_flyInChopper;
+[_chopper] call ETCS_fnc_startDamageHandlers;

@@ -29,7 +29,7 @@ params ["_vehicle"];
 // =============================
 // Helper: Check if unit is valid
 // =============================
-fnc_isUnitGood = {
+ETCS_fnc_isUnitGood = {
 	params ["_unit"];
 	!(isNull _unit) && {
 		alive _unit
@@ -41,7 +41,7 @@ fnc_isUnitGood = {
 // =============================
 // Helper: get nearest available AI from same group
 // =============================
-fnc_getReplacement = {
+ETCS_fnc_getReplacement = {
 	params ["_vehicle"];
 
 	private _assignedUnits = _vehicle getVariable ["assignedUnits", []];
@@ -52,7 +52,7 @@ fnc_getReplacement = {
 		group effectiveCommander _vehicle
 	};
 	private _candidates = (units _grp) select {
-		([_x] call fnc_isUnitGood) &&
+		([_x] call ETCS_fnc_isUnitGood) &&
 		isNull objectParent _x &&
 		!isPlayer _x &&
 		!(_x in _assignedUnits)
@@ -78,11 +78,11 @@ fnc_getReplacement = {
 // ===========================================
 // Function: Assign replacement to given seat
 // ===========================================
-fnc_assignReplacement = {
+ETCS_fnc_assignReplacement = {
 	params ["_vehicle", "_role", "_turretPath"];
 
 	private _assignedUnits = _vehicle getVariable ["assignedUnits", []];
-	private _replacement = [_vehicle] call fnc_getReplacement;
+	private _replacement = [_vehicle] call ETCS_fnc_getReplacement;
 
 	if (isNull _replacement) exitWith {};
 
@@ -120,19 +120,19 @@ _vehicle addEventHandler ["GetOut", {
 	if (alive _veh) then {
 		switch (true) do {
 			case (_role == "driver"): {
-				[_veh, "driver", _turretPath] call fnc_assignReplacement;
+				[_veh, "driver", _turretPath] call ETCS_fnc_assignReplacement;
 			};
 			case (_role == "gunner"): {
-				[_veh, "gunner", _turretPath] call fnc_assignReplacement;
+				[_veh, "gunner", _turretPath] call ETCS_fnc_assignReplacement;
 			};
 			case (_role == "turret"): {
-				[_veh, "turret", _turretPath] call fnc_assignReplacement;
+				[_veh, "turret", _turretPath] call ETCS_fnc_assignReplacement;
 			};
 			case (_role == "commander"): {
-				[_veh, "commander", _turretPath] call fnc_assignReplacement;
+				[_veh, "commander", _turretPath] call ETCS_fnc_assignReplacement;
 			};
 			default {
-				[_veh, _role, _turretPath] call fnc_assignReplacement;
+				[_veh, _role, _turretPath] call ETCS_fnc_assignReplacement;
 			};
 		};
 	};

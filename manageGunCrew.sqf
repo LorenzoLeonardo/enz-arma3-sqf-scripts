@@ -12,7 +12,7 @@ params ["_gun", "_group"];
 // ===============================
 // FUNCTION: find Nearest Unit
 // ===============================
-fnc_findNearestUnit = {
+ETCS_fnc_findNearestUnit = {
 	params ["_pos", "_candidates"];
 
 	private _nearestUnit = objNull;
@@ -48,7 +48,7 @@ private _findReplacementGunner = {
 		objNull
 	};
 
-	private _gunner = [_gun, _candidates] call fnc_findNearestUnit;
+	private _gunner = [_gun, _candidates] call ETCS_fnc_findNearestUnit;
 	_gunner
 };
 

@@ -50,7 +50,7 @@ params ["_group"];
 // ===============================
 // FUNCTION: Check if unit is ok
 // ===============================
-fnc_isUnitGood = {
+ETCS_fnc_isUnitGood = {
 	params ["_unit"];
 	!isNull _unit && {
 		alive _unit && {
@@ -62,7 +62,7 @@ fnc_isUnitGood = {
 // ===============================
 // FUNCTION: find Nearest Unit
 // ===============================
-fnc_findNearestUnit = {
+ETCS_fnc_findNearestUnit = {
 	params ["_pos", "_candidates"];
 
 	private _nearestUnit = objNull;
@@ -82,7 +82,7 @@ fnc_findNearestUnit = {
 // ===============================
 // FUNCTION: get Best Medic
 // ===============================
-fnc_getBestMedic = {
+ETCS_fnc_getBestMedic = {
 	params ["_injured"];
 	private _injuredSide = side _injured;
 	private _groupUnits = units group _injured;
@@ -90,8 +90,8 @@ fnc_getBestMedic = {
 	// Gather all valid units once
 	private _allValidUnits = allUnits select {
 		(_x != _injured) &&
-		([_x] call fnc_isUnitGood) &&
-		!([_x] call fnc_isReviving) &&
+		([_x] call ETCS_fnc_isUnitGood) &&
+		!([_x] call ETCS_fnc_isReviving) &&
 		(isNull objectParent _x) &&
 		!(captive _x)
 	};
@@ -127,7 +127,7 @@ fnc_getBestMedic = {
 	};
 
 	// find nearest friendly medic or fallback unit
-	private _nearestMedic = [_injured, _candidates] call fnc_findNearestUnit;
+	private _nearestMedic = [_injured, _candidates] call ETCS_fnc_findNearestUnit;
 	private _nearestMedicDist = if (isNull _nearestMedic) then {
 		1e10
 	} else {
@@ -138,7 +138,7 @@ fnc_getBestMedic = {
 	private _enemies = _allValidUnits select {
 		side _x != _injuredSide
 	};
-	private _nearestEnemy = [_injured, _enemies] call fnc_findNearestUnit;
+	private _nearestEnemy = [_injured, _enemies] call ETCS_fnc_findNearestUnit;
 	private _nearestEnemyDist = if (isNull _nearestEnemy) then {
 		1e10
 	} else {
@@ -156,7 +156,7 @@ fnc_getBestMedic = {
 // ===============================
 // FUNCTION: Bleedout Timer
 // ===============================
-fnc_bleedoutTimer = {
+ETCS_fnc_bleedoutTimer = {
 	params ["_injured"];
 	private _startTime = time;
 
@@ -171,18 +171,18 @@ fnc_bleedoutTimer = {
 	// Determine what happened
 	if (alive _injured && (lifeState _injured == "INCAPACITATED") && ((time - _startTime) >= BLEEDOUT_TIME)) then {
 		// Bleedout expired → kill the unit
-		[_injured, false] call fnc_setReviveProcess;
+		[_injured, false] call ETCS_fnc_setReviveProcess;
 		_injured setDamage 1;
 	} else {
 		// Unit was revived or died naturally → just stop revive process
-		[_injured, false] call fnc_setReviveProcess;
+		[_injured, false] call ETCS_fnc_setReviveProcess;
 	};
 };
 
 // ===============================
 // FUNCTION: Calculate Timeout for Medic Movement
 // ===============================
-fnc_getDynamicTimeout = {
+ETCS_fnc_getDynamicTimeout = {
 	params ["_medic", "_injured"];
 
 	private _pathDist = _medic distance2D _injured;
@@ -194,7 +194,7 @@ fnc_getDynamicTimeout = {
 // ===============================
 // FUNCTION: Reset Revive State
 // ===============================
-fnc_unlockReviveState = {
+ETCS_fnc_unlockReviveState = {
 	params ["_medic", "_injured"];
 
 	if (!isNull _medic) then {
@@ -205,14 +205,14 @@ fnc_unlockReviveState = {
 		if (!isNull _ldr && alive _ldr) then {
 			_medic doFollow _ldr;
 		};
-		[_medic, false] call fnc_setReviving;
+		[_medic, false] call ETCS_fnc_setReviving;
 		if (_medic == player) then {
 			player setVariable ["injuredToRevive", objNull, true];
 		};
 	};
 
 	if (!isNull _injured) then {
-		[_injured, false] call fnc_setBeingRevived;
+		[_injured, false] call ETCS_fnc_setBeingRevived;
 		if (_injured == player) then {
 			player setVariable ["reviverAssigned", objNull, true];
 		};
@@ -222,18 +222,18 @@ fnc_unlockReviveState = {
 // ===============================
 // FUNCTION: Start Revive State
 // ===============================
-fnc_lockReviveState = {
+ETCS_fnc_lockReviveState = {
 	params ["_medic", "_injured"];
 	// lock injured and medic
 	if (!isNull _medic) then {
-		[_medic, true] call fnc_setReviving;
+		[_medic, true] call ETCS_fnc_setReviving;
 		if (_medic == player) then {
 			player setVariable ["injuredToRevive", _injured, true];
 		};
 	};
 
 	if (!isNull _injured) then {
-		[_injured, true] call fnc_setBeingRevived;
+		[_injured, true] call ETCS_fnc_setBeingRevived;
 		if (_injured == player) then {
 			player setVariable ["reviverAssigned", _medic, true];
 		};
@@ -251,15 +251,15 @@ fnc_lockReviveState = {
 // ===============================
 // FUNCTION: Wait for Medic Arrival
 // ===============================
-fnc_waitForMedicArrival = {
+ETCS_fnc_waitForMedicArrival = {
 	params ["_medic", "_injured"];
 
 	// Wait for medic to arrive within range or timeout
-	private _timeout = [_medic, _injured] call fnc_getDynamicTimeout;
+	private _timeout = [_medic, _injured] call ETCS_fnc_getDynamicTimeout;
 	waitUntil {
 		sleep 1;
 		(!alive _injured)
-		|| ([_injured] call fnc_isRevived)
+		|| ([_injured] call ETCS_fnc_isRevived)
 		|| (_medic distance2D _injured < REVIVE_RANGE)
 		|| (!alive _medic)
 		|| (lifeState _medic == "INCAPACITATED")
@@ -272,13 +272,13 @@ fnc_waitForMedicArrival = {
 // ===============================
 // FUNCTION: Make Unconscious
 // ===============================
-fnc_makeUnconscious = {
+ETCS_fnc_makeUnconscious = {
 	params ["_unit"];
 
-	[_unit, true] call fnc_setReviveProcess;
+	[_unit, true] call ETCS_fnc_setReviveProcess;
 	// Reset revive state for NEW incapacitation
-	[_unit, false] call fnc_setRevived;
-	[_unit, false] call fnc_setBeingRevived;
+	[_unit, false] call ETCS_fnc_setRevived;
+	[_unit, false] call ETCS_fnc_setBeingRevived;
 
 	// if the injured is in a vehicle or static weapon, remove them
 	private _vehicle = objectParent _unit;
@@ -295,22 +295,22 @@ fnc_makeUnconscious = {
 	_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
 
 	// Bleeding out timer
-	[_unit] spawn fnc_bleedoutTimer;
+	[_unit] spawn ETCS_fnc_bleedoutTimer;
 
 	// AI revive logic
 	[_unit] spawn {
 		params ["_injured"];
-		[_injured] call fnc_reviveLoop;
+		[_injured] call ETCS_fnc_reviveLoop;
 
 		// Reset the process flag after loop ends
-		[_injured, false] call fnc_setReviveProcess;
+		[_injured, false] call ETCS_fnc_setReviveProcess;
 	};
 };
 
 // ===============================
 // FUNCTION: Headshot damage Handling
 // ===============================
-fnc_headshotDamageHandling = {
+ETCS_fnc_headshotDamageHandling = {
 	params ["_unit", "_damage"];
 
 	// ----- CONFIG -----
@@ -353,7 +353,7 @@ fnc_headshotDamageHandling = {
 	// Roll survival
 	private _roll = random 1;
 	if (_roll < _adjustedSurviveChance) then {
-		[_unit] call fnc_makeUnconscious;
+		[_unit] call ETCS_fnc_makeUnconscious;
 		// heavily injured, unconscious
 		0.9
 	} else {
@@ -365,7 +365,7 @@ fnc_headshotDamageHandling = {
 // ===============================
 // FUNCTION: Torso damage Handling
 // ===============================
-fnc_torsoDamageHandling = {
+ETCS_fnc_torsoDamageHandling = {
 	params ["_unit", "_damage"];
 
 	// ----- CONFIG -----
@@ -405,7 +405,7 @@ fnc_torsoDamageHandling = {
 	    // Roll survival
 	private _roll = random 1;
 	if (_roll < _adjustedSurviveChance) then {
-		[_unit] call fnc_makeUnconscious;
+		[_unit] call ETCS_fnc_makeUnconscious;
 		// very injured, unconscious
 		0.85
 	} else {
@@ -417,13 +417,13 @@ fnc_torsoDamageHandling = {
 // ================================
 // FUNCTION: Arms damage Handling
 // ================================
-fnc_armDamageHandling = {
+ETCS_fnc_armDamageHandling = {
 	params ["_unit", "_damage"];
 
 	if (_damage >= 0.8) then {
 		// 20% chance to get knocked out from shock
 		if (random 1 < 0.2) then {
-			[_unit] call fnc_makeUnconscious;
+			[_unit] call ETCS_fnc_makeUnconscious;
 			// not dead, but badly hurt
 			0.7
 		} else {
@@ -438,13 +438,13 @@ fnc_armDamageHandling = {
 // ================================
 // FUNCTION: Legs damage Handling
 // ================================
-fnc_legDamageHandling = {
+ETCS_fnc_legDamageHandling = {
 	params ["_unit", "_damage"];
 
 	if (_damage >= 0.8) then {
 		// 15% chance to get knocked out from shock
 		if (random 1 < 0.15) then {
-			[_unit] call fnc_makeUnconscious;
+			[_unit] call ETCS_fnc_makeUnconscious;
 			0.75
 		} else {
 			// serious leg injury, but still alive
@@ -458,7 +458,7 @@ fnc_legDamageHandling = {
 // ===============================
 // FUNCTION: Handle Heal
 // ===============================
-fnc_handleHeal = {
+ETCS_fnc_handleHeal = {
 	params ["_medic", "_injured"];
 
 	_injured setUnconscious false;
@@ -472,22 +472,22 @@ fnc_handleHeal = {
 
 	// if revived by an enemy, drop the weapon become a captive
 	if (((side _medic) getFriend (side _injured)) < 0.6) then {
-		[_injured, _medic] call fnc_surrender;
-		[_injured] call fnc_dropAllWeapons;
+		[_injured, _medic] call ETCS_fnc_surrender;
+		[_injured] call ETCS_fnc_dropAllWeapons;
 	} else {
 		if (rating _injured <= -2000) then {
-			[_injured, _medic] call fnc_surrender;
-			[_injured] call fnc_dropAllWeapons;
+			[_injured, _medic] call ETCS_fnc_surrender;
+			[_injured] call ETCS_fnc_dropAllWeapons;
 		};
 	};
 
-	[_injured, true] call fnc_setRevived;
+	[_injured, true] call ETCS_fnc_setRevived;
 };
 
 // ===============================
 // FUNCTION: drop All weapons
 // ===============================
-fnc_dropAllWeapons = {
+ETCS_fnc_dropAllWeapons = {
 	params ["_unit"];
 	private _pos = getPosATL _unit;
 	private _holder = createVehicle ["GroundWeaponHolder", _pos, [], 0, "CAN_COLLIDE"];
@@ -545,7 +545,7 @@ fnc_dropAllWeapons = {
 // ===============================
 // FUNCTION: Surrender
 // ===============================
-fnc_surrender = {
+ETCS_fnc_surrender = {
 	params ["_unit", "_medic"];
 	// AI won’t target them
 	_unit setCaptive true;
@@ -557,42 +557,42 @@ fnc_surrender = {
 // ===============================
 // FUNCTION: Revive Loop (AI logic)
 // ===============================
-fnc_reviveLoop = {
+ETCS_fnc_reviveLoop = {
 	params ["_injured"];
 	private _loopTimeout = time + BLEEDOUT_TIME; // max 5 minutes to try reviving
 	private _medic = objNull;
 
-	while { (alive _injured) && !([_injured] call fnc_isRevived) && (time < _loopTimeout) } do {
+	while { (alive _injured) && !([_injured] call ETCS_fnc_isRevived) && (time < _loopTimeout) } do {
 		sleep 3;
-		if (!alive _injured || ([_injured] call fnc_isRevived)) exitWith {
+		if (!alive _injured || ([_injured] call ETCS_fnc_isRevived)) exitWith {
 			if (!isNull _medic) then {
-				[_medic, _injured] call fnc_unlockReviveState;
+				[_medic, _injured] call ETCS_fnc_unlockReviveState;
 			};
 		};
 		// Skip if already being revived
-		if ([_injured] call fnc_isBeingRevived) then {
+		if ([_injured] call ETCS_fnc_isBeingRevived) then {
 			continue
 		};
 
 		// find best medic
-		_medic = [_injured] call fnc_getBestMedic;
+		_medic = [_injured] call ETCS_fnc_getBestMedic;
 		if (isNull _medic || !alive _medic) then {
 			continue
 		};
 
 		// lock injured and medic
-		[_medic, _injured] call fnc_lockReviveState;
+		[_medic, _injured] call ETCS_fnc_lockReviveState;
 
 		_medic doMove (position _injured);
 
 		 // Wait for medic arrival
-		private _arrived = [_medic, _injured] call fnc_waitForMedicArrival;
+		private _arrived = [_medic, _injured] call ETCS_fnc_waitForMedicArrival;
 		// If medic didn't arrive in time or died or incapacitated
 		if (!_arrived) then {
-			[_medic, _injured] call fnc_unlockReviveState;
+			[_medic, _injured] call ETCS_fnc_unlockReviveState;
 			continue;
 		};
-		if (([_medic] call fnc_isUnitGood) && alive _injured) then {
+		if (([_medic] call ETCS_fnc_isUnitGood) && alive _injured) then {
 			// stop and animate revive
 			doStop _medic;
 			{
@@ -616,59 +616,59 @@ fnc_reviveLoop = {
 				|| (lifeState _medic == "INCAPACITATED")
 				|| (time > _animTime)
 			};
-			if (!([_medic] call fnc_isUnitGood)) then {
-				[_medic, _injured] call fnc_unlockReviveState;
+			if (!([_medic] call ETCS_fnc_isUnitGood)) then {
+				[_medic, _injured] call ETCS_fnc_unlockReviveState;
 				continue;
 			};
 
 			// SUCCESS: Revive and heal
-			[_medic, _injured] call fnc_handleHeal;
+			[_medic, _injured] call ETCS_fnc_handleHeal;
 		};
 		// Always reset states after attempt
-		[_medic, _injured] call fnc_unlockReviveState;
+		[_medic, _injured] call ETCS_fnc_unlockReviveState;
 	};
-	[_medic, _injured] call fnc_unlockReviveState;
+	[_medic, _injured] call ETCS_fnc_unlockReviveState;
 };
 
 // =======================================================
 // START: Getter/Setters for Revive States
 // =======================================================
-fnc_isInReviveProcess = {
+ETCS_fnc_isInReviveProcess = {
 	params ["_unit"];
 	_unit getVariable ["isInReviveProcess", false]
 };
 
-fnc_setReviveProcess = {
+ETCS_fnc_setReviveProcess = {
 	params ["_unit", "_state"];
 	_unit setVariable ["isInReviveProcess", _state, true];
 };
 
-fnc_isBeingRevived = {
+ETCS_fnc_isBeingRevived = {
 	params ["_unit"];
 	_unit getVariable ["beingRevived", false]
 };
 
-fnc_setBeingRevived = {
+ETCS_fnc_setBeingRevived = {
 	params ["_unit", "_state"];
 	_unit setVariable ["beingRevived", _state, true];
 };
 
-fnc_isRevived = {
+ETCS_fnc_isRevived = {
 	params ["_unit"];
 	_unit getVariable ["revived", false]
 };
 
-fnc_setRevived = {
+ETCS_fnc_setRevived = {
 	params ["_unit", "_state"];
 	_unit setVariable ["revived", _state, true];
 };
 
-fnc_isReviving = {
+ETCS_fnc_isReviving = {
 	params ["_unit"];
 	_unit getVariable ["reviving", false]
 };
 
-fnc_setReviving = {
+ETCS_fnc_setReviving = {
 	params ["_unit", "_state"];
 	_unit setVariable ["reviving", _state, true];
 };
@@ -679,7 +679,7 @@ fnc_setReviving = {
 // ===============================
 // FUNCTION: Handle damage
 // ===============================
-fnc_handleDamage = {
+ETCS_fnc_handleDamage = {
 	params ["_unit", "_selection", "_damage", "_source", "_projectile"];
 	private _result = _damage;
 
@@ -690,28 +690,28 @@ fnc_handleDamage = {
 
 	switch (true) do {
 		// ----- HEAD -----
-		case (_selection == "head" && !([_unit] call fnc_isInReviveProcess)): {
-			_result = [_unit, _damage] call fnc_headshotDamageHandling;
+		case (_selection == "head" && !([_unit] call ETCS_fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call ETCS_fnc_headshotDamageHandling;
 		};
 
 		// ----- TORSO -----
-		case (_selection == "body" && !([_unit] call fnc_isInReviveProcess)): {
-			_result = [_unit, _damage] call fnc_torsoDamageHandling;
+		case (_selection == "body" && !([_unit] call ETCS_fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call ETCS_fnc_torsoDamageHandling;
 		};
 
 		// ----- ARMS -----
-		case ((_selection in ["hand_l", "hand_r", "arm_l", "arm_r"]) && !([_unit] call fnc_isInReviveProcess)): {
-			_result = [_unit, _damage] call fnc_armDamageHandling;
+		case ((_selection in ["hand_l", "hand_r", "arm_l", "arm_r"]) && !([_unit] call ETCS_fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call ETCS_fnc_armDamageHandling;
 		};
 
 		// ----- LEGS -----
-		case ((_selection in ["leg_l", "leg_r", "foot_l", "foot_r"]) && !([_unit] call fnc_isInReviveProcess)): {
-			_result = [_unit, _damage] call fnc_legDamageHandling;
+		case ((_selection in ["leg_l", "leg_r", "foot_l", "foot_r"]) && !([_unit] call ETCS_fnc_isInReviveProcess)): {
+			_result = [_unit, _damage] call ETCS_fnc_legDamageHandling;
 		};
 
 		// ----- GLOBAL NEAR-LETHAL CHECK -----
-		case ((_damage >= 0.95) && !([_unit] call fnc_isInReviveProcess)): {
-			[_unit] call fnc_makeUnconscious;
+		case ((_damage >= 0.95) && !([_unit] call ETCS_fnc_isInReviveProcess)): {
+			[_unit] call ETCS_fnc_makeUnconscious;
 			_result = 0.9;
 		};
 	};
@@ -723,14 +723,14 @@ fnc_handleDamage = {
 // ===============================
 {
 	_x addEventHandler ["HandleDamage", {
-		_this call fnc_handleDamage
+		_this call ETCS_fnc_handleDamage
 	}];
 	_x addEventHandler ["Killed", {
 		params ["_unit"];
-		[_unit, false] call fnc_setReviveProcess;
-		[_unit, false] call fnc_setBeingRevived;
-		[_unit, false] call fnc_setReviving;
-		[_unit, false] call fnc_setRevived;
+		[_unit, false] call ETCS_fnc_setReviveProcess;
+		[_unit, false] call ETCS_fnc_setBeingRevived;
+		[_unit, false] call ETCS_fnc_setReviving;
+		[_unit, false] call ETCS_fnc_setRevived;
 	}];
 } forEach units _group;
 

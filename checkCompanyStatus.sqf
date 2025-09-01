@@ -5,7 +5,7 @@ private _group = _this param [0];
 private _papaBear = _this param [1];
 private _callRetries = _this param [2, 3];
 // Save original unit types and loadouts
-private _originalGroupTemplate = [_group] call fnc_saveOriginalGroupTemplates;
+private _originalGroupTemplate = [_group] call ETCS_fnc_saveOriginalGroupTemplates;
 private _totalUnits = count units _group;
 
 missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
@@ -32,7 +32,7 @@ missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 	_responder setVariable ["isRadioBusy", false];
 }];
 
-fnc_getAssignedPlane = {
+ETCS_fnc_getAssignedPlane = {
 	private _teamName = _this select 0;
 	private _planeAssigned="";
 	switch (toLower _teamName) do {
@@ -58,9 +58,9 @@ fnc_getAssignedPlane = {
 	_planeAssigned
 };
 
-fnc_setSupportMarkerAndRadio = {
+ETCS_fnc_setSupportMarkerAndRadio = {
 	params ["_unit", "_grpName", "_papaBear"];
-	private _responder = [_papaBear] call fnc_getQuietUnit;
+	private _responder = [_papaBear] call ETCS_fnc_getQuietUnit;
 	private _markerName = format ["paraDropMarker_%1", diag_tickTime];
 	private _markerText = format ["Requesting Paradrop Support (%1)", _grpName];
 	private _marker = createMarkerLocal [_markerName, position _unit];
@@ -107,9 +107,9 @@ fnc_setSupportMarkerAndRadio = {
 	_markerName
 };
 
-fnc_joinReinforcementToGroup = {
+ETCS_fnc_joinReinforcementToGroup = {
 	params ["_group", "_groupCallerID", "_reinforcements"];
-	private _quietUnit = [_group] call fnc_getQuietUnit;
+	private _quietUnit = [_group] call ETCS_fnc_getQuietUnit;
 	_quietUnit setVariable ["isRadioBusy", true];
 	if (({
 		alive _x
@@ -145,7 +145,7 @@ fnc_joinReinforcementToGroup = {
 	_group
 };
 
-fnc_spawnDistressSmokeSignal = {
+ETCS_fnc_spawnDistressSmokeSignal = {
 	params ["_radioUnit"];
 	private _pos = position _radioUnit;
 	private _posFlare = _pos vectorAdd [0, 0, 150];
@@ -160,7 +160,7 @@ fnc_spawnDistressSmokeSignal = {
 	} forEach [1, 2, 3];
 };
 
-fnc_isGroupAlive = {
+ETCS_fnc_isGroupAlive = {
 	params ["_group"];
 	private _aliveCount = {
 		alive _x && {
@@ -183,15 +183,15 @@ fnc_isGroupAlive = {
 			_aliveCount <= (_totalUnits / 4)
 		};
 
-		if (!([_group] call fnc_isGroupAlive)) exitWith {
+		if (!([_group] call ETCS_fnc_isGroupAlive)) exitWith {
 			hint format ["Lost contact with %1 team!", _groupCallerID];
 		};
 
-		private _radioUnit = [_group] call fnc_getQuietUnit;
+		private _radioUnit = [_group] call ETCS_fnc_getQuietUnit;
 		// Signal: Flare & Smoke
-		[_radioUnit] spawn fnc_spawnDistressSmokeSignal;
+		[_radioUnit] spawn ETCS_fnc_spawnDistressSmokeSignal;
 
-		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call fnc_setSupportMarkerAndRadio;
+		private _paraDropMarkerName = [_radioUnit, groupId _group, _papaBear] call ETCS_fnc_setSupportMarkerAndRadio;
 		// Plane's cruising altitude
 		private _planeAltitude = 200;
 		// Plan starts at 5, 000 meters south of the drop zone
@@ -201,25 +201,25 @@ fnc_isGroupAlive = {
 		// Radius of from the center of the drop where to start dropping troops.
 		private _yDroppingRadius = 400;
 		// Get Assigned plane's name
-		private _planeGroupName = [groupId _group] call fnc_getAssignedPlane;
+		private _planeGroupName = [groupId _group] call ETCS_fnc_getAssignedPlane;
 		private _paraDropLocation = getMarkerPos _paraDropMarkerName;
 		// Initial location of the plane
 		private _initLocation = [_paraDropLocation select 0, (_paraDropLocation select 1) - _yDistance, _planeAltitude];
 		// Create the plane
-		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C130J_USMC", _paraDropLocation, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+		private _plane = [west, "CUP_B_US_Pilot", "CUP_B_C130J_USMC", _paraDropLocation, _initLocation, _planeSpeed, _planeGroupName] call ETCS_fnc_initializePlane;
 		// Always Turn off lights
 		_plane setCollisionLight false;
 		_plane disableAI "LIGHTS";
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
-		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call fnc_createGroupFromTemplate;
+		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call ETCS_fnc_createGroupFromTemplate;
 		// Add reviving characteristic of the newly created group.
 		[_groupToBeDropped] execVM "reviveSystem.sqf";
 		// Start executing the paradrop system.
-		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropLocation, _groupToBeDropped] call fnc_executeParaDrop;
+		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropLocation, _groupToBeDropped] call ETCS_fnc_executeParaDrop;
 		(driver _plane) sideRadio "RadioAirbasePackageOnGround";
 		sleep 3;
-		([_papaBear] call fnc_getQuietUnit) sideRadio "RadioAirbasePackageOnGroundReply";
-		_group = [_group, _groupCallerID, _groupToBeDropped] call fnc_joinReinforcementToGroup;
+		([_papaBear] call ETCS_fnc_getQuietUnit) sideRadio "RadioAirbasePackageOnGroundReply";
+		_group = [_group, _groupCallerID, _groupToBeDropped] call ETCS_fnc_joinReinforcementToGroup;
 
 		_groupCallerID = groupId (_group);
 		hint format ["Reinforcements has arrived for %1.", _groupCallerID];
@@ -231,9 +231,9 @@ fnc_isGroupAlive = {
 	params ["_group", "_papaBear"];
 	private _groupCallerID = groupId _group;
 	waitUntil {
-		!([_group] call fnc_isGroupAlive)
+		!([_group] call ETCS_fnc_isGroupAlive)
 	};
-	private _hqUnit = [_papaBear] call fnc_getQuietUnit;
+	private _hqUnit = [_papaBear] call ETCS_fnc_getQuietUnit;
 	_hqUnit setVariable ["isRadioBusy", true];
 
 	switch (toLower _groupCallerID) do {
