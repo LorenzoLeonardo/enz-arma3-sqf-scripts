@@ -167,10 +167,13 @@ fnc_spawnDistressSmokeSignal = {
 	params ["_radioUnit"];
 	private _pos = position _radioUnit;
 	private _posFlare = _pos vectorAdd [0, 0, 150];
+	private _posSmoke = _pos vectorAdd [0, 0, 150];
 	{
 		private _flrObj = "F_40mm_red" createVehicle _posFlare;
 		_flrObj setVelocity [0, 0, -1];
-		"SmokeShellRed" createVehicle _pos;
+
+		private _proj = "Smoke_120mm_AMOS_White" createVehicle _posSmoke;
+		_proj setVelocity [0, 0, -100];
 		sleep 30;
 	} forEach [1, 2, 3];
 };
