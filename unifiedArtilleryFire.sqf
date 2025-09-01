@@ -600,20 +600,23 @@ fnc_isClusterDuplicate = {
 // =========================
 fnc_getQuietUnit = {
 	params ["_group"];
+	private _radioMan = objNull;
+	if (isNull _group) exitWith {
+		player
+	};
 
-	private _leader = leader _group;
-	private _quietUnit = objNull;
+	_radioMan = leader _group;
+	if (isNull _radioMan) then {
+		_radioMan = player;
+	};
 
 	{
-		if ((alive _x) && !isPlayer _x && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
-			_quietUnit = _x;
+		if ((alive _x) && !isPlayer _x && (_x != _radioMan) && !(_x getVariable ["isRadioBusy", false])) exitWith {
+			_radioMan = _x;
 		};
 	} forEach (units _group);
 
-	if (isNull _quietUnit) then {
-		_quietUnit = _leader;
-	};
-	_quietUnit
+	_radioMan
 };
 
 // =========================
@@ -623,14 +626,14 @@ fnc_selectEnemiesByMode = {
 	params ["_mode", "_scoutGroup", "_gun", "_detectionRange"];
 
 	private _enemies = [];
-	private _group = objNull;
+	private _group = grpNull;
 
 	switch (_mode) do {
 		case MODE_SCOUT: {
 			private _gunSide = [_gun] call fnc_getGunSide;
 			private _scoutLeader = leader _scoutGroup;
 			if (isNull _scoutLeader || !alive _scoutLeader) exitWith {
-				[[], objNull]
+				[[], grpNull]
 			};
 
 			private _allUnits = allUnits select {
@@ -640,20 +643,20 @@ fnc_selectEnemiesByMode = {
 				_scoutLeader knowsAbout _x > 1.5
 			};
 			if (_enemies isEqualTo []) exitWith {
-				[[], objNull]
+				[[], grpNull]
 			};
 			_group = group _scoutLeader;
 		};
 		case MODE_AUTO: {
 			_enemies = [getPos _gun, _detectionRange, _gun] call fnc_getEnemies;
 			if (_enemies isEqualTo []) exitWith {
-				[[], objNull]
+				[[], grpNull]
 			};
 			_group = group _gun;
 		};
 		default {
 			hint format["Invalid mode specified. Use MODE_SCOUT, MODE_AUTO or MODE_MAP."];
-			[[], objNull]
+			[[], grpNull]
 		};
 	};
 
@@ -717,7 +720,7 @@ fnc_spawnSmoke = {
 		];
 
 		private _posSmoke = _centerPos vectorAdd [0, 0, 150];
-		private _proj = "Smoke_120mm_AMOS_White" createVehicle _posSmoke;
+		private _proj = "SmokeShellOrange" createVehicle _posSmoke;
 
 		_proj setVelocity [0, 0, -100];
 	};
@@ -789,7 +792,7 @@ fnc_handleAutoOrScoutMode = {
 			};
 
 			private _enemiesAndGroup = [_mode, _scoutGroup, _gun, _detectionRange] call fnc_selectEnemiesByMode;
-			if (_enemiesAndGroup isEqualTo [[], objNull]) then {
+			if (_enemiesAndGroup isEqualTo [[], grpNull]) then {
 				continue
 			};
 			private _enemies = _enemiesAndGroup select 0;
