@@ -172,8 +172,8 @@ fnc_spawnDistressSmokeSignal = {
 		private _flrObj = "F_40mm_red" createVehicle _posFlare;
 		_flrObj setVelocity [0, 0, -1];
 
-		private _proj = "Smoke_120mm_AMOS_White" createVehicle _posSmoke;
-		_proj setVelocity [0, 0, -100];
+		private _proj = "SmokeShellBlue" createVehicle _posSmoke;
+		_proj setVelocity [0, 0, -5];
 		sleep 30;
 	} forEach [1, 2, 3];
 };
