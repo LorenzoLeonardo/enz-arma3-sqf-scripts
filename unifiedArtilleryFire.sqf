@@ -138,7 +138,7 @@ if (isNil {
 // =========================
 // Dynamic Accuracy Radius Calculation
 // =========================
-fnc_dynamicAccuracyRadius = {
+ETCS_fnc_dynamicAccuracyRadius = {
 	params ["_gun", "_accuracyRadius"];
 	private _dynamicAccuracyRadius = 0;
 
@@ -177,7 +177,7 @@ fnc_dynamicAccuracyRadius = {
 // =========================
 // Claim a target position for the gun
 // =========================
-fnc_claimTarget = {
+ETCS_fnc_claimTarget = {
 	params ["_pos", "_gun"];
 	private _targets = missionNamespace getVariable ["GVAR_activeTargets", []];
 	_targets pushBack [_pos, _gun];
@@ -187,7 +187,7 @@ fnc_claimTarget = {
 // =========================
 // Release a target from the gun's claim
 // =========================
-fnc_releaseTarget = {
+ETCS_fnc_releaseTarget = {
 	params ["_gun"];
 	private _targets = missionNamespace getVariable ["GVAR_activeTargets", []];
 	_targets = _targets select {
@@ -199,7 +199,7 @@ fnc_releaseTarget = {
 // =========================
 // Check if a target position is already claimed by another gun
 // =========================
-fnc_isTargetClaimed = {
+ETCS_fnc_isTargetClaimed = {
 	params ["_pos", "_radius"];
 	private _targets = missionNamespace getVariable ["GVAR_activeTargets", []];
 	private _claimed = false;
@@ -214,7 +214,7 @@ fnc_isTargetClaimed = {
 // =========================
 // get the ammo count for a specific ammo type in a vehicle
 // =========================
-fnc_getAmmoCount = {
+ETCS_fnc_getAmmoCount = {
 	params ["_vehicle", "_ammoType"];
 	private _count = 0;
 	{
@@ -228,7 +228,7 @@ fnc_getAmmoCount = {
 // =========================
 // Handle gun depletion (unassign crew, move to guard position, optionally disable gun)
 // =========================
-fnc_handleGunDepletion = {
+ETCS_fnc_handleGunDepletion = {
 	params ["_gun"];
 	if (isNull _gun) exitWith {};
 
@@ -257,7 +257,7 @@ fnc_handleGunDepletion = {
 // =========================
 // get the side of the gun based on its crew or default side
 // =========================
-fnc_getGunSide = {
+ETCS_fnc_getGunSide = {
 	params ["_gun"];
 	if ((count crew _gun) > 0) exitWith {
 		side (gunner _gun)
@@ -268,7 +268,7 @@ fnc_getGunSide = {
 // =========================
 // Check if a unit is hostile to the gun's side
 // =========================
-fnc_isHostile = {
+ETCS_fnc_isHostile = {
 	params ["_unit", "_gunSide"];
 	alive _unit && ((side _unit getFriend _gunSide) < 0.6 || (_gunSide getFriend side _unit) < 0.6)
 };
@@ -276,29 +276,29 @@ fnc_isHostile = {
 // =========================
 // get enemies near a position within a specified distance
 // =========================
-fnc_getEnemies = {
+ETCS_fnc_getEnemies = {
 	params ["_origin", "_distance", "_gun"];
-	private _gunSide = [_gun] call fnc_getGunSide;
+	private _gunSide = [_gun] call ETCS_fnc_getGunSide;
 	(_origin nearEntities ["Man", _distance]) select {
-		[_x, _gunSide] call fnc_isHostile
+		[_x, _gunSide] call ETCS_fnc_isHostile
 	}
 };
 
 // =========================
 // get a cluster of hostile units around a unit within a specified radius
 // =========================
-fnc_getCluster = {
+ETCS_fnc_getCluster = {
 	params ["_unit", "_radius", "_gun"];
-	private _gunSide = [_gun] call fnc_getGunSide;
+	private _gunSide = [_gun] call ETCS_fnc_getGunSide;
 	(getPos _unit nearEntities ["Man", _radius]) select {
-		[_x, _gunSide] call fnc_isHostile
+		[_x, _gunSide] call ETCS_fnc_isHostile
 	}
 };
 
 // =========================
 // get the center position of a cluster of units
 // =========================
-fnc_getClusterCenter = {
+ETCS_fnc_getClusterCenter = {
 	params ["_cluster"];
 
 	if (_cluster isEqualTo []) exitWith {
@@ -340,7 +340,7 @@ fnc_getClusterCenter = {
 	getPosASL _nearest
 };
 
-fnc_getIndexOfGroup = {
+ETCS_fnc_getIndexOfGroup = {
 	params ["_group"];
 
 	switch (toLower(groupId _group)) do {
@@ -373,7 +373,7 @@ fnc_getIndexOfGroup = {
 // The artillery/mortar will continue to do its job
 missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 	params ["_requestor", "_responder", "_phase", "_grid"];
-	private _index = [group _requestor] call fnc_getIndexOfGroup;
+	private _index = [group _requestor] call ETCS_fnc_getIndexOfGroup;
 
 	_requestor setVariable ["isRadioBusy", true];
 	_responder setVariable ["isRadioBusy", true];
@@ -446,7 +446,7 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 		};
 	};
 	_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
-	[_targetPos] call fnc_spawnSmoke;
+	[_targetPos] call ETCS_fnc_spawnSmoke;
 
 	_marker
 }];
@@ -454,9 +454,9 @@ missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 // =========================
 // fire the gun at a target position with optional accuracy radius
 // =========================
-fnc_fireGun = {
+ETCS_fnc_fireGun = {
 	params ["_caller", "_gun", "_targetPos", "_accuracyRadius", "_ammoType", "_rounds"];
-	private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
+	private _ammoLeft = [_gun, _ammoType] call ETCS_fnc_getAmmoCount;
 	if (!canFire _gun || (_ammoLeft == 0)) exitWith {
 		false
 	};
@@ -475,7 +475,7 @@ fnc_fireGun = {
 		_finalPos = _targetPos vectorAdd [(sin _angle * _dist), (cos _angle * _dist), 0];
 	};
 	// Choose a responder (gunner or commander)
-	private _base = [group _gun] call fnc_getQuietUnit;
+	private _base = [group _gun] call ETCS_fnc_getQuietUnit;
 	private _grid = mapGridPosition _finalPos;
 
 	// --- 1. Standby call ---
@@ -541,7 +541,7 @@ fnc_fireGun = {
 // =========================
 // get the artillery ammo type based on gun type
 // =========================
-fnc_getArtilleryAmmoType = {
+ETCS_fnc_getArtilleryAmmoType = {
 	params ["_gun"];
 
 	private _mags = magazines _gun;
@@ -585,7 +585,7 @@ fnc_getArtilleryAmmoType = {
 // =========================
 // Check if a cluster is a duplicate based on proximity
 // =========================
-fnc_isClusterDuplicate = {
+ETCS_fnc_isClusterDuplicate = {
 	params ["_centerPos", "_clustersChecked", "_mergeRadius"];
 
 	private _foundIndex = _clustersChecked findIf {
@@ -598,7 +598,7 @@ fnc_isClusterDuplicate = {
 // =========================
 // get a quiet unit from the group
 // =========================
-fnc_getQuietUnit = {
+ETCS_fnc_getQuietUnit = {
 	params ["_group"];
 	private _radioMan = objNull;
 	if (isNull _group) exitWith {
@@ -622,7 +622,7 @@ fnc_getQuietUnit = {
 // =========================
 // Enemy Selection Logic
 // =========================
-fnc_selectEnemiesByMode = {
+ETCS_fnc_selectEnemiesByMode = {
 	params ["_mode", "_scoutGroup", "_gun", "_detectionRange"];
 
 	private _enemies = [];
@@ -630,14 +630,14 @@ fnc_selectEnemiesByMode = {
 
 	switch (_mode) do {
 		case MODE_SCOUT: {
-			private _gunSide = [_gun] call fnc_getGunSide;
+			private _gunSide = [_gun] call ETCS_fnc_getGunSide;
 			private _scoutLeader = leader _scoutGroup;
 			if (isNull _scoutLeader || !alive _scoutLeader) exitWith {
 				[[], grpNull]
 			};
 
 			private _allUnits = allUnits select {
-				[_x, _gunSide] call fnc_isHostile && alive _x
+				[_x, _gunSide] call ETCS_fnc_isHostile && alive _x
 			};
 			_enemies = _allUnits select {
 				_scoutLeader knowsAbout _x > 1.5
@@ -648,7 +648,7 @@ fnc_selectEnemiesByMode = {
 			_group = group _scoutLeader;
 		};
 		case MODE_AUTO: {
-			_enemies = [getPos _gun, _detectionRange, _gun] call fnc_getEnemies;
+			_enemies = [getPos _gun, _detectionRange, _gun] call ETCS_fnc_getEnemies;
 			if (_enemies isEqualTo []) exitWith {
 				[[], grpNull]
 			};
@@ -666,22 +666,22 @@ fnc_selectEnemiesByMode = {
 // =========================
 // lock / Unlock System
 // =========================
-fnc_lockOnGoingFire = {
+ETCS_fnc_lockOnGoingFire = {
 	missionNamespace setVariable ["onGoingGunFire", true, true];
 };
 
-fnc_unlockOnGoingFire = {
+ETCS_fnc_unlockOnGoingFire = {
 	missionNamespace setVariable ["onGoingGunFire", false, true];
 };
 
-fnc_isOnGoingFire = {
+ETCS_fnc_isOnGoingFire = {
 	missionNamespace getVariable ["onGoingGunFire", false]
 };
 
 // =========================
 // Gun Index Assignment
 // =========================
-fnc_assignGunIndex = {
+ETCS_fnc_assignGunIndex = {
 	params ["_gun"];
 	// The purpose of these lines if this script is attached to multiple guns.
 	// Thus we don't need to let them fire at the same time.
@@ -699,7 +699,7 @@ fnc_assignGunIndex = {
 // =========================
 // spawn smoke to target location
 // =========================
-fnc_spawnSmoke = {
+ETCS_fnc_spawnSmoke = {
 	params [
 		["_centerPos", [0, 0, 0], [[]]],
 		["_radius", 0, [0]],
@@ -729,7 +729,7 @@ fnc_spawnSmoke = {
 // =========================
 // Handler for AUTO or SCOUT Mode
 // =========================
-fnc_handleAutoOrScoutMode = {
+ETCS_fnc_handleAutoOrScoutMode = {
 	params [
 		"_mode",
 		"_gun",
@@ -772,7 +772,7 @@ fnc_handleAutoOrScoutMode = {
 			"_claimRadius"
 		];
 
-		private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+		private _ammoType = [_gun] call ETCS_fnc_getArtilleryAmmoType;
 		private _clusterMergeRadius = 10;   // minimum separation to treat clusters as unique
 
 		_gun setVehicleAmmo 1;
@@ -780,18 +780,18 @@ fnc_handleAutoOrScoutMode = {
 		while { !isNull _gun && alive _gun } do {
 			sleep 2;
 
-			private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
-			private _ammoLeft = [_gun, _ammoType] call fnc_getAmmoCount;
+			private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call ETCS_fnc_dynamicAccuracyRadius;
+			private _ammoLeft = [_gun, _ammoType] call ETCS_fnc_getAmmoCount;
 			if (_ammoLeft <= 0) then {
 				if (_unlimitedAmmo) then {
 					_gun setVehicleAmmo 1
 				} else {
-					[_gun] call fnc_handleGunDepletion;
+					[_gun] call ETCS_fnc_handleGunDepletion;
 					break
 				};
 			};
 
-			private _enemiesAndGroup = [_mode, _scoutGroup, _gun, _detectionRange] call fnc_selectEnemiesByMode;
+			private _enemiesAndGroup = [_mode, _scoutGroup, _gun, _detectionRange] call ETCS_fnc_selectEnemiesByMode;
 			if (_enemiesAndGroup isEqualTo [[], grpNull]) then {
 				continue
 			};
@@ -806,10 +806,10 @@ fnc_handleAutoOrScoutMode = {
 
 			private _clustersChecked = [];
 			{
-				private _cluster = [_x, _clusterRadius, _gun] call fnc_getCluster;
+				private _cluster = [_x, _clusterRadius, _gun] call ETCS_fnc_getCluster;
 				if (count _cluster >= _minUnitsPerCluster) then {
-					private _centerPos = [_cluster] call fnc_getClusterCenter;
-					private _isDuplicate = [_centerPos, _clustersChecked, _clusterMergeRadius] call fnc_isClusterDuplicate;
+					private _centerPos = [_cluster] call ETCS_fnc_getClusterCenter;
+					private _isDuplicate = [_centerPos, _clustersChecked, _clusterMergeRadius] call ETCS_fnc_isClusterDuplicate;
 
 					if (_isDuplicate) then {
 						continue
@@ -817,16 +817,16 @@ fnc_handleAutoOrScoutMode = {
 
 					_clustersChecked pushBack _centerPos;
 
-					if (!([_centerPos, _claimRadius] call fnc_isTargetClaimed)) then {
-						[_centerPos, _gun] call fnc_claimTarget;
+					if (!([_centerPos, _claimRadius] call ETCS_fnc_isTargetClaimed)) then {
+						[_centerPos, _gun] call ETCS_fnc_claimTarget;
 
-						private _quietUnit = [_group] call fnc_getQuietUnit;
-						private _fired = [_quietUnit, _gun, _centerPos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
+						private _quietUnit = [_group] call ETCS_fnc_getQuietUnit;
+						private _fired = [_quietUnit, _gun, _centerPos, _dynamicAccuracyRadius, _ammoType, _rounds] call ETCS_fnc_fireGun;
 						if (_fired) then {
 							sleep _coolDownForEffect;
 						};
 
-						[_gun] call fnc_releaseTarget;
+						[_gun] call ETCS_fnc_releaseTarget;
 						// one cluster per loop
 						break;
 					};
@@ -839,7 +839,7 @@ fnc_handleAutoOrScoutMode = {
 // =========================
 // Handler for MAP Mode
 // =========================
-fnc_handleMapMode = {
+ETCS_fnc_handleMapMode = {
 	params [
 		"_gun",
 		"_rounds",
@@ -848,22 +848,22 @@ fnc_handleMapMode = {
 	];
 
 	missionNamespace setVariable ["onGoingGunFire", false, true];
-	[_gun] call fnc_assignGunIndex;
+	[_gun] call ETCS_fnc_assignGunIndex;
 	addMissionEventHandler [
 		"MapSingleClick",
 		{
 			params ["_units", "_pos", "_alt", "_shift", "_thisArgs"];
 			_thisArgs params ["_gun", "_rounds", "_unlimitedAmmo", "_accuracyRadius"];
 
-			if (!([] call fnc_isOnGoingFire)) then {
+			if (!([] call ETCS_fnc_isOnGoingFire)) then {
 				[_gun, _rounds, _unlimitedAmmo, _accuracyRadius, _pos] spawn {
 					params ["_gun", "_rounds", "_unlimitedAmmo", "_accuracyRadius", "_pos"];
 
-					[] call fnc_lockOnGoingFire;
-					[_pos, _gun] call fnc_claimTarget;
+					[] call ETCS_fnc_lockOnGoingFire;
+					[_pos, _gun] call ETCS_fnc_claimTarget;
 
-					private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call fnc_dynamicAccuracyRadius;
-					private _ammoType = [_gun] call fnc_getArtilleryAmmoType;
+					private _dynamicAccuracyRadius = [_gun, _accuracyRadius] call ETCS_fnc_dynamicAccuracyRadius;
+					private _ammoType = [_gun] call ETCS_fnc_getArtilleryAmmoType;
 
 					if (_unlimitedAmmo) then {
 						_gun setVehicleAmmo 1;
@@ -872,14 +872,14 @@ fnc_handleMapMode = {
 					// This is needed since this script can be attached into multiple guns.
 					private _thisDelay = _gun getVariable["gunIndex", 0];
 					sleep _thisDelay;
-					private _fired = [player, _gun, _pos, _dynamicAccuracyRadius, _ammoType, _rounds] call fnc_fireGun;
+					private _fired = [player, _gun, _pos, _dynamicAccuracyRadius, _ammoType, _rounds] call ETCS_fnc_fireGun;
 
 					if (!_fired) then {
 						hint "Gun fire failed!";
 					};
 
-					[_gun] call fnc_releaseTarget;
-					[] call fnc_unlockOnGoingFire;
+					[_gun] call ETCS_fnc_releaseTarget;
+					[] call ETCS_fnc_unlockOnGoingFire;
 				};
 			} else {
 				hint "Guns are busy at the moment!";
@@ -908,7 +908,7 @@ switch (_mode) do {
 			_unlimitedAmmo,
 			_accuracyRadius,
 			_claimRadius
-		] call fnc_handleAutoOrScoutMode;
+		] call ETCS_fnc_handleAutoOrScoutMode;
 	};
 
 	case MODE_MAP: {
@@ -917,7 +917,7 @@ switch (_mode) do {
 			_rounds,
 			_unlimitedAmmo,
 			_accuracyRadius
-		] call fnc_handleMapMode;
+		] call ETCS_fnc_handleMapMode;
 	};
 
 	default {

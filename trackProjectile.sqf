@@ -85,7 +85,7 @@ _artillery addEventHandler ["Fired", {
 					playSound3D [_sound, _proj, false, _lastPos, 3, _pitch, 6000];
 					_impactSoundPlayed = true;
 				};
-				sleep 0.1;
+				sleep 0.01;
 			};
 		};
 	};

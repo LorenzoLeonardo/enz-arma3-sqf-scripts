@@ -6,7 +6,7 @@
 
 params ["_squad", ["_tolerance", 0.75]];
 
-fnc_enemySide = {
+ETCS_fnc_enemySide = {
 	params ["_group"];
 	private _mySide = side _group;
 
@@ -21,44 +21,44 @@ fnc_enemySide = {
 	};
 };
 
-fnc_enemyCount = {
+ETCS_fnc_enemyCount = {
 	params ["_sideEnemy"];
 	count (allUnits select {
 		(side _x == _sideEnemy) && (alive _x) && (lifeState _x != "INCAPACITATED")
 	})
 };
 
-fnc_clearWP = {
+ETCS_fnc_clearWP = {
 	params ["_group"];
 	{
 		deleteWaypoint _x
 	} forEachReversed waypoints _group;
 };
 
-fnc_allEnemies = {
+ETCS_fnc_allEnemies = {
 	params ["_enemySide"];
 	allUnits select {
 		(side _x == _enemySide) && (alive _x) && (lifeState _x != "INCAPACITATED")
 	}
 };
 
-fnc_waitUntilTargetDead = {
+ETCS_fnc_waitUntilTargetDead = {
 	params ["_target", "_enemySide"];
 	private _timeNow = time;
 	waitUntil {
 		sleep 2;
 		!alive _target ||
 		(lifeState _target == "INCAPACITATED") ||
-		(([_enemySide] call fnc_enemyCount) == 0) ||
+		(([_enemySide] call ETCS_fnc_enemyCount) == 0) ||
 		(time > (_timeNow + 60))
 	};
 };
 
-fnc_mainLogicHuntRemainingEnemies = {
+ETCS_fnc_mainLogicHuntRemainingEnemies = {
 	params ["_squad", "_tolerance"];
 
-	private _enemySide = [_squad] call fnc_enemySide;
-	private _initialEnemies = [_enemySide] call fnc_allEnemies;
+	private _enemySide = [_squad] call ETCS_fnc_enemySide;
+	private _initialEnemies = [_enemySide] call ETCS_fnc_allEnemies;
 	private _initialCount = count _initialEnemies;
 
 	if (_initialCount <= 0) exitWith {};
@@ -66,11 +66,11 @@ fnc_mainLogicHuntRemainingEnemies = {
 	// Wait until enemy count drops to 75% or less
 	private _threshHoldCount = floor (_initialCount * _tolerance);
 	waitUntil {
-		([_enemySide] call fnc_enemyCount) <= _threshHoldCount
+		([_enemySide] call ETCS_fnc_enemyCount) <= _threshHoldCount
 	};
 
 	// exit early if no enemies left
-	if (([_enemySide] call fnc_enemyCount) == 0) exitWith {};
+	if (([_enemySide] call ETCS_fnc_enemyCount) == 0) exitWith {};
 
 	// Radio only once
 	if (!(missionNamespace getVariable["DoneRadioRadioPapaBearToAllUnitsClearArea", false])) then {
@@ -80,15 +80,15 @@ fnc_mainLogicHuntRemainingEnemies = {
 	};
 
 	// Dynamic hunt loop
-	while { ([_enemySide] call fnc_enemyCount) > 0 } do {
-		private _aliveEnemies = [_enemySide] call fnc_allEnemies;
+	while { ([_enemySide] call ETCS_fnc_enemyCount) > 0 } do {
+		private _aliveEnemies = [_enemySide] call ETCS_fnc_allEnemies;
 		private _target = _aliveEnemies param [0, objNull];
 
 		hint format ["Objective Updated: Hunt %1 remaining enemies.", count _aliveEnemies];
 		if (!(isNull _target) && alive _target) then {
 			private _targetPos = getPos _target;
 			// Clear waypoints
-			[_squad] call fnc_clearWP;
+			[_squad] call ETCS_fnc_clearWP;
 
 			// Add new waypoint to target
 			private _wp = _squad addWaypoint [getPos _target, 0];
@@ -97,7 +97,7 @@ fnc_mainLogicHuntRemainingEnemies = {
 			_wp setWaypointCombatMode "RED";
 			_wp setWaypointSpeed "FULL";
 
-			[_target, _enemySide] call fnc_waitUntilTargetDead;
+			[_target, _enemySide] call ETCS_fnc_waitUntilTargetDead;
 		} else {
 			// Target is invalid, just wait a moment
 			systemChat "Target invalid, waiting...";
@@ -134,4 +134,4 @@ addMissionEventHandler ["Draw3D", {
 	];
 }];
 
-[_squad, _tolerance] spawn fnc_mainLogicHuntRemainingEnemies;
+[_squad, _tolerance] spawn ETCS_fnc_mainLogicHuntRemainingEnemies;

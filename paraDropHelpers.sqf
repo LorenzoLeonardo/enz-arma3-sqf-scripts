@@ -26,7 +26,7 @@
 // Returns: None
 // 
 // Example usage:
-// [_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_ACKNOWLEDGED] call fnc_callBackParaDropStatus
+// [_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_ACKNOWLEDGED] call ETCS_fnc_callBackParaDropStatus
 // 
 // Note: Ensure that the callback function is set in the mission namespace before calling this function.
 // 
@@ -37,7 +37,7 @@
 		systemChat format ["Para drop status: %1", _phase];
 	}];
 */
-fnc_callBackParaDropStatus = {
+ETCS_fnc_callBackParaDropStatus = {
 	params ["_requestor", "_responder", "_paraDropGroup", "_phase"];
 
 	private _callBack = missionNamespace getVariable [CALLBACK_PARA_DROP_STATUS, nil];
@@ -61,41 +61,41 @@ fnc_callBackParaDropStatus = {
 // Returns: None
 // 
 // Example usage:
-// [_caller, _plane, 3000, 500, [1000, 2000, 0], _groupToBeDropped] call fnc_executeParaDrop
+// [_caller, _plane, 3000, 500, [1000, 2000, 0], _groupToBeDropped] call ETCS_fnc_executeParaDrop
 // 
 // Note: Ensure that the plane is properly initialized and has enough seats for the group to be dropped before calling this function.
 // 
 // Example of initializing a plane:
-// private _plane = [_side, _pilotType, _planeModel, _dropPosition, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+// private _plane = [_side, _pilotType, _planeModel, _dropPosition, _initLocation, _planeSpeed, _planeGroupName] call ETCS_fnc_initializePlane;
 // 
 // Example of loading a group into the plane:
-// [_plane, _groupToBeDropped] call fnc_loadGroupToPlane;
+// [_plane, _groupToBeDropped] call ETCS_fnc_loadGroupToPlane;
 // 
 // Ensure that the group to be dropped has parachute backpacks assigned before calling this function.
 // Example of assigning parachute backpacks:
-// private _backPack = [_groupToBeDropped] call fnc_setParachuteBackpack;
+// private _backPack = [_groupToBeDropped] call ETCS_fnc_setParachuteBackpack;
 // 
-// The original backpacks can be restored after the drop using fnc_getOriginalBackPack.
+// The original backpacks can be restored after the drop using ETCS_fnc_getOriginalBackPack.
 // Example of restoring original backpacks:
-// [_paraPlayer, _backPack] call fnc_getOriginalBackPack;
-fnc_executeParaDrop = {
+// [_paraPlayer, _backPack] call ETCS_fnc_getOriginalBackPack;
+ETCS_fnc_executeParaDrop = {
 	params ["_caller", "_plane", "_planeAltitude", "_yDroppingRadius", "_dropDropLocation", "_groupToBeDropped"];
 
 	// save the original backpack after swapping for a parachute backpack.
-	private _backPack = [_groupToBeDropped] call fnc_setParachuteBackpack;
+	private _backPack = [_groupToBeDropped] call ETCS_fnc_setParachuteBackpack;
 
 	// acknowledge the request for para drop.
-	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_ACKNOWLEDGED] call fnc_callBackParaDropStatus;
+	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_ACKNOWLEDGED] call ETCS_fnc_callBackParaDropStatus;
 
 	// wait until plane reaches drop zone
-	[_plane, _dropDropLocation, _yDroppingRadius, _planeAltitude] call fnc_waitUntilReachDropzone;
+	[_plane, _dropDropLocation, _yDroppingRadius, _planeAltitude] call ETCS_fnc_waitUntilReachDropzone;
 
 	// drop troops
-	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DROPPING] call fnc_callBackParaDropStatus;
-	[_groupToBeDropped, _plane, _backPack, 0.5] call fnc_ejectFromPlane;
-	[_groupToBeDropped] call fnc_waitUntilGroupOnGround;
+	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DROPPING] call ETCS_fnc_callBackParaDropStatus;
+	[_groupToBeDropped, _plane, _backPack, 0.5] call ETCS_fnc_ejectFromPlane;
+	[_groupToBeDropped] call ETCS_fnc_waitUntilGroupOnGround;
 	// ejecting from plane done
-	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DONE] call fnc_callBackParaDropStatus;
+	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DONE] call ETCS_fnc_callBackParaDropStatus;
 };
 
 // Save the original loadouts of a group template
@@ -107,13 +107,13 @@ fnc_executeParaDrop = {
 // Returns: An array containing the original loadouts, ranks, and skills of each unit in the group.
 // 
 // Example usage:
-// private _originalLoadouts = [_group] call fnc_saveOriginalGroupTemplates;
+// private _originalLoadouts = [_group] call ETCS_fnc_saveOriginalGroupTemplates;
 // 
 // Note: This function is useful for creating templates of groups that can be recreated later with their original loadouts.
 // 
 // Example of using the saved template to create a new group:
-// private _newGroup = [_side, _spawnPos, _plane, _originalLoadouts] call fnc_createGroupFromTemplate;
-fnc_saveOriginalGroupTemplates = {
+// private _newGroup = [_side, _spawnPos, _plane, _originalLoadouts] call ETCS_fnc_createGroupFromTemplate;
+ETCS_fnc_saveOriginalGroupTemplates = {
 	params ["_group"];
 
 	private _originalLoadouts = [];
@@ -143,10 +143,10 @@ fnc_saveOriginalGroupTemplates = {
 // Returns: The newly created group.
 // 
 // Example usage:
-// private _newGroup = [_side, _spawnPos, _plane, _groupTemplate] call fnc_createGroupFromTemplate;
+// private _newGroup = [_side, _spawnPos, _plane, _groupTemplate] call ETCS_fnc_createGroupFromTemplate;
 // 
 // Note: Ensure that the plane has enough seats for the group to be loaded before calling this function.
-fnc_createGroupFromTemplate = {
+ETCS_fnc_createGroupFromTemplate = {
 	params ["_side", "_spawnPos", "_plane", "_groupTemplate"];
 	private _group = createGroup _side;
 	{
@@ -179,15 +179,15 @@ fnc_createGroupFromTemplate = {
 // Returns: The created waypoint object.
 // 
 // Example usage:
-// private _waypoint = [_group, _destinationPosition, _wayPointSpeed, _wayPointType, _wayPointFormation, _wayPointBehaviour, _wayPointNumber] call fnc_createWaypoint;
+// private _waypoint = [_group, _destinationPosition, _wayPointSpeed, _wayPointType, _wayPointFormation, _wayPointBehaviour, _wayPointNumber] call ETCS_fnc_createWaypoint;
 // 
 // Note: This function is useful for dynamically setting waypoints for groups during missions.
 // 
 // Example of setting a waypoint:
-// private _waypoint = [_group, [1000, 2000, 0], "NORMAL", "MOVE", "DIAMOND", "AWARE", 0] call fnc_createWaypoint;
+// private _waypoint = [_group, [1000, 2000, 0], "NORMAL", "MOVE", "DIAMOND", "AWARE", 0] call ETCS_fnc_createWaypoint;
 // 
 // The waypoint can then be modified further if needed using waypoint commands.
-fnc_createWaypoint = {
+ETCS_fnc_createWaypoint = {
 	private _group = _this select 0;
 	private _destinationPosition = _this select 1;
 	private _wayPointSpeed = _this select 2;
@@ -213,11 +213,11 @@ fnc_createWaypoint = {
 // Returns: An array containing the original backpacks of each unit in the group.
 // 
 // Example usage:
-// private _originalBackpacks = [_groupPlatoon] call fnc_setParachuteBackpack;
+// private _originalBackpacks = [_groupPlatoon] call ETCS_fnc_setParachuteBackpack;
 // 
 // Note: This function is useful for preparing units for a parachute drop by ensuring they have parachute backpacks.
-// The original backpacks can be restored later using fnc_getOriginalBackPack.
-fnc_setParachuteBackpack = {
+// The original backpacks can be restored later using ETCS_fnc_getOriginalBackPack.
+ETCS_fnc_setParachuteBackpack = {
 	private _groupPlatoon = _this select 0;
 	private _oldbackPack = [];
 	{
@@ -233,19 +233,19 @@ fnc_setParachuteBackpack = {
 // 
 // Parameters:
 // _unit: The unit whose backpack will be restored.
-// _backPack: An array containing the original backpacks of units, as returned by fnc_setParachuteBackpack.
+// _backPack: An array containing the original backpacks of units, as returned by ETCS_fnc_setParachuteBackpack.
 // 
 // Returns: None
 // 
 // Example usage:
-// [_paraPlayer, _backPack] call fnc_getOriginalBackPack;
+// [_paraPlayer, _backPack] call ETCS_fnc_getOriginalBackPack;
 // 
 // Note: This function should be called after the unit has landed from a parachute drop to restore their original equipment.
 // 
 // Example of restoring original backpacks:
-// private _backPack = [_groupToBeDropped] call fnc_setParachuteBackpack;
-// [_paraPlayer, _backPack] call fnc_getOriginalBackPack;
-fnc_getOriginalBackPack = {
+// private _backPack = [_groupToBeDropped] call ETCS_fnc_setParachuteBackpack;
+// [_paraPlayer, _backPack] call ETCS_fnc_getOriginalBackPack;
+ETCS_fnc_getOriginalBackPack = {
 	private _unit = _this select 0;
 	private _backPack = _this select 1;
 	{
@@ -270,10 +270,10 @@ fnc_getOriginalBackPack = {
 // Returns: The created plane object.
 // 
 // Example usage:
-// private _plane = [_side, _pilotType, _planeModel, _dropPosition, _initLocation, _planeSpeed, _planeGroupName] call fnc_initializePlane;
+// private _plane = [_side, _pilotType, _planeModel, _dropPosition, _initLocation, _planeSpeed, _planeGroupName] call ETCS_fnc_initializePlane;
 // 
 // Note: Ensure that the plane is properly initialized before using it for para drop operations.
-fnc_initializePlane = {
+ETCS_fnc_initializePlane = {
 	params ["_side", "_pilotType", "_planeModel", "_dropPosition", "_initLocation", "_planeSpeed", "_planeGroupName"];
 
 	// create a group of the plane
@@ -291,7 +291,7 @@ fnc_initializePlane = {
 	_groupPlane setGroupId [_planeGroupName];
 
 	// change speed when almost reach drop zone
-	[_returnPlane, _groupPlane, _initLocation, _dropPosition, _planeSpeed] spawn fnc_setPlaneWayPoints;
+	[_returnPlane, _groupPlane, _initLocation, _dropPosition, _planeSpeed] spawn ETCS_fnc_setPlaneWayPoints;
 	_returnPlane
 };
 
@@ -304,10 +304,10 @@ fnc_initializePlane = {
 // Returns: None
 // 
 // Example usage:
-// [_plane] call fnc_uninitializePlane;
+// [_plane] call ETCS_fnc_uninitializePlane;
 // 
 // Note: This function should be called after the para drop operation is complete and the plane is no longer needed.
-fnc_uninitializePlane = {
+ETCS_fnc_uninitializePlane = {
 	private _plane = _this select 0;
 	// Delete plane and pilots
 	{
@@ -329,10 +329,10 @@ fnc_uninitializePlane = {
 // Returns: None
 // 
 // Example usage:
-// [_plane, _group, _initLocation, _dropPosition, _planeSpeed] call fnc_setPlaneWayPoints;
+// [_plane, _group, _initLocation, _dropPosition, _planeSpeed] call ETCS_fnc_setPlaneWayPoints;
 // 
 // Note: This function is typically called during the initialization of the plane for a para drop operation
-fnc_setPlaneWayPoints = {
+ETCS_fnc_setPlaneWayPoints = {
 	private _plane = _this select 0;
 	private _group = _this select 1;
 	private _initLocation = _this select 2;
@@ -347,24 +347,24 @@ fnc_setPlaneWayPoints = {
 
 	// set plane waypoint yDistance ahead of the dropzone position.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) - _distanceBeforeAndAfterDroplocation, _planeAltitude];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 0] call fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 0] call ETCS_fnc_createWaypoint;
 
 	// set plane waypoint at exact location of the drop zone.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1), _dropPosition select 2];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 1] call fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 1] call ETCS_fnc_createWaypoint;
 
 	// set plane waypoint at beyond the drop location before going RTB.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) + _distanceBeforeAndAfterDroplocation, _dropPosition select 2];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 2] call fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 2] call ETCS_fnc_createWaypoint;
 
 	// Change plane course back to the starting location. RTB
-	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", 3] call fnc_createWaypoint;
+	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", 3] call ETCS_fnc_createWaypoint;
 
 	waitUntil {
 		sleep 1;
 		(_initLocation distance2D (getPos _plane)) <= 100
 	};
-	[_plane] call fnc_uninitializePlane;
+	[_plane] call ETCS_fnc_uninitializePlane;
 };
 
 // Wait until the plane reaches the drop zone within a specified radius.
@@ -378,10 +378,10 @@ fnc_setPlaneWayPoints = {
 // Returns: None
 // 
 // Example usage:
-// [_plane, _dropPosition, _droppingRadius] call fnc_waitUntilReachDropzone;
+// [_plane, _dropPosition, _droppingRadius] call ETCS_fnc_waitUntilReachDropzone;
 // 
 // Note: This function is typically used to ensure that the plane is in the correct position before initiating the troop drop.
-fnc_waitUntilReachDropzone = {
+ETCS_fnc_waitUntilReachDropzone = {
 	private _plane = _this select 0;
 	private _dropPosition = _this select 1;
 	private _droppingRadius = _this select 2;
@@ -397,7 +397,7 @@ fnc_waitUntilReachDropzone = {
 // 
 // Parameters:
 // _paraPlayer: The paratrooper unit whose backpack will be restored.
-// _backPack: An array containing the original backpacks of units, as returned by fnc_setParachuteBackpack.
+// _backPack: An array containing the original backpacks of units, as returned by ETCS_fnc_setParachuteBackpack.
 // Returns: None
 // 
 // Example usage:
@@ -413,7 +413,7 @@ func_reloadInventoryWhenHitGround = {
 		isTouchingGround _paraPlayer
 	};
 	unassignVehicle _paraPlayer;
-	[_paraPlayer, _backPack] call fnc_getOriginalBackPack;
+	[_paraPlayer, _backPack] call ETCS_fnc_getOriginalBackPack;
 	sleep 5;
 	_paraPlayer allowDamage true;
 };
@@ -424,15 +424,15 @@ func_reloadInventoryWhenHitGround = {
 // Parameters:
 // _groupPlatoon: The group of paratroopers to be ejected.
 // _plane: The plane from which the paratroopers will be ejected.
-// _backPack: An array containing the original backpacks of units, as returned by fnc_setParachuteBackpack.
+// _backPack: An array containing the original backpacks of units, as returned by ETCS_fnc_setParachuteBackpack.
 // _jumpIntervalTime: The time interval (in seconds) between each paratrooper's ejection.
 // 
 // Returns: None
 // Example usage:
-// [_groupPlatoon, _plane, _backPack, _jumpIntervalTime] call fnc_ejectFromPlane;
+// [_groupPlatoon, _plane, _backPack, _jumpIntervalTime] call ETCS_fnc_ejectFromPlane;
 // 
 // Note: This function should be called when the plane is in the correct position for the para drop.
-fnc_ejectFromPlane = {
+ETCS_fnc_ejectFromPlane = {
 	private _groupPlatoon = _this select 0;
 	private _plane = _this select 1;
 	private _backPack = _this select 2;
@@ -457,11 +457,11 @@ fnc_ejectFromPlane = {
 // Returns: None
 // 
 // Example usage:
-// [_group] call fnc_waitUntilGroupOnGround;
+// [_group] call ETCS_fnc_waitUntilGroupOnGround;
 // 
 // Note: This function is useful for ensuring that a majority of the group has safely landed before proceeding with further actions.
 // The function considers a unit to be on the ground if its altitude is less than 3 meters above sea level.
-fnc_waitUntilGroupOnGround = {
+ETCS_fnc_waitUntilGroupOnGround = {
 	params ["_grp"];
 	waitUntil {
 		sleep 1;
@@ -482,10 +482,10 @@ fnc_waitUntilGroupOnGround = {
 // Returns: true if the group was successfully loaded into the plane, false otherwise.
 // 
 // Example usage:
-// [_plane, _group] call fnc_loadGroupToPlane;
+// [_plane, _group] call ETCS_fnc_loadGroupToPlane;
 // 
 // Note: Ensure that the plane is alive and has enough free seats before calling this function.
-fnc_loadGroupToPlane = {
+ETCS_fnc_loadGroupToPlane = {
 	params ["_plane", "_group"];
 	if (isNull _plane || isNull _group || !alive _plane) exitWith {
 		false
