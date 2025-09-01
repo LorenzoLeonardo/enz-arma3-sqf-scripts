@@ -8,24 +8,6 @@ private _callRetries = _this param [2, 3];
 private _originalGroupTemplate = [_group] call fnc_saveOriginalGroupTemplates;
 private _totalUnits = count units _group;
 
-fnc_getQuietUnit = {
-	params ["_group"];
-
-	private _leader = leader _group;
-	private _quietUnit = objNull;
-
-	{
-		if ((alive _x) && (_x != _leader) && !(_x getVariable ["isRadioBusy", false])) exitWith {
-			_quietUnit = _x;
-		};
-	} forEach (units _group);
-
-	if (isNull _quietUnit) then {
-		_quietUnit = leader _group;
-	};
-	_quietUnit
-};
-
 missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 	params ["_requestor", "_responder", "_groupToBeDropped", "_phase"];
 
