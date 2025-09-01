@@ -160,21 +160,22 @@ fnc_bleedoutTimer = {
 	params ["_injured"];
 	private _startTime = time;
 
+	// Wait until unit dies, is revived, or bleedout time expires
 	waitUntil {
 		sleep 1;
-		!alive _injured                                    // Dead
-		|| ([_injured] call fnc_isRevived)       // Revived
-		|| (lifeState _injured != "INCAPACITATED")         // No longer incapacitated
-		|| ((time - _startTime) >= BLEEDOUT_TIME)          // Timer expired
+		!alive _injured
+		|| (lifeState _injured != "INCAPACITATED")
+		|| ((time - _startTime) >= BLEEDOUT_TIME);
 	};
 
-	// exit if revived or dead
-	if (!alive _injured || ([_injured] call fnc_isRevived)) exitWith {};
-
-	// if still incapacitated after bleedout time, kill them
-	if (lifeState _injured == "INCAPACITATED" && !([_injured] call fnc_isBeingRevived)) then {
+	// Determine what happened
+	if (alive _injured && (lifeState _injured == "INCAPACITATED") && ((time - _startTime) >= BLEEDOUT_TIME)) then {
+		// Bleedout expired → kill the unit
 		[_injured, false] call fnc_setReviveProcess;
-		_injured setDamage 1; // Bleed out
+		_injured setDamage 1;
+	} else {
+		// Unit was revived or died naturally → just stop revive process
+		[_injured, false] call fnc_setReviveProcess;
 	};
 };
 
