@@ -6,7 +6,7 @@
 // 
 // Description:
 // This script implements a fully AI-driven revive system for incapacitated units, allowing friendly (and in some
-// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection, 
+// cases enemy) AI to revive downed soldiers under combat conditions. It includes intelligent medic selection,  
 // realistic bleedout timers, headshot and explosive damage handling, and dynamic prioritization of medics
 // based on proximity, threat levels, and availability.
 // 
