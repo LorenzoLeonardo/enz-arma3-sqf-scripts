@@ -384,7 +384,8 @@ fnc_torsoDamageHandling = {
 	(_vestClass find "carrier" != -1) ||
 	(_vestClass find "6b" != -1) ||
 	(_vestClass find "spetsnaz" != -1) ||
-	(_vestClass find "cup_v" == 0));
+	(_vestClass find "cup_v" == 0) ||
+	(_vestClass find "v_" == 0));
 
 	private _adjustedSurviveChance = if (_isVest) then {
 		_baseSurviveChance + _vestBonus
