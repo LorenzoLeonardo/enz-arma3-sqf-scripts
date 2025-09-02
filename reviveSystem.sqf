@@ -69,7 +69,7 @@ ETCS_fnc_findNearestUnit = {
 	private _nearestDist = 1e10;  // a very large distance
 
 	{
-		private _dist = _pos distance2D _x;
+		private _dist = _pos distance _x;
 		if (_dist < _nearestDist) then {
 			_nearestDist = _dist;
 			_nearestUnit = _x;
@@ -131,7 +131,7 @@ ETCS_fnc_getBestMedic = {
 	private _nearestMedicDist = if (isNull _nearestMedic) then {
 		1e10
 	} else {
-		_injured distance2D _nearestMedic
+		_injured distance _nearestMedic
 	};
 
 	// find nearest enemy
@@ -142,7 +142,7 @@ ETCS_fnc_getBestMedic = {
 	private _nearestEnemyDist = if (isNull _nearestEnemy) then {
 		1e10
 	} else {
-		_injured distance2D _nearestEnemy
+		_injured distance _nearestEnemy
 	};
 
 	// Enemy revival logic if friendlies too far
@@ -186,7 +186,7 @@ ETCS_fnc_bleedoutTimer = {
 ETCS_fnc_getDynamicTimeout = {
 	params ["_medic", "_injured"];
 
-	private _pathDist = _medic distance2D _injured;
+	private _pathDist = _medic distance _injured;
 
 	// 10 sec base + (distance / 3 m/s), capped at 90 sec
 	time + ((10 max (_pathDist / 3)) min 90)
@@ -261,13 +261,13 @@ ETCS_fnc_waitForMedicArrival = {
 		sleep 1;
 		(!alive _injured)
 		|| ([_injured] call ETCS_fnc_isRevived)
-		|| (_medic distance2D _injured < REVIVE_RANGE)
+		|| (_medic distance _injured < REVIVE_RANGE)
 		|| (!alive _medic)
 		|| (lifeState _medic == "INCAPACITATED")
 		|| (time > _timeout)
 	};
 
-	(_medic distance2D _injured) < REVIVE_RANGE
+	(_medic distance _injured) < REVIVE_RANGE
 };
 
 // ===============================
@@ -584,7 +584,7 @@ ETCS_fnc_reviveLoop = {
 		// lock injured and medic
 		[_medic, _injured] call ETCS_fnc_lockReviveState;
 
-		_medic doMove (position _injured);
+		_medic doMove (getPosATL _injured);
 
 		 // Wait for medic arrival
 		private _arrived = [_medic, _injured] call ETCS_fnc_waitForMedicArrival;
