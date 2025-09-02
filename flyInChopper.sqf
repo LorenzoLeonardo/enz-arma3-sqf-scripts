@@ -45,11 +45,28 @@ ETCS_fnc_getEnemyCount = {
 	})
 };
 
+ETCS_fnc_assignUniqueGroupId = {
+	params ["_baseId"];
+
+	private _counter = 1;
+	private _newId = format["%1 (%2)", _baseId, _counter];
+	// Loop until we find an unused ID
+	while {
+		{
+			groupId _x == _newId
+		} count allGroups > 0
+	} do {
+		_newId = format["%1 (%2)", _baseId, _counter];
+		_counter = _counter + 1;
+	};
+	_newId
+};
+
 ETCS_fnc_removeCargoFromGroup = {
 	params ["_chopper"];
 	private _crew = (crew _chopper);
 	private _replacementGrp = createGroup (side _chopper);
-	_replacementGrp setGroupIdGlobal ["Replacements"];
+	_replacementGrp setGroupIdGlobal [["Replacements"] call ETCS_fnc_assignUniqueGroupId];
 	{
 		if (tolower((assignedVehicleRole _x) select 0) == "cargo") then {
 			[_x] joinSilent _replacementGrp;
