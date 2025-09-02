@@ -832,7 +832,8 @@ addMissionEventHandler ["Draw3D", {
 	};
 
 	private _incap = allUnits select {
-		lifeState _x == "INCAPACITATED"
+		lifeState _x == "INCAPACITATED" &&
+		side (group _x) == side player
 	};
 	{
 		[_x] call ETCS_fnc_drawBleedOutTime;
