@@ -408,6 +408,9 @@ ETCS_fnc_startMonitoringHeliStatus = {
 		} count _heliUnits == 0) || !(alive _chopper) || !(canMove _chopper)
 	};
 	_chopper setDamage 1;
+	// Attached unlimited fire
+	private _smoker = "test_EmptyObjectForFireBig" createVehicle (position _chopper);
+	_smoker attachTo [_chopper, [0, 1.5, 0]];
 	deleteGroup _group;
 
 	private _markerName = [
