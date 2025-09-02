@@ -159,7 +159,7 @@ ETCS_fnc_getBestMedic = {
 ETCS_fnc_bleedoutTimer = {
 	params ["_injured"];
 	private _startTime = time;
-
+	_injured setVariable ["bleedoutTime", time + BLEEDOUT_TIME, true];
 	// Wait until unit dies, is revived, or bleedout time expires
 	waitUntil {
 		sleep 1;
@@ -177,6 +177,7 @@ ETCS_fnc_bleedoutTimer = {
 		// Unit was revived or died naturally → just stop revive process
 		[_injured, false] call ETCS_fnc_setReviveProcess;
 	};
+	_injured setVariable ["bleedoutTime", -1, true];
 };
 
 // ===============================
@@ -734,11 +735,54 @@ ETCS_fnc_handleDamage = {
 	}];
 } forEach units _group;
 
+ETCS_fnc_drawBleedOutTime = {
+	params ["_injured"];
+	private _wpPos = getPosATL _injured;
+
+	// Read bleedout time
+	private _deadline = _injured getVariable ["bleedoutTime", -1];
+	private _timeLeft = if (_deadline > 0) then {
+		(_deadline - time) max 0
+	} else {
+		-1
+	};
+
+	// format minutes:seconds
+	private _timeText = "";
+	if (_timeLeft >= 0) then {
+		private _mins = floor (_timeLeft / 60);
+		private _secs = floor (_timeLeft % 60);
+		_timeText = format ["%1:%2", _mins, if (_secs < 10) then {
+			format ["0%1", _secs]
+		} else {
+			str _secs
+		}];
+	};
+	// 1 meter above the unit
+	_wpPos set [2, (_wpPos select 2) + 0.5];
+	// Draw (red color)
+	drawIcon3D [
+		"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+		[1, 0, 0, 1], // <-- RED
+		_wpPos,
+		0.5, 0.5,
+		180,
+		_timeText,
+		2,
+		0.035,
+		"PuristaSemiBold",
+		"center",
+		true,
+		0,
+		-0.04
+	];
+};
+
 addMissionEventHandler ["Draw3D", {
 	// --- case 1: player is reviver
 	private _injured = player getVariable ["injuredToRevive", objNull];
 	if (!isNull _injured && alive _injured) then {
-		private _wpPos = getPos _injured;
+		private _wpPos = getPosATL _injured;
 		private _wpText = format ["Revive Injured (%1 m)", round (player distance _wpPos)];
 
 		drawIcon3D [
@@ -786,4 +830,11 @@ addMissionEventHandler ["Draw3D", {
 			-0.04
 		];
 	};
+
+	private _incap = allUnits select {
+		lifeState _x == "INCAPACITATED"
+	};
+	{
+		[_x] call ETCS_fnc_drawBleedOutTime;
+	} forEach _incap;
 }];
