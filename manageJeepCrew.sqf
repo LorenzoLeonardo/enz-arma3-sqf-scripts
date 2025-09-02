@@ -106,6 +106,33 @@ ETCS_fnc_assignReplacement = {
 	_vehicle setVariable ["assignedUnits", _assignedUnits, true]; // public so MP safe
 };
 
+ETCS_fnc_startMonitoringVehicle = {
+	params ["_vehicle"];
+	private _group = (group _vehicle);
+	private _groupID = groupId _group;
+	waitUntil {
+		!(alive _vehicle) || !(canMove _vehicle)
+	};
+	{
+		if (alive _x) then {
+			unassignVehicle _x;
+			_x action ["Eject", _vehicle];
+		}
+	} forEach (units _group);
+	_vehicle setDamage 1;
+
+	// Attached unlimited fire
+	private _smoker = "test_EmptyObjectForFireBig" createVehicle (position _vehicle);
+	_smoker attachTo [_vehicle, [0, 1.5, 0]];
+
+	private _markerName = [
+		getPosATL _vehicle,
+		format["APC Destroyed Here: %1", _groupID],
+		"mil_unknown",
+		"ColorWEST"
+	] call ETCS_fnc_createMarker;
+};
+
 // =============================
 // EVENT HANDLERS
 // =============================
@@ -143,3 +170,5 @@ _vehicle addEventHandler ["Killed", {
 	params ["_veh"];
 	_veh setVariable ["assignedUnits", [], true];
 }];
+
+[_vehicle] spawn ETCS_fnc_startMonitoringVehicle;
