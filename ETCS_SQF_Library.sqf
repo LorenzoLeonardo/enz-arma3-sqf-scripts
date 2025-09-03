@@ -4,26 +4,6 @@
 // Contact: enzotechcomputersolutions@gmail.com
 // ==============================================================================================================
 
-// ================================================================================
-// Callback name for artillery fire status
-#define ETCS_ARTILLERY_FIRE_STATUS_CALLBACK "ETCS_Callback_artilleryFireStatus"
-// Callback name for artillery fire marker
-#define ETCS_ARTILLERY_MAP_MARKER_CALLBACK "ETCS_Callback_artilleryFireMapMarker"
-
-// Global variable to set/get if Unit is still on radio
-#define ETCS_VAR_IS_RADIO_BUSY "ETCS_isUnitRadioBusy"
-// Artillery Request Phase
-#define ETCS_GUN_BARRAGE_PHASE_REQUEST 1
-// Artillery Shot Phase
-#define ETCS_GUN_BARRAGE_PHASE_SHOT 2
-// Artillery Splash Phase
-#define ETCS_GUN_BARRAGE_PHASE_SPLASH 3
-// Artillery Done Phase
-#define ETCS_GUN_BARRAGE_PHASE_DONE 4
-// Artillery Invalid Range
-#define ETCS_GUN_BARRAGE_PHASE_INVALID_RANGE 5
-// ================================================================================
-
 // =======================================================================
 // custom assign group name. if same name exist the format will be
 // incrementing number inside a parenthesis.
@@ -66,42 +46,24 @@ ETCS_fnc_clearWaypoints = {
 };
 
 // =======================================================================
-// compute the dyanamic accuracy radius
+// create waypoints for a group
+// private _waypoint = [_group, [1000, 2000, 0], "NORMAL", "MOVE", "DIAMOND", "AWARE", 0] call ETCS_fnc_createWaypoint;
 // =======================================================================
-ETCS_fnc_dynamicAccuracyRadius = {
-	params ["_gun", "_accuracyRadius"];
-	private _dynamicAccuracyRadius = 0;
+ETCS_fnc_createWaypoint = {
+	private _group = _this select 0;
+	private _destinationPosition = _this select 1;
+	private _wayPointSpeed = _this select 2;
+	private _wayPointType = _this select 3;
+	private _wayPointFormation = _this select 4;
+	private _wayPointBehaviour = _this select 5;
+	private _wayPointNumber = _this select 6;
+	private _teamWP = _group addWaypoint [_destinationPosition, _wayPointNumber];
+	_teamWP setWaypointSpeed _wayPointSpeed;
+	_teamWP setWaypointType _wayPointType;
+	_teamWP setWaypointFormation _wayPointFormation;
+	_teamWP setWaypointBehaviour _wayPointBehaviour;
 
-	if (_accuracyRadius <= 0) then {
-		// only auto-scale if not manually specified
-		private _gunner = gunner _gun;
-		private _skill = if (!isNull _gunner) then {
-			skill _gunner
-		} else {
-			0.5 // default if unmanned
-		};
-
-		// Weapon-type specific scatter ranges
-		private _maxScatter = 200;  // worst accuracy
-		private _minScatter = 5;    // best accuracy
-		if (_gun isKindOf "StaticMortar") then {
-			_minScatter = 8;   // skilled mortar team
-			_maxScatter = 80;  // poorly trained / max range
-		} else {
-			_minScatter = 15;  // skilled artillery crew
-			_maxScatter = 150; // poor crew / max range
-		};
-
-		// skill reduces scatter (linear mapping)
-		private _baseScatter = _maxScatter - (_skill * (_maxScatter - _minScatter));
-
-		// Add random human imperfection (±20%)
-		private _variation = random [0.8, 1, 1.2];
-		_dynamicAccuracy = _baseScatter * _variation;
-	} else {
-		_dynamicAccuracyRadius = _accuracyRadius; // use specified radius
-	};
-	_dynamicAccuracyRadius
+	_teamWP
 };
 
 // =======================================================================
@@ -127,111 +89,6 @@ ETCS_fnc_findNearestUnit = {
 	} forEach _candidates;
 
 	_nearestUnit
-};
-
-// =======================================================================
-// find a valid replacement matching any of the allowed role types
-// =======================================================================
-ETCS_fnc_findReplacement = {
-	params ["_unit", "_veh", "_allowedRoles"]; // e.g., ["cargo", "turret"]
-
-	private _r = objNull;
-	{
-		if (([_x] call ETCS_fnc_isUnitGood) && _x != _unit &&
-		(toLower ((assignedVehicleRole _x) select 0)) in _allowedRoles) exitWith {
-			_r = _x
-		};
-	} forEach (crew _veh);
-
-	_r
-};
-
-// =======================================================================
-// fire the gun at a target position with optional accuracy radius
-// =======================================================================
-ETCS_fnc_fireArtillery = {
-	params ["_caller", "_gun", "_targetPos", "_ammoType", ["_rounds", 3], ["_accuracyRadius", 0]];
-
-	private _ammoLeft = [_gun, _ammoType] call ETCS_fnc_getAmmoCount;
-	if (!canFire _gun || (_ammoLeft == 0)) exitWith {
-		false
-	};
-
-	if (_ammoLeft < _rounds) then {
-		_rounds = _ammoLeft;
-	};
-
-	private _finalPos = _targetPos;
-	// Create temporary "X" marker
-	private _marker = [_caller, _finalPos] call (_gun getVariable ETCS_ARTILLERY_MAP_MARKER_CALLBACK);
-
-	if (_accuracyRadius > 0) then {
-		private _angle = random 360;
-		private _dist = random _accuracyRadius;
-		_finalPos = _targetPos vectorAdd [(sin _angle * _dist), (cos _angle * _dist), 0];
-	};
-	// Choose a responder (gunner or commander)
-	private _base = [group _gun] call ETCS_fnc_getQuietUnit;
-	private _grid = mapGridPosition _finalPos;
-
-	// --- 1. Standby call ---
-	[_caller, _base, ETCS_GUN_BARRAGE_PHASE_REQUEST, _grid] call (_gun getVariable ETCS_ARTILLERY_FIRE_STATUS_CALLBACK);
-
-	// --- 2. fire the artillery ---
-	private _canReach = _finalPos inRangeOfArtillery [[_gun], _ammoType];
-	if (!_canReach) exitWith {
-		[_caller, _base, ETCS_GUN_BARRAGE_PHASE_INVALID_RANGE] call (_gun getVariable ETCS_ARTILLERY_FIRE_STATUS_CALLBACK);
-		deleteMarker _marker;
-		false
-	};
-
-	// Variable to track for first projectile to hit the ground
-	// to sync when calling "Splash out"
-	_gun setVariable ["ETCS_splashed", false, true];
-	// list of number of shells to hit the ground to sync when
-	// when calling Rounds complete
-	_gun setVariable ["ETCS_firedShells", [], true];
-
-	private _eventIndex = _gun addEventHandler ["Fired", {
-		params ["_unit", "_weapon", "_muzzle", "_mode", "_ammo", "_mag", "_projectile"];
-
-		[_projectile, _unit] spawn {
-			params ["_proj", "_unit"];
-
-			waitUntil {
-				(isNull _proj) || !(alive _proj)
-			};
-			if !(_unit getVariable ["ETCS_splashed", false]) then {
-				_unit setVariable ["ETCS_splashed", true, true];
-			};
-
-			private _shells = _unit getVariable ["ETCS_firedShells", []];
-			_shells pushBack _proj;
-			_unit setVariable ["ETCS_firedShells", _shells];
-		};
-	}];
-	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
-
-	// --- 3. Shot call ---
-	[_caller, _base, ETCS_GUN_BARRAGE_PHASE_SHOT] call (_gun getVariable ETCS_ARTILLERY_FIRE_STATUS_CALLBACK);
-
-	// call splash after the first shell hits the ground.
-	waitUntil {
-		_gun getVariable ["ETCS_splashed", false]
-	};
-	[_caller, _base, ETCS_GUN_BARRAGE_PHASE_SPLASH] call (_gun getVariable ETCS_ARTILLERY_FIRE_STATUS_CALLBACK);
-
-	// call rounds complete until all projectiles hit the ground.
-	waitUntil {
-		private _shells = _gun getVariable ["ETCS_firedShells", []];
-		(count _shells == _rounds)
-	};
-	[_caller, _base, ETCS_GUN_BARRAGE_PHASE_DONE] call (_gun getVariable ETCS_ARTILLERY_FIRE_STATUS_CALLBACK);
-
-	deleteMarker _marker;
-
-	_gun removeEventHandler["Fired", _eventIndex];
-	true
 };
 
 // =======================================================================
@@ -421,6 +278,18 @@ ETCS_fnc_getNearEnemies = {
 };
 
 // =======================================================================
+// get friendlies near the observer given the distance from observer to
+// the enemies.
+// =======================================================================
+ETCS_fnc_getNearFriendlies = {
+	params ["_observer", "_distance"];
+	private _observerSide = [_observer] call ETCS_fnc_getObserverSide;
+	((getPos _observer) nearEntities ["Man", _distance]) select {
+		![_x, _observerSide] call ETCS_fnc_isHostile
+	}
+};
+
+// =======================================================================
 // get the side of the observer, preferring its crew if it is inside
 // a vehicle, fallback to object side
 // =======================================================================
@@ -460,91 +329,6 @@ ETCS_fnc_getQuietUnit = {
 };
 
 // =======================================================================
-// get average enemy positions
-// =======================================================================
-ETCS_fnc_getAverageEnemyPos = {
-	params ["_sideEnemy"];
-	private _enemies = allUnits select {
-		side _x == _sideEnemy && alive _x
-	};
-	private _enemyPos = [0, 0, 0];
-	{
-		_enemyPos = _enemyPos vectorAdd (getPosATL _x)
-	} forEach _enemies;
-
-	if ((count _enemies) > 0) then {
-		_enemyPos vectorMultiply (1 / (count _enemies))
-	} else {
-		[0, 0, 0]
-	}
-};
-
-// =======================================================================
-// generate a random position near average
-// =======================================================================
-ETCS_fnc_getRandomPosNearEnemy = {
-	params ["_sideEnemy", ["_radius", 0]]; // default radius = 0
-
-	private _avgPos = [_sideEnemy] call ETCS_fnc_getAverageEnemyPos;
-
-	if (_avgPos isEqualTo [0, 0, 0]) exitWith {
-		[0, 0, 0]
-	}; // no enemies
-
-	private _angle = random 360;
-	private _dist = random _radius;
-
-	private _offset = [
-		_dist * cos _angle,
-		_dist * sin _angle,
-		0
-	];
-
-	_avgPos vectorAdd _offset
-};
-
-// =======================================================================
-// driver down → try turret first (keep guns manned), then cargo
-// =======================================================================
-ETCS_fnc_handleDriverDown = {
-	params ["_unit", "_veh"];
-
-	private _replacement = [_unit, _veh, ["turret", "cargo"]] call ETCS_fnc_findReplacement;
-	if (isNull _replacement) exitWith {};
-
-	private _repRole = toLower ((assignedVehicleRole _replacement) select 0);
-
-	switch (_repRole) do {
-		case "turret": {
-			// Turret path comes from the REPLACEMENT (they vacate that seat)
-			private _turretPath = (assignedVehicleRole _replacement) select 1;
-			// New positions: UNIT → that turret seat, REPLACEMENT → driver
-			[_unit, _replacement, _veh, "turret", "driver", _turretPath, []] call ETCS_fnc_swapPositions;
-		};
-		case "cargo": {
-			// New positions: UNIT → cargo, REPLACEMENT → driver
-			[_unit, _replacement, _veh, "cargo", "driver", [], []] call ETCS_fnc_swapPositions;
-		};
-	};
-};
-
-// =======================================================================
-// Turret down → pull from cargo into THIS unit's turret seat
-// =======================================================================
-ETCS_fnc_handleTurretDown = {
-	params ["_unit", "_veh"];
-
-	private _replacement = [_unit, _veh, ["cargo"]] call ETCS_fnc_findReplacement;
-	if (isNull _replacement) exitWith {};
-
-	// Turret path from the UNIT (the seat that just got vacated)
-	private _unitTurretPath = (assignedVehicleRole _unit) select 1;
-
-	// New positions: UNIT → cargo, REPLACEMENT → that turret seat
-	[_unit, _replacement, _veh, "cargo", "turret", [], _unitTurretPath] call ETCS_fnc_swapPositions;
-};
-
-// =======================================================================
 // Check if two units are hostile
 // =======================================================================
 ETCS_fnc_isHostile = {
@@ -575,26 +359,6 @@ ETCS_fnc_isUnitGood = {
 // =======================================================================
 ETCS_fnc_isUnitRadioBusy = {
 	_x getVariable [ETCS_VAR_IS_RADIO_BUSY, false]
-};
-
-// =======================================================================
-// move a unit to a specific role (optionally a turret seat path)
-// =======================================================================
-ETCS_fnc_moveToRole = {
-	params ["_man", "_veh", "_role", "_seatPath"];
-
-	switch (toLower _role) do {
-		case "driver": {
-			_man moveInDriver _veh
-		};
-		case "cargo": {
-			_man moveInCargo _veh
-		};
-		case "turret": {
-			_man moveInTurret [_veh, _seatPath]
-		};
-		default {};
-	};
 };
 
 // =======================================================================
@@ -650,24 +414,4 @@ ETCS_fnc_spawnSmoke = {
 
 		_proj setVelocity [0, 0, -100];
 	};
-};
-
-// =======================================================================
-// Generic swap: define BOTH new roles (and seats if turret)
-// =======================================================================
-ETCS_fnc_swapPositions = {
-	// _unit = the one going down; _replacement = the one taking over
-	params ["_unit", "_replacement", "_veh", "_unitNewRole", "_replacementNewRole", "_unitTurretSeat", "_replacementTurretSeat"];
-
-	// Evict both, then place them in target seats
-	{
-		unassignVehicle _x;
-		moveOut _x;
-	} forEach [_unit, _replacement];
-
-	// Keep team cohesion
-	[_replacement] joinSilent (group _unit);
-	// Place them
-	[_unit, _veh, _unitNewRole, _unitTurretSeat] call ETCS_fnc_moveToRole;
-	[_replacement, _veh, _replacementNewRole, _replacementTurretSeat] call ETCS_fnc_moveToRole;
 };
