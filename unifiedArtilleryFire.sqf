@@ -365,93 +365,6 @@ ETCS_fnc_getIndexOfGroup = {
 	};
 };
 
-// =========================
-// Callbacks
-// =========================
-
-// if this callback is not defined, there will be no radio sounds.
-// The artillery/mortar will continue to do its job
-missionNamespace setVariable [GUN_FIRE_CALLBACK, {
-	params ["_requestor", "_responder", "_phase", "_grid"];
-	private _index = [group _requestor] call ETCS_fnc_getIndexOfGroup;
-
-	_requestor setVariable ["isRadioBusy", true];
-	_responder setVariable ["isRadioBusy", true];
-	switch (_phase) do {
-		case GUN_BARRAGE_PHASE_REQUEST: {
-			private _request = selectRandom [
-				format ["ArtyRequest%1", _index select 0],
-				format ["CUPArtyRequestHE%1", _index select 0],
-				format ["CUPArtyRequestWP%1", _index select 0]
-			];
-			_requestor sideRadio _request;
-			sleep 3;
-		};
-		case GUN_BARRAGE_PHASE_SHOT : {
-			private _response = selectRandom [
-				format["ArtyResponse%1", _index select 1],
-				format["ArtyResponse%1_%1", _index select 1, _index select 1],
-				format["ArtyResponse%1_%1_%1", _index select 1, _index select 1, _index select 1],
-				format["ArtyResponse%1_%1_%1_%1", _index select 1, _index select 1, _index select 1, _index select 1]
-			];
-			_responder sideRadio _response;
-			sleep 2;
-		};
-		case GUN_BARRAGE_PHASE_SPLASH : {
-			_responder sideRadio format["ArtySplash%1", _index select 1];
-			sleep 1;
-		};
-		case GUN_BARRAGE_PHASE_DONE : {
-			_responder sideRadio format["ArtyComplete%1", _index select 1];
-			sleep 1;
-		};
-		case GUN_BARRAGE_PHASE_INVALID_RANGE :{
-			_responder sideRadio format["ArtyRangeError%1", _index select 1];
-			sleep 3;
-		};
-		default {
-			systemChat format ["Invalid artillery call phase: %1", _phase];
-		};
-	};
-	_requestor setVariable ["isRadioBusy", false];
-	_responder setVariable ["isRadioBusy", false];
-}];
-
-missionNamespace setVariable [GUN_MARKER_CALLBACK, {
-	params ["_requestor", "_targetPos"];
-
-	private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-	private _marker = createMarker [_markerId, _targetPos];
-	_marker setMarkerShape "ICON";
-	_marker setMarkerType "mil_warning";
-
-	switch (toLower groupId (group _requestor)) do {
-		case "alpha": {
-			_marker setMarkerColor "ColorBlue";
-		};
-		case "bravo": {
-			_marker setMarkerColor "ColorRed";
-		};
-		case "charlie": {
-			_marker setMarkerColor "ColorGreen";
-		};
-		case "delta": {
-			_marker setMarkerColor "ColorYellow";
-		};
-		case "echo": {
-			_marker setMarkerColor "ColorOrange";
-		};
-		default {
-			_marker setMarkerColor "ColorWhite";
-		};
-	};
-	_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
-	[_targetPos] call ETCS_fnc_spawnSmoke;
-
-	_marker
-}];
-
-// =========================
 // fire the gun at a target position with optional accuracy radius
 // =========================
 ETCS_fnc_fireGun = {
@@ -467,7 +380,7 @@ ETCS_fnc_fireGun = {
 
 	private _finalPos = _targetPos;
 	// Create temporary "X" marker
-	private _marker = [_caller, _finalPos] call (missionNamespace getVariable GUN_MARKER_CALLBACK);
+	private _marker = [_caller, _finalPos] call (_gun getVariable GUN_MARKER_CALLBACK);
 
 	if (_accuracyRadius > 0) then {
 		private _angle = random 360;
@@ -479,12 +392,12 @@ ETCS_fnc_fireGun = {
 	private _grid = mapGridPosition _finalPos;
 
 	// --- 1. Standby call ---
-	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (_gun getVariable GUN_FIRE_CALLBACK);
 
 	// --- 2. fire the artillery ---
 	private _canReach = _finalPos inRangeOfArtillery [[_gun], _ammoType];
 	if (!_canReach) exitWith {
-		[_caller, _base, GUN_BARRAGE_PHASE_INVALID_RANGE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
+		[_caller, _base, GUN_BARRAGE_PHASE_INVALID_RANGE] call (_gun getVariable GUN_FIRE_CALLBACK);
 		deleteMarker _marker;
 		false
 	};
@@ -517,20 +430,20 @@ ETCS_fnc_fireGun = {
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
-	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (_gun getVariable GUN_FIRE_CALLBACK);
 
 	// call splash after the first shell hits the ground.
 	waitUntil {
 		_gun getVariable ["splashed", false]
 	};
-	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (_gun getVariable GUN_FIRE_CALLBACK);
 
 	// call rounds complete until all projectiles hit the ground.
 	waitUntil {
 		private _shells = _gun getVariable ["firedShells", []];
 		(count _shells == _rounds)
 	};
-	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (_gun getVariable GUN_FIRE_CALLBACK);
 
 	deleteMarker _marker;
 
@@ -891,11 +804,100 @@ ETCS_fnc_handleMapMode = {
 };
 
 // =========================
+// Callbacks
+// =========================
+ETCS_fnc_registerArtilleryCallBacks = {
+	params ["_unit"];
+	// if this callback is not defined, there will be no radio sounds.
+	// The artillery/mortar will continue to do its job
+	_unit setVariable [GUN_FIRE_CALLBACK, {
+		params ["_requestor", "_responder", "_phase", "_grid"];
+		private _index = [group _requestor] call ETCS_fnc_getIndexOfGroup;
+
+		_requestor setVariable ["isRadioBusy", true];
+		_responder setVariable ["isRadioBusy", true];
+		switch (_phase) do {
+			case GUN_BARRAGE_PHASE_REQUEST: {
+				private _request = selectRandom [
+					format ["ArtyRequest%1", _index select 0],
+					format ["CUPArtyRequestHE%1", _index select 0],
+					format ["CUPArtyRequestWP%1", _index select 0]
+				];
+				_requestor sideRadio _request;
+				sleep 3;
+			};
+			case GUN_BARRAGE_PHASE_SHOT : {
+				private _response = selectRandom [
+					format["ArtyResponse%1", _index select 1],
+					format["ArtyResponse%1_%1", _index select 1, _index select 1],
+					format["ArtyResponse%1_%1_%1", _index select 1, _index select 1, _index select 1],
+					format["ArtyResponse%1_%1_%1_%1", _index select 1, _index select 1, _index select 1, _index select 1]
+				];
+				_responder sideRadio _response;
+				sleep 2;
+			};
+			case GUN_BARRAGE_PHASE_SPLASH : {
+				_responder sideRadio format["ArtySplash%1", _index select 1];
+				sleep 1;
+			};
+			case GUN_BARRAGE_PHASE_DONE : {
+				_responder sideRadio format["ArtyComplete%1", _index select 1];
+				sleep 1;
+			};
+			case GUN_BARRAGE_PHASE_INVALID_RANGE :{
+				_responder sideRadio format["ArtyRangeError%1", _index select 1];
+				sleep 3;
+			};
+			default {
+				systemChat format ["Invalid artillery call phase: %1", _phase];
+			};
+		};
+		_requestor setVariable ["isRadioBusy", false];
+		_responder setVariable ["isRadioBusy", false];
+	}];
+
+	_unit setVariable [GUN_MARKER_CALLBACK, {
+		params ["_requestor", "_targetPos"];
+
+		private _markerId = format ["artilleryMarker_%1", diag_tickTime];
+		private _marker = createMarker [_markerId, _targetPos];
+		_marker setMarkerShape "ICON";
+		_marker setMarkerType "mil_warning";
+
+		switch (toLower groupId (group _requestor)) do {
+			case "alpha": {
+				_marker setMarkerColor "ColorBlue";
+			};
+			case "bravo": {
+				_marker setMarkerColor "ColorRed";
+			};
+			case "charlie": {
+				_marker setMarkerColor "ColorGreen";
+			};
+			case "delta": {
+				_marker setMarkerColor "ColorYellow";
+			};
+			case "echo": {
+				_marker setMarkerColor "ColorOrange";
+			};
+			default {
+				_marker setMarkerColor "ColorWhite";
+			};
+		};
+		_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
+		[_targetPos] call ETCS_fnc_spawnSmoke;
+
+		_marker
+	}];
+};
+
+// =========================
 // Main Script Entry
 // =========================
 switch (_mode) do {
 	case MODE_AUTO;
 	case MODE_SCOUT: {
+		[_gun] call ETCS_fnc_registerArtilleryCallBacks;
 		[
 			_mode,
 			_gun,
@@ -912,6 +914,7 @@ switch (_mode) do {
 	};
 
 	case MODE_MAP: {
+		[_gun] call ETCS_fnc_registerArtilleryCallBacks;
 		[
 			_gun,
 			_rounds,
