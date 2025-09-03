@@ -401,10 +401,10 @@ ETCS_fnc_waitUntilReachDropzone = {
 // Returns: None
 // 
 // Example usage:
-// [_paraPlayer, _backPack] call func_reloadInventoryWhenHitGround;
+// [_paraPlayer, _backPack] call ETCS_fnc_reloadInventoryWhenHitGround;
 // 
 // Note: This function should be called after the paratrooper has been ejected from the plane and is expected to land safely.
-func_reloadInventoryWhenHitGround = {
+ETCS_fnc_reloadInventoryWhenHitGround = {
 	private _paraPlayer = _this select 0;
 	private _backPack = _this select 1;
 
@@ -443,7 +443,7 @@ ETCS_fnc_ejectFromPlane = {
 		_x allowDamage false;
 		unassignVehicle _x;
 		moveOut _x;
-		[_x, _backPack] spawn func_reloadInventoryWhenHitGround;
+		[_x, _backPack] spawn ETCS_fnc_reloadInventoryWhenHitGround;
 		sleep _jumpIntervalTime;
 	} forEach _groupArray;
 };
