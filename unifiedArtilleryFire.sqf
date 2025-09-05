@@ -42,6 +42,7 @@
 // [this, group, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode without specified accuracy radius, used gunner's skill to determine scatter)
 // [this, player, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (MAP mode without specified accuracy radius, used gunner's skill to determine scatter)
 // ==============================================================================================================
+#include "ETCS_SQF_Library.sqf"
 
 // =====================
 // Definitions
@@ -814,8 +815,6 @@ ETCS_fnc_registerArtilleryCallBacks = {
 		params ["_requestor", "_responder", "_phase", "_grid"];
 		private _index = [group _requestor] call ETCS_fnc_getIndexOfGroup;
 
-		_requestor setVariable ["isRadioBusy", true];
-		_responder setVariable ["isRadioBusy", true];
 		switch (_phase) do {
 			case GUN_BARRAGE_PHASE_REQUEST: {
 				private _request = selectRandom [
@@ -823,8 +822,7 @@ ETCS_fnc_registerArtilleryCallBacks = {
 					format ["CUPArtyRequestHE%1", _index select 0],
 					format ["CUPArtyRequestWP%1", _index select 0]
 				];
-				_requestor sideRadio _request;
-				sleep 3;
+				[_requestor, _request, 3] call ETCS_fnc_callSideRadio;
 			};
 			case GUN_BARRAGE_PHASE_SHOT : {
 				private _response = selectRandom [
@@ -833,27 +831,21 @@ ETCS_fnc_registerArtilleryCallBacks = {
 					format["ArtyResponse%1_%1_%1", _index select 1, _index select 1, _index select 1],
 					format["ArtyResponse%1_%1_%1_%1", _index select 1, _index select 1, _index select 1, _index select 1]
 				];
-				_responder sideRadio _response;
-				sleep 2;
+				[_responder, _response, 2] call ETCS_fnc_callSideRadio;
 			};
 			case GUN_BARRAGE_PHASE_SPLASH : {
-				_responder sideRadio format["ArtySplash%1", _index select 1];
-				sleep 1;
+				[_responder, format["ArtySplash%1", _index select 1], 1] call ETCS_fnc_callSideRadio;
 			};
 			case GUN_BARRAGE_PHASE_DONE : {
-				_responder sideRadio format["ArtyComplete%1", _index select 1];
-				sleep 1;
+				[_responder, format["ArtyComplete%1", _index select 1], 1] call ETCS_fnc_callSideRadio;
 			};
 			case GUN_BARRAGE_PHASE_INVALID_RANGE :{
-				_responder sideRadio format["ArtyRangeError%1", _index select 1];
-				sleep 3;
+				[_responder, format["ArtyRangeError%1", _index select 1], 3] call ETCS_fnc_callSideRadio;
 			};
 			default {
 				systemChat format ["Invalid artillery call phase: %1", _phase];
 			};
 		};
-		_requestor setVariable ["isRadioBusy", false];
-		_responder setVariable ["isRadioBusy", false];
 	}];
 
 	_unit setVariable [GUN_MARKER_CALLBACK, {
