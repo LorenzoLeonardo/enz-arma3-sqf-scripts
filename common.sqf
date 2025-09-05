@@ -61,7 +61,7 @@ ETCS_fnc_clearWaypoints = {
 
 // =======================================================================
 // create waypoints for a group
-// private _waypoint = [_group, [1000, 2000, 0], "NORMAL", "MOVE", "DIAMOND", "AWARE", 0] call ETCS_fnc_createWaypoint;
+// private _waypoint = [_group, [1000, 2000, 0], "NORMAL", "MOVE", "DIAMOND", "AWARE", 0, "RED"] call ETCS_fnc_createWaypoint;
 // =======================================================================
 ETCS_fnc_createWaypoint = {
 	private _group = _this select 0;
@@ -71,11 +71,13 @@ ETCS_fnc_createWaypoint = {
 	private _wayPointFormation = _this select 4;
 	private _wayPointBehaviour = _this select 5;
 	private _wayPointNumber = _this select 6;
+	private _wayPointCombatMode = _this select 7;
 	private _teamWP = _group addWaypoint [_destinationPosition, _wayPointNumber];
 	_teamWP setWaypointSpeed _wayPointSpeed;
 	_teamWP setWaypointType _wayPointType;
 	_teamWP setWaypointFormation _wayPointFormation;
 	_teamWP setWaypointBehaviour _wayPointBehaviour;
+	_teamWP setWaypointCombatMode _wayPointCombatMode;
 
 	_teamWP
 };
@@ -285,9 +287,9 @@ ETCS_fnc_getEnemyCount = {
 // get the side enemy of the given unit
 // =======================================================================
 ETCS_fnc_getEnemySide = {
-	params ["_chopper"];
+	params ["_vehicle"];
 
-	private _side = side (driver _chopper);
+	private _side = side (driver _vehicle);
 
 	switch (_side) do {
 		case east: {

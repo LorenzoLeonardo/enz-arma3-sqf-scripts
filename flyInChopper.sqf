@@ -2,65 +2,17 @@
 	    flyInChopper.sqf
 	    Usage: [this] execVM "flyInChopper.sqf";
 */
+#include "common.sqf"
 
 private _chopper = _this param [0];
 private _rtbAltitude = _this param [1, 80];
 private _percentEnemyLeft = _this param [2, 0.75];
-
-ETCS_fnc_getEnemySide = {
-	params ["_chopper"];
-
-	private _side = side (driver _chopper);
-
-	switch (_side) do {
-		case east: {
-			west
-		};
-		case west: {
-			east
-		};
-		case independent: {
-			west
-		};
-		case civilian: {
-			east
-		};
-		default {
-			independent
-		};
-	};
-};
-
 private _heliPilot = driver _chopper;
 private _aiPilotGroup = group _heliPilot;
 private _sideEnemy = [_chopper] call ETCS_fnc_getEnemySide;
 private _basePos = getPos _chopper;
 
 _chopper setVariable["basePosition", _basePos, true];
-
-ETCS_fnc_getEnemyCount = {
-	params ["_sideEnemy"];
-	count (allUnits select {
-		side _x == _sideEnemy && alive _x
-	})
-};
-
-ETCS_fnc_assignUniqueGroupId = {
-	params ["_baseId"];
-
-	private _counter = 1;
-	private _newId = format["%1 (%2)", _baseId, _counter];
-	// Loop until we find an unused ID
-	while {
-		{
-			groupId _x == _newId
-		} count allGroups > 0
-	} do {
-		_newId = format["%1 (%2)", _baseId, _counter];
-		_counter = _counter + 1;
-	};
-	_newId
-};
 
 ETCS_fnc_removeCargoFromGroup = {
 	params ["_chopper"];
@@ -115,13 +67,6 @@ ETCS_fnc_getRandomPosNearEnemy = {
 	_avgPos vectorAdd _offset
 };
 
-ETCS_fnc_clearWaypoints = {
-	params ["_group"];
-	{
-		deleteWaypoint _x
-	} forEachReversed waypoints _group;
-};
-
 ETCS_fnc_createMarker = {
 	params ["_target", "_text", "_type", "_color"];
 	private _markerName = format ["airstrikeMarker_%1_%2", diag_tickTime, mapGridPosition _target];
@@ -135,23 +80,6 @@ ETCS_fnc_createMarker = {
 	_markerName
 };
 
-ETCS_fnc_createWaypoint = {
-	private _group = _this select 0;
-	private _destinationPosition = _this select 1;
-	private _wayPointSpeed = _this select 2;
-	private _wayPointType = _this select 3;
-	private _wayPointFormation = _this select 4;
-	private _wayPointBehaviour = _this select 5;
-	private _wayPointNumber = _this select 6;
-	private _teamWP = _group addWaypoint [_destinationPosition, _wayPointNumber];
-	_teamWP setWaypointSpeed _wayPointSpeed;
-	_teamWP setWaypointType _wayPointType;
-	_teamWP setWaypointFormation _wayPointFormation;
-	_teamWP setWaypointBehaviour _wayPointBehaviour;
-	_teamWP setWaypointCombatMode "RED";
-	_teamWP
-};
-
 ETCS_fnc_engageEnemies = {
 	params ["_chopper", "_sideEnemy"];
 
@@ -159,7 +87,7 @@ ETCS_fnc_engageEnemies = {
 	private _aiPilotGroup = group _heliPilot;
 
 	while {
-		(([_sideEnemy] call ETCS_fnc_getEnemyCount) > 0) &&
+		(([_chopper] call ETCS_fnc_getEnemyCount) > 0) &&
 		alive _chopper &&
 		(({
 			alive _x
@@ -179,7 +107,7 @@ ETCS_fnc_engageEnemies = {
 		if (!isNull _target) then {
 			[_aiPilotGroup] call ETCS_fnc_clearWaypoints;
 
-			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "COMBAT", 0] call ETCS_fnc_createWaypoint;
+			[_aiPilotGroup, getPos _target, "FULL", "DESTROY", "DIAMOND", "COMBAT", 0, "RED"] call ETCS_fnc_createWaypoint;
 			private _markerName = [
 				getPos _target,
 				"Air Strike Here!",
@@ -207,11 +135,11 @@ ETCS_fnc_flyInChopper = {
 	// Remove cargo from group
 	[_chopper] call ETCS_fnc_removeCargoFromGroup;
 
-	private _threshHoldCount = floor (([_sideEnemy] call ETCS_fnc_getEnemyCount) * _percentEnemyLeft);
+	private _threshHoldCount = floor (([_chopper] call ETCS_fnc_getEnemyCount) * _percentEnemyLeft);
 
 	// Wait until enemy count drops
 	waitUntil {
-		([_sideEnemy] call ETCS_fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
+		([_chopper] call ETCS_fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
 	};
 
 	if (alive _chopper) then {
@@ -240,10 +168,10 @@ ETCS_fnc_flyInChopper = {
 			] call ETCS_fnc_createMarker;
 
 			// Add TAKEOFF move waypoint
-			[_aiPilotGroup, getPos _chopper, "FULL", "MOVE", "DIAMOND", "AWARE", 0] call ETCS_fnc_createWaypoint;
+			[_aiPilotGroup, getPos _chopper, "FULL", "MOVE", "DIAMOND", "AWARE", 0, "RED"] call ETCS_fnc_createWaypoint;
 
 			// move waypoint to enemy cluster
-			[_aiPilotGroup, _enemyPos, "FULL", "MOVE", "DIAMOND", "AWARE", 1] call ETCS_fnc_createWaypoint;
+			[_aiPilotGroup, _enemyPos, "FULL", "MOVE", "DIAMOND", "AWARE", 1, "RED"] call ETCS_fnc_createWaypoint;
 
 			_heliPilot doMove _enemyPos;
 			deleteMarker _markerName;
@@ -261,7 +189,7 @@ ETCS_fnc_flyInChopper = {
 					"mil_end",
 					"ColorWEST"
 				] call ETCS_fnc_createMarker;
-				[_aiPilotGroup, _basePos, "FULL", "GETOUT", "DIAMOND", "CARELESS", 0] call ETCS_fnc_createWaypoint;
+				[_aiPilotGroup, _basePos, "FULL", "GETOUT", "DIAMOND", "CARELESS", 0, "RED"] call ETCS_fnc_createWaypoint;
 				sleep 60;
 			};
 		};
