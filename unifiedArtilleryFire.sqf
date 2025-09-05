@@ -213,20 +213,6 @@ ETCS_fnc_isTargetClaimed = {
 };
 
 // =========================
-// get the ammo count for a specific ammo type in a vehicle
-// =========================
-ETCS_fnc_getAmmoCount = {
-	params ["_vehicle", "_ammoType"];
-	private _count = 0;
-	{
-		if (_x select 0 == _ammoType) exitWith {
-			_count = _x select 1
-		};
-	} forEach magazinesAmmo _vehicle;
-	_count
-};
-
-// =========================
 // Handle gun depletion (unassign crew, move to guard position, optionally disable gun)
 // =========================
 ETCS_fnc_handleGunDepletion = {
@@ -253,92 +239,6 @@ ETCS_fnc_handleGunDepletion = {
 	_wp setWaypointBehaviour "AWARE";
 	_wp setWaypointSpeed "FULL";
 	_wp setWaypointCombatMode "GREEN";
-};
-
-// =========================
-// get the side of the gun based on its crew or default side
-// =========================
-ETCS_fnc_getGunSide = {
-	params ["_gun"];
-	if ((count crew _gun) > 0) exitWith {
-		side (gunner _gun)
-	};
-	side _gun
-};
-
-// =========================
-// Check if a unit is hostile to the gun's side
-// =========================
-ETCS_fnc_isHostile = {
-	params ["_unit", "_gunSide"];
-	alive _unit && ((side _unit getFriend _gunSide) < 0.6 || (_gunSide getFriend side _unit) < 0.6)
-};
-
-// =========================
-// get enemies near a position within a specified distance
-// =========================
-ETCS_fnc_getEnemies = {
-	params ["_origin", "_distance", "_gun"];
-	private _gunSide = [_gun] call ETCS_fnc_getGunSide;
-	(_origin nearEntities ["Man", _distance]) select {
-		[_x, _gunSide] call ETCS_fnc_isHostile
-	}
-};
-
-// =========================
-// get a cluster of hostile units around a unit within a specified radius
-// =========================
-ETCS_fnc_getCluster = {
-	params ["_unit", "_radius", "_gun"];
-	private _gunSide = [_gun] call ETCS_fnc_getGunSide;
-	(getPos _unit nearEntities ["Man", _radius]) select {
-		[_x, _gunSide] call ETCS_fnc_isHostile
-	}
-};
-
-// =========================
-// get the center position of a cluster of units
-// =========================
-ETCS_fnc_getClusterCenter = {
-	params ["_cluster"];
-
-	if (_cluster isEqualTo []) exitWith {
-		[0, 0, 0]
-	};
-
-	// --- step 1: Compute centroid (average)
-	private _sumX = 0;
-	private _sumY = 0;
-	private _sumZ = 0;
-
-	{
-		private _pos = getPosASL _x;
-		_sumX = _sumX + (_pos select 0);
-		_sumY = _sumY + (_pos select 1);
-		_sumZ = _sumZ + (_pos select 2);
-	} forEach _cluster;
-
-	private _center = [
-		_sumX / (count _cluster),
-		_sumY / (count _cluster),
-		_sumZ / (count _cluster)
-	];
-
-	// --- step 2: find the unit nearest to that centroid
-	private _nearest = objNull;
-	private _nearestDist = 1e10;
-
-	{
-		private _pos = getPosASL _x;
-		private _dist = _pos vectorDistance _center;
-		if (_dist < _nearestDist) then {
-			_nearest = _x;
-			_nearestDist = _dist;
-		};
-	} forEach _cluster;
-
-	// --- step 3: Return position of that nearest unit
-	getPosASL _nearest
 };
 
 ETCS_fnc_getIndexOfGroup = {
@@ -453,87 +353,6 @@ ETCS_fnc_fireGun = {
 };
 
 // =========================
-// get the artillery ammo type based on gun type
-// =========================
-ETCS_fnc_getArtilleryAmmoType = {
-	params ["_gun"];
-
-	private _mags = magazines _gun;
-	private _ammoType = "";
-
-	// Prefer HE rounds specifically
-	private _preferredKeywords = ["HE", "155mm", "105mm", "82mm", "shell", "Mo_shells"];
-
-	// Look for HE first
-	{
-		private _mag = _x;
-		{
-			private _keyword = _x;
-			if (_mag find _keyword > -1) exitWith {
-				_ammoType = _mag;
-			};
-		} forEach _preferredKeywords;
-
-		if (_ammoType != "") exitWith {};
-	} forEach _mags;
-
-	// Fallback to first mag if no HE found
-	if (_ammoType == "" && {
-		count _mags > 0
-	}) then {
-		_ammoType = _mags select 0;
-	};
-
-	// Final fallback if gun has no mags at all
-	if (_ammoType == "") then {
-		if (_gun isKindOf "StaticMortar") then {
-			_ammoType = "8Rnd_82mm_Mo_shells";
-		} else {
-			_ammoType = "CUP_30Rnd_105mmHE_M119_M";  // default cannon HE
-		};
-	};
-
-	_ammoType
-};
-
-// =========================
-// Check if a cluster is a duplicate based on proximity
-// =========================
-ETCS_fnc_isClusterDuplicate = {
-	params ["_centerPos", "_clustersChecked", "_mergeRadius"];
-
-	private _foundIndex = _clustersChecked findIf {
-		(_centerPos distance2D _x) < _mergeRadius
-	};
-
-	_foundIndex > -1
-};
-
-// =========================
-// get a quiet unit from the group
-// =========================
-ETCS_fnc_getQuietUnit = {
-	params ["_group"];
-	private _radioMan = objNull;
-	if (isNull _group) exitWith {
-		player
-	};
-
-	_radioMan = leader _group;
-	if (isNull _radioMan) then {
-		_radioMan = player;
-	};
-
-	{
-		if ((alive _x) && !isPlayer _x && (_x != _radioMan) && !(_x getVariable ["isRadioBusy", false])) exitWith {
-			_radioMan = _x;
-		};
-	} forEach (units _group);
-
-	_radioMan
-};
-
-// =========================
 // Enemy Selection Logic
 // =========================
 ETCS_fnc_selectEnemiesByMode = {
@@ -544,15 +363,13 @@ ETCS_fnc_selectEnemiesByMode = {
 
 	switch (_mode) do {
 		case MODE_SCOUT: {
-			private _gunSide = [_gun] call ETCS_fnc_getGunSide;
+			private _gunSide = [_gun] call ETCS_fnc_getObserverSide;
 			private _scoutLeader = leader _scoutGroup;
 			if (isNull _scoutLeader || !alive _scoutLeader) exitWith {
 				[[], grpNull]
 			};
 
-			private _allUnits = allUnits select {
-				[_x, _gunSide] call ETCS_fnc_isHostile && alive _x
-			};
+			private _allUnits = [_gun] call ETCS_fnc_getAllEnemies;
 			_enemies = _allUnits select {
 				_scoutLeader knowsAbout _x > 1.5
 			};
@@ -562,7 +379,7 @@ ETCS_fnc_selectEnemiesByMode = {
 			_group = group _scoutLeader;
 		};
 		case MODE_AUTO: {
-			_enemies = [getPos _gun, _detectionRange, _gun] call ETCS_fnc_getEnemies;
+			_enemies = [_gun, _detectionRange] call ETCS_fnc_getNearEnemies;
 			if (_enemies isEqualTo []) exitWith {
 				[[], grpNull]
 			};

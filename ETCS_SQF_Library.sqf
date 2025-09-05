@@ -201,9 +201,8 @@ ETCS_fnc_getArtilleryAmmoType = {
 ETCS_fnc_getCluster = {
 	params ["_target", "_radius", "_observer"];
 
-	private _observerSide = [_observer] call ETCS_fnc_getObserverSide;
 	(getPos _target nearEntities ["Man", _radius]) select {
-		[_x, _observerSide] call ETCS_fnc_isHostile
+		[_x, _observer] call ETCS_fnc_isHostile
 	}
 };
 
@@ -340,6 +339,19 @@ ETCS_fnc_getQuietUnit = {
 	} forEach (units _group);
 
 	_radioMan
+};
+
+// =========================
+// Check if a cluster is a duplicate based on proximity
+// =========================
+ETCS_fnc_isClusterDuplicate = {
+	params ["_centerPos", "_clustersChecked", "_mergeRadius"];
+
+	private _foundIndex = _clustersChecked findIf {
+		(_centerPos distance2D _x) < _mergeRadius
+	};
+
+	_foundIndex > -1
 };
 
 // =======================================================================
