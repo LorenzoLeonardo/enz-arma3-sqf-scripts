@@ -137,45 +137,6 @@ if (isNil {
 };
 
 // =========================
-// Dynamic Accuracy Radius Calculation
-// =========================
-ETCS_fnc_dynamicAccuracyRadius = {
-	params ["_gun", "_accuracyRadius"];
-	private _dynamicAccuracyRadius = 0;
-
-	if (_accuracyRadius <= 0) then {
-		// only auto-scale if not manually specified
-		private _gunner = gunner _gun;
-		private _skill = if (!isNull _gunner) then {
-			skill _gunner
-		} else {
-			0.5 // default if unmanned
-		};
-
-		// Weapon-type specific scatter ranges
-		private _maxScatter = 200;  // worst accuracy
-		private _minScatter = 5;    // best accuracy
-		if (_gun isKindOf "StaticMortar") then {
-			_minScatter = 8;   // skilled mortar team
-			_maxScatter = 80;  // poorly trained / max range
-		} else {
-			_minScatter = 15;  // skilled artillery crew
-			_maxScatter = 150; // poor crew / max range
-		};
-
-		// skill reduces scatter (linear mapping)
-		private _baseScatter = _maxScatter - (_skill * (_maxScatter - _minScatter));
-
-		// Add random human imperfection (±20%)
-		private _variation = random [0.8, 1, 1.2];
-		_dynamicAccuracy = _baseScatter * _variation;
-	} else {
-		_dynamicAccuracyRadius = _accuracyRadius; // use specified radius
-	};
-	_dynamicAccuracyRadius
-};
-
-// =========================
 // Claim a target position for the gun
 // =========================
 ETCS_fnc_claimTarget = {
@@ -664,7 +625,7 @@ ETCS_fnc_registerArtilleryCallBacks = {
 			};
 		};
 		_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
-		["SmokeShellOrange",_targetPos, 50, 3] call ETCS_fnc_spawnSmoke;
+		["SmokeShellOrange", _targetPos, 50, 3] call ETCS_fnc_spawnSmoke;
 
 		_marker
 	}];
