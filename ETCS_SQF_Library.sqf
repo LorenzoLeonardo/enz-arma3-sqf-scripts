@@ -38,6 +38,18 @@ ETCS_fnc_attachBigFire = {
 };
 
 // =======================================================================
+// custom call radio with busy flags
+// =======================================================================
+ETCS_fnc_callSideRadio = {
+	params["_unit", "_radioClass", ["_delay", 0]];
+
+	[_unit] call ETCS_fnc_setUnitRadioBusy;
+	_unit sideRadio _radioClass;
+	sleep _delay;
+	[_unit] call ETCS_fnc_setUnitRadioAvailable;
+};
+
+// =======================================================================
 // clear waypoints of the group
 // =======================================================================
 ETCS_fnc_clearWaypoints = {
@@ -273,9 +285,9 @@ ETCS_fnc_getFriendliesCount = {
 // =======================================================================
 ETCS_fnc_getNearEnemies = {
 	params ["_observer", "_distance"];
-	private _observerSide = [_observer] call ETCS_fnc_getObserverSide;
+
 	((getPos _observer) nearEntities ["Man", _distance]) select {
-		[_x, _observerSide] call ETCS_fnc_isHostile
+		[_x, _observer] call ETCS_fnc_isHostile
 	}
 };
 
@@ -285,10 +297,10 @@ ETCS_fnc_getNearEnemies = {
 // =======================================================================
 ETCS_fnc_getNearFriendlies = {
 	params ["_observer", "_distance"];
-	private _observerSide = [_observer] call ETCS_fnc_getObserverSide;
+
 	((getPos _observer) nearEntities ["Man", _distance]) select {
-		![_x, _observerSide] call ETCS_fnc_isHostile
-	}
+		!([_x, _observer] call ETCS_fnc_isHostile)
+	};
 };
 
 // =======================================================================

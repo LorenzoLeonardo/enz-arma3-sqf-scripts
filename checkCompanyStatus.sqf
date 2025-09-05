@@ -1,5 +1,6 @@
 #include "paraDropHelpers.sqf"
 #include "reviveSystem.sqf"
+#include "ETCS_SQF_Library.sqf"
 
 private _group = _this param [0];
 private _papaBear = _this param [1];
@@ -11,25 +12,21 @@ private _totalUnits = count units _group;
 missionNamespace setVariable [CALLBACK_PARA_DROP_STATUS, {
 	params ["_requestor", "_responder", "_groupToBeDropped", "_phase"];
 
-	_requestor setVariable ["isRadioBusy", true];
-	_responder setVariable ["isRadioBusy", true];
 	switch (_phase) do {
 		case PARA_DROP_PHASE_ACKNOWLEDGED: {
 			private _groupCallerID = groupId (group _requestor);
 			hint format ["Requesting Reinforcements: %1", _groupCallerID];
-			_responder sideRadio "SupportOnWayStandBy";
+			[_responder, "SupportOnWayStandBy", 2] call ETCS_fnc_callSideRadio;
 			_groupToBeDropped copyWaypoints (group _requestor);
 		};
 		case PARA_DROP_PHASE_DROPPING: {
-			_responder sideRadio "RadioAirbaseDropPackage";
+			[_responder, "RadioAirbaseDropPackage", 3] call ETCS_fnc_callSideRadio;
 		};
 		case PARA_DROP_PHASE_DONE: {};
 		default {
 			hint "Unsupported phase!";
 		};
 	};
-	_requestor setVariable ["isRadioBusy", false];
-	_responder setVariable ["isRadioBusy", false];
 }];
 
 ETCS_fnc_getAssignedPlane = {
@@ -76,41 +73,36 @@ ETCS_fnc_setSupportMarkerAndRadio = {
 	switch (toLower _grpName) do {
 		case "alpha": {
 			_marker setMarkerColorLocal "ColorBlue";
-			_unit sideRadio "RadioAlphaWipedOut";
+			[_unit, "RadioAlphaWipedOut", 15] call ETCS_fnc_callSideRadio;
 		};
 		case "bravo": {
 			_marker setMarkerColorLocal "ColorRed";
-			_unit sideRadio "RadioBravoWipedOut";
+			[_unit, "RadioBravoWipedOut", 15] call ETCS_fnc_callSideRadio;
 		};
 		case "charlie":{
 			_marker setMarkerColorLocal "ColorGreen";
-			_unit sideRadio "RadioCharlieWipedOut";
+			[_unit, "RadioCharlieWipedOut", 15] call ETCS_fnc_callSideRadio;
 		};
 		case "delta": {
 			_marker setMarkerColorLocal "ColorYellow";
-			_unit sideRadio "RadioDeltaWipedOut";
+			[_unit, "RadioDeltaWipedOut", 15] call ETCS_fnc_callSideRadio;
 		};
 		case "echo": {
 			_marker setMarkerColorLocal "ColorOrange";
-			_unit sideRadio "RadioEchoWipedOut";
+			[_unit, "RadioEchoWipedOut", 15] call ETCS_fnc_callSideRadio;
 		};
 		default {
 			_marker setMarkerColorLocal "ColorWhite";
-			_unit sideRadio "RadioUnknownGroupWipedOut";
+			[_unit, "RadioUnknownGroupWipedOut", 15] call ETCS_fnc_callSideRadio;
 		};
 	};
-	sleep 15;
-	_responder sideRadio "RadioPapaBearReplyWipedOut";
-	sleep 8;
-	_unit setVariable ["isRadioBusy", false];
-	_responder setVariable ["isRadioBusy", false];
+	[_responder, "RadioPapaBearReplyWipedOut", 8] call ETCS_fnc_callSideRadio;
 	_markerName
 };
 
 ETCS_fnc_joinReinforcementToGroup = {
 	params ["_group", "_groupCallerID", "_reinforcements"];
 	private _quietUnit = [_group] call ETCS_fnc_getQuietUnit;
-	_quietUnit setVariable ["isRadioBusy", true];
 	if (({
 		alive _x
 	} count units _group) == 0) then {
@@ -122,26 +114,22 @@ ETCS_fnc_joinReinforcementToGroup = {
 	};
 	switch (toLower _groupCallerID) do {
 		case "alpha": {
-			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha";
+			[_quietUnit, "WeLinkedUpWithTheReinforcementsThanksForTheSupportAlpha", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "bravo": {
-			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo";
+			[_quietUnit, "WeLinkedUpWithTheReinforcementsThanksForTheSupportBravo", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "charlie": {
-			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie";
+			[_quietUnit, "WeLinkedUpWithTheReinforcementsThanksForTheSupportCharlie", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "delta": {
-			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta";
+			[_quietUnit, "WeLinkedUpWithTheReinforcementsThanksForTheSupportDelta", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "echo": {
-			_quietUnit sideRadio "WeLinkedUpWithTheReinforcementsThanksForTheSupportEcho";
+			[_quietUnit, "WeLinkedUpWithTheReinforcementsThanksForTheSupportEcho", 5] call ETCS_fnc_callSideRadio;
 		};
-		default {
-			_quietUnit sideRadio "Reinforcements have linked up.";
-		};
+		default {};
 	};
-	sleep 5;
-	_quietUnit setVariable ["isRadioBusy", false];
 	_group
 };
 
@@ -216,9 +204,8 @@ ETCS_fnc_isGroupAlive = {
 		[_groupToBeDropped] execVM "reviveSystem.sqf";
 		// Start executing the paradrop system.
 		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropLocation, _groupToBeDropped] call ETCS_fnc_executeParaDrop;
-		(driver _plane) sideRadio "RadioAirbasePackageOnGround";
-		sleep 3;
-		([_papaBear] call ETCS_fnc_getQuietUnit) sideRadio "RadioAirbasePackageOnGroundReply";
+		[(driver _plane), "RadioAirbasePackageOnGround", 3] call ETCS_fnc_callSideRadio;
+		[([_papaBear] call ETCS_fnc_getQuietUnit), "RadioAirbasePackageOnGroundReply", 3] call ETCS_fnc_callSideRadio;
 		_group = [_group, _groupCallerID, _groupToBeDropped] call ETCS_fnc_joinReinforcementToGroup;
 
 		_groupCallerID = groupId (_group);
@@ -234,25 +221,22 @@ ETCS_fnc_isGroupAlive = {
 		!([_group] call ETCS_fnc_isGroupAlive)
 	};
 	private _hqUnit = [_papaBear] call ETCS_fnc_getQuietUnit;
-	_hqUnit setVariable ["isRadioBusy", true];
 
 	switch (toLower _groupCallerID) do {
 		case "alpha": {
-			_hqUnit sideRadio "LostContactWithAlphaTeam";
+			[_hqUnit, "LostContactWithAlphaTeam", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "bravo": {
-			_hqUnit sideRadio "LostContactWithBravoTeam";
+			[_hqUnit, "LostContactWithBravoTeam", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "charlie": {
-			_hqUnit sideRadio "LostContactWithCharlieTeam";
+			[_hqUnit, "LostContactWithCharlieTeam", 5] call ETCS_fnc_callSideRadio;
 		};
 		case "delta": {
-			_hqUnit sideRadio "LostContactWithDeltaTeam";
+			[_hqUnit, "LostContactWithDeltaTeam", 5] call ETCS_fnc_callSideRadio;
 		};
 		default {
-			_hqUnit sideRadio "LostContactWithUnknownTeam";
+			[_hqUnit, "LostContactWithUnknownTeam", 5] call ETCS_fnc_callSideRadio;
 		};
 	};
-	sleep 5;
-	_hqUnit setVariable ["isRadioBusy", false];
 };
