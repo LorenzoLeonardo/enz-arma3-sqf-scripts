@@ -428,36 +428,6 @@ ETCS_fnc_assignGunIndex = {
 };
 
 // =========================
-// spawn smoke to target location
-// =========================
-ETCS_fnc_spawnSmoke = {
-	params [
-		["_centerPos", [0, 0, 0], [[]]],
-		["_radius", 0, [0]],
-		["_count", 1, [0]]
-	];
-
-	for "_i" from 1 to _count do {
-		private _angle = random 360;
-		private _dist = random _radius;
-
-		private _offsetX = _dist * cos _angle;
-		private _offsetY = _dist * sin _angle;
-
-		private _pos = [
-			(_centerPos select 0) + _offsetX,
-			(_centerPos select 1) + _offsetY,
-			(_centerPos select 2)
-		];
-
-		private _posSmoke = _centerPos vectorAdd [0, 0, 150];
-		private _proj = "SmokeShellOrange" createVehicle _posSmoke;
-
-		_proj setVelocity [0, 0, -100];
-	};
-};
-
-// =========================
 // Handler for AUTO or SCOUT Mode
 // =========================
 ETCS_fnc_handleAutoOrScoutMode = {
@@ -694,7 +664,7 @@ ETCS_fnc_registerArtilleryCallBacks = {
 			};
 		};
 		_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
-		[_targetPos] call ETCS_fnc_spawnSmoke;
+		["SmokeShellOrange",_targetPos, 50, 3] call ETCS_fnc_spawnSmoke;
 
 		_marker
 	}];
