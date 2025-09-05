@@ -4,6 +4,8 @@
 // Contact: enzotechcomputersolutions@gmail.com
 // ==============================================================================================================
 
+#define ETCS_VAR_IS_RADIO_BUSY "ETCS_isRadioBusy"
+
 // =======================================================================
 // custom assign group name. if same name exist the format will be
 // incrementing number inside a parenthesis.
@@ -99,7 +101,7 @@ ETCS_fnc_getAllEnemies = {
 
 	allUnits select {
 		([_x] call ETCS_fnc_isUnitGood) &&
-		[_unit, _x] call ETCS_fnc_isUnitsHostile
+		[_unit, _x] call ETCS_fnc_isHostile
 	}
 };
 
@@ -110,7 +112,7 @@ ETCS_fnc_getAllFriendlies = {
 	params ["_unit"];
 	allUnits select {
 		([_x] call ETCS_fnc_isUnitGood) &&
-		!([_unit, _x] call ETCS_fnc_isUnitsHostile)
+		!([_unit, _x] call ETCS_fnc_isHostile)
 	}
 };
 
@@ -382,10 +384,9 @@ ETCS_fnc_setUnitRadioBusy = {
 };
 
 // =======================================================================
-// spawn smoke to target location.
-// ammo could be any of the following:
-// SmokeShell, SmokeShellRed, SmokeShellBlue, SmokeShellYellow, 
-//  SmokeShellOrange, SmokeShellPurple, SmokeShellGreen, 
+// spawn smoke to target location. ammo could be any of the following:
+// SmokeShell, SmokeShellRed, SmokeShellBlue, SmokeShellYellow,
+//  SmokeShellOrange, SmokeShellPurple, SmokeShellGreen,
 // Smoke_120mm_AMOS_White
 // =======================================================================
 ETCS_fnc_spawnSmoke = {
