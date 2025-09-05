@@ -1,6 +1,6 @@
+#include "common.sqf"
 #include "paraDropHelpers.sqf"
 #include "reviveSystem.sqf"
-#include "ETCS_SQF_Library.sqf"
 
 private _group = _this param [0];
 private _papaBear = _this param [1];

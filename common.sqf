@@ -56,7 +56,7 @@ ETCS_fnc_clearWaypoints = {
 	params ["_group"];
 	{
 		deleteWaypoint _x
-	} forEachReversed waypoints _group;
+	} forEach waypoints _group;
 };
 
 // =======================================================================

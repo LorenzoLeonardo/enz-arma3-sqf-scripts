@@ -42,7 +42,7 @@
 // [this, group, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (SCOUT mode without specified accuracy radius, used gunner's skill to determine scatter)
 // [this, player, 8, 50, 8, 60, true, 50] execVM "unifiedArtilleryFire.sqf"; (MAP mode without specified accuracy radius, used gunner's skill to determine scatter)
 // ==============================================================================================================
-#include "ETCS_SQF_Library.sqf"
+#include "common.sqf"
 
 // =====================
 // Definitions
