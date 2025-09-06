@@ -402,6 +402,14 @@ ETCS_fnc_isHostile = {
 	((side _unit2) getFriend (side _unit1)) < 0.6)
 };
 
+// =======================================================================
+// FUNCTION: Check if unit is INCAPACITATED
+// =======================================================================
+ETCS_fnc_isInjured = {
+	params["_unit"];
+	lifeState _unit == "INCAPACITATED"
+};
+
 // ===============================
 // FUNCTION: Check if unit is ok
 // ===============================
@@ -409,7 +417,7 @@ ETCS_fnc_isUnitGood = {
 	params ["_unit"];
 	!isNull _unit && {
 		alive _unit && {
-			lifeState _unit != "INCAPACITATED"
+			!([_unit] call ETCS_fnc_isInjured)
 		}
 	}
 };
