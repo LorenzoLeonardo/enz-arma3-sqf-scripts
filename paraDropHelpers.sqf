@@ -347,7 +347,7 @@ ETCS_fnc_waitUntilReachDropzone = {
 	private _droppingRadius = _this select 2;
 
 	waitUntil {
-		sleep 1;
+		sleep 0.01;
 		(_dropPosition distance2D (getPos _plane)) <= _droppingRadius
 	};
 };
