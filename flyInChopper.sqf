@@ -67,19 +67,6 @@ ETCS_fnc_getRandomPosNearEnemy = {
 	_avgPos vectorAdd _offset
 };
 
-ETCS_fnc_createMarker = {
-	params ["_target", "_text", "_type", "_color"];
-	private _markerName = format ["airstrikeMarker_%1_%2", diag_tickTime, mapGridPosition _target];
-
-	private _marker = createMarker [_markerName, _target];
-	_marker setMarkerShape "ICON";
-	_marker setMarkerType _type;
-	_marker setMarkerColor _color;
-	_marker setMarkerText _text;
-
-	_markerName
-};
-
 ETCS_fnc_engageEnemies = {
 	params ["_chopper", "_sideEnemy"];
 
