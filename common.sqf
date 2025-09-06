@@ -121,25 +121,20 @@ ETCS_fnc_dynamicAccuracyRadius = {
 	_dynamicAccuracyRadius
 };
 
-// =======================================================================
-// find the nearest valid unit from a candidate list
-// =======================================================================
+// ===============================
+// FUNCTION: find Nearest Unit
+// ===============================
 ETCS_fnc_findNearestUnit = {
-	params ["_unit", "_candidates"];
-
-	if (!([_unit] call ETCS_fnc_isUnitGood)) exitWith {
-		objNull
-	};
+	params ["_pos", "_candidates"];
 
 	private _nearestUnit = objNull;
-	private _nearestDist = 1e10;
+	private _nearestDist = 1e10;  // a very large distance
+
 	{
-		if ([_x] call ETCS_fnc_isUnitGood) then {
-			private _dist = _unit distance _x;
-			if (_dist < _nearestDist) then {
-				_nearestDist = _dist;
-				_nearestUnit = _x;
-			};
+		private _dist = _pos distance _x;
+		if (_dist < _nearestDist) then {
+			_nearestDist = _dist;
+			_nearestUnit = _x;
 		};
 	} forEach _candidates;
 
@@ -407,17 +402,15 @@ ETCS_fnc_isHostile = {
 	((side _unit2) getFriend (side _unit1)) < 0.6)
 };
 
-// =======================================================================
-// Check if a unit is valid/usable
-// =======================================================================
+// ===============================
+// FUNCTION: Check if unit is ok
+// ===============================
 ETCS_fnc_isUnitGood = {
 	params ["_unit"];
-	!isNull _unit &&
-	{
-		alive _unit
-	} &&
-	{
-		lifeState _unit != "INCAPACITATED"
+	!isNull _unit && {
+		alive _unit && {
+			lifeState _unit != "INCAPACITATED"
+		}
 	}
 };
 

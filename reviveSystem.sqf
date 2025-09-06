@@ -40,44 +40,13 @@
 // - Can be adapted for player revive logic by adding custom event handling.
 // - Revive animations and states can be replaced with mod-specific actions for better integration.
 // ==============================================================================================================
+#include "common.sqf"
 
 #define BLEEDOUT_TIME 300 // 5 minutes
 #define REVIVE_RANGE 3 // 3 meters
 #define FRIENDLY_MEDIC_FAR_THRESHOLD 120 // 120 meters
 
 params ["_group"];
-
-// ===============================
-// FUNCTION: Check if unit is ok
-// ===============================
-ETCS_fnc_isUnitGood = {
-	params ["_unit"];
-	!isNull _unit && {
-		alive _unit && {
-			lifeState _unit != "INCAPACITATED"
-		}
-	}
-};
-
-// ===============================
-// FUNCTION: find Nearest Unit
-// ===============================
-ETCS_fnc_findNearestUnit = {
-	params ["_pos", "_candidates"];
-
-	private _nearestUnit = objNull;
-	private _nearestDist = 1e10;  // a very large distance
-
-	{
-		private _dist = _pos distance _x;
-		if (_dist < _nearestDist) then {
-			_nearestDist = _dist;
-			_nearestUnit = _x;
-		};
-	} forEach _candidates;
-
-	_nearestUnit
-};
 
 // ===============================
 // FUNCTION: get Best Medic
@@ -720,8 +689,24 @@ ETCS_fnc_handleDamage = {
 };
 
 // ===============================
-// Draw bleed out timer
+// apply EVENT HANDLERS to group
 // ===============================
+ETCS_fnc_registerReviveSystem = {
+	params["_group"];
+	{
+		_x addEventHandler ["HandleDamage", {
+			_this call ETCS_fnc_handleDamage
+		}];
+		_x addEventHandler ["Killed", {
+			params ["_unit"];
+			[_unit, false] call ETCS_fnc_setReviveProcess;
+			[_unit, false] call ETCS_fnc_setBeingRevived;
+			[_unit, false] call ETCS_fnc_setReviving;
+			[_unit, false] call ETCS_fnc_setRevived;
+		}];
+	} forEach units _group;
+};
+
 ETCS_fnc_drawBleedOutTime = {
 	params ["_injured"];
 	private _wpPos = getPosATL _injured;
@@ -765,10 +750,7 @@ ETCS_fnc_drawBleedOutTime = {
 	];
 };
 
-// ===============================
-// Drawing of 3D texts
-// ===============================
-ETCS_fnc_start3DDraw = {
+ETCS_fnc_draw3DText = {
 	addMissionEventHandler ["Draw3D", {
 		// --- case 1: player is reviver
 		private _injured = player getVariable ["injuredToRevive", objNull];
@@ -832,27 +814,6 @@ ETCS_fnc_start3DDraw = {
 	}];
 };
 
-// =========================================
-// Register revive system into a group
-// =========================================
-ETCS_fnc_registerReviveSystem = {
-	params ["_group"];
-	{
-		_x addEventHandler ["HandleDamage", {
-			_this call ETCS_fnc_handleDamage
-		}];
-		_x addEventHandler ["Killed", {
-			params ["_unit"];
-			[_unit, false] call ETCS_fnc_setReviveProcess;
-			[_unit, false] call ETCS_fnc_setBeingRevived;
-			[_unit, false] call ETCS_fnc_setReviving;
-			[_unit, false] call ETCS_fnc_setRevived;
-		}];
-	} forEach units _group;
-};
-
-// =========================================
-// Start triggers, Main entry of the script
-// =========================================
+// Main triggers
 [_group] call ETCS_fnc_registerReviveSystem;
-[] call ETCS_fnc_start3DDraw;
+[] call ETCS_fnc_draw3DText;
