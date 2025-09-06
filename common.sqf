@@ -50,6 +50,22 @@ ETCS_fnc_callSideRadio = {
 };
 
 // =======================================================================
+// create marker on the map
+// =======================================================================
+ETCS_fnc_createMarker = {
+	params ["_target", "_text", "_type", "_color"];
+	private _markerName = format ["%1_%2_%3", _text, diag_tickTime, mapGridPosition _target];
+
+	private _marker = createMarker [_markerName, _target];
+	_marker setMarkerShape "ICON";
+	_marker setMarkerType _type;
+	_marker setMarkerColor _color;
+	_marker setMarkerText _text;
+
+	_markerName
+};
+
+// =======================================================================
 // clear waypoints of the group
 // =======================================================================
 ETCS_fnc_clearWaypoints = {
