@@ -133,12 +133,12 @@ ETCS_fnc_bleedoutTimer = {
 	waitUntil {
 		sleep 1;
 		!alive _injured
-		|| (lifeState _injured != "INCAPACITATED")
+		|| !([_injured] call ETCS_fnc_isInjured)
 		|| ((time - _startTime) >= BLEEDOUT_TIME);
 	};
 
 	// Determine what happened
-	if (alive _injured && (lifeState _injured == "INCAPACITATED") && ((time - _startTime) >= BLEEDOUT_TIME)) then {
+	if (alive _injured && ([_injured] call ETCS_fnc_isInjured) && ((time - _startTime) >= BLEEDOUT_TIME)) then {
 		// Bleedout expired → kill the unit
 		[_injured, false] call ETCS_fnc_setReviveProcess;
 		_injured setDamage 1;
@@ -232,7 +232,7 @@ ETCS_fnc_waitForMedicArrival = {
 		|| ([_injured] call ETCS_fnc_isRevived)
 		|| (_medic distance _injured < REVIVE_RANGE)
 		|| (!alive _medic)
-		|| (lifeState _medic == "INCAPACITATED")
+		|| ([_medic] call ETCS_fnc_isInjured)
 		|| (time > _timeout)
 	};
 
@@ -583,7 +583,7 @@ ETCS_fnc_reviveLoop = {
 			waitUntil {
 				sleep 0.5;
 				(!alive _medic)
-				|| (lifeState _medic == "INCAPACITATED")
+				|| ([_medic] call ETCS_fnc_isInjured)
 				|| (time > _animTime)
 			};
 			if (!([_medic] call ETCS_fnc_isUnitGood)) then {
@@ -654,7 +654,7 @@ ETCS_fnc_handleDamage = {
 	private _result = _damage;
 
 	// Allow lethal finishers if already down
-	if (lifeState _unit == "INCAPACITATED") exitWith {
+	if ([_unit] call ETCS_fnc_isInjured) exitWith {
 		_damage
 	};
 
@@ -805,7 +805,7 @@ ETCS_fnc_draw3DText = {
 		};
 
 		private _incap = allUnits select {
-			lifeState _x == "INCAPACITATED" &&
+			([_x] call ETCS_fnc_isInjured) &&
 			side (group _x) == side (group player)
 		};
 		{
