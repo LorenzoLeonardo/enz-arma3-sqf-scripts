@@ -1,3 +1,5 @@
+#include "common.sqf"
+
 params ["_gun", "_group"];
 
 // Auto-refill ammo loop
@@ -9,26 +11,6 @@ params ["_gun", "_group"];
 	};
 };
 
-// ===============================
-// FUNCTION: find Nearest Unit
-// ===============================
-ETCS_fnc_findNearestUnit = {
-	params ["_pos", "_candidates"];
-
-	private _nearestUnit = objNull;
-	private _nearestDist = 1e10;  // a very large distance
-
-	{
-		private _dist = _pos distance _x;
-		if (_dist < _nearestDist) then {
-			_nearestDist = _dist;
-			_nearestUnit = _x;
-		};
-	} forEach _candidates;
-
-	_nearestUnit
-};
-
 // Function to find a suitable gunner
 private _findReplacementGunner = {
 	params ["_group", "_gun"];
@@ -36,10 +18,9 @@ private _findReplacementGunner = {
 	private _leader = leader _group;
 
 	private _candidates = (units _group) select {
-		alive _x &&
 		_x != player &&
 		_x != _leader &&
-		lifeState _x != "INCAPACITATED" &&
+		([_x] call ETCS_fnc_isUnitGood) &&
 		isNull objectParent _x &&
 		isNull assignedVehicle _x
 	};
@@ -61,8 +42,12 @@ while {
 	} count units _group > 1
 } do {
 	if ((count crew _gun) == 0 || {
-		lifeState (gunner _gun) == "INCAPACITATED"
+		([gunner _gun] call ETCS_fnc_isInjured)
 	}) then {
+		if ((count crew _gun) != 0) then {
+			moveOut (gunner _gun);
+			unassignVehicle	(gunner _gun);
+		};
 		private _candidate = [_group, _gun] call _findReplacementGunner;
 
 		if (!isNull _candidate) then {
@@ -72,9 +57,7 @@ while {
 			// Wait until the unit becomes the gunner or dies/incapacitated
 			waitUntil {
 				sleep 0.5;
-				!alive _candidate ||
-				lifeState _candidate == "INCAPACITATED" ||
-				gunner _gun == _candidate
+				(!([_candidate] call ETCS_fnc_isUnitGood) || (gunner _gun == _candidate))
 			};
 		};
 	};
