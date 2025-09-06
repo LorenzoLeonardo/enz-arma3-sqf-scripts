@@ -92,8 +92,9 @@ ETCS_fnc_executeParaDrop = {
 	[_plane, _dropDropLocation, _yDroppingRadius, _planeAltitude] call ETCS_fnc_waitUntilReachDropzone;
 
 	// drop troops
+	[_groupToBeDropped, _plane, _backPack, 0.5] spawn ETCS_fnc_ejectFromPlane;
 	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DROPPING] call ETCS_fnc_callBackParaDropStatus;
-	[_groupToBeDropped, _plane, _backPack, 0.5] call ETCS_fnc_ejectFromPlane;
+
 	[_groupToBeDropped] call ETCS_fnc_waitUntilGroupOnGround;
 	// ejecting from plane done
 	[_caller, driver _plane, _groupToBeDropped, PARA_DROP_PHASE_DONE] call ETCS_fnc_callBackParaDropStatus;
