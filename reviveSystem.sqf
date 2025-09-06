@@ -123,6 +123,45 @@ ETCS_fnc_getBestMedic = {
 };
 
 // ===============================
+// FUNCTION: Bleedout Timer Manager
+// ===============================
+ETCS_fnc_bleedoutManager = {
+	while { true } do {
+		{
+			private _unit = _x;
+			if (alive _unit && {
+				[_unit] call ETCS_fnc_isInjured
+			}) then {
+				private _deadline = _unit getVariable ["bleedoutTime", -1];
+
+				if (_deadline > 0) then {
+					// case 1: deadline expired
+					if (time >= _deadline) then {
+						[_unit, false] call ETCS_fnc_setReviveProcess;
+						_unit setDamage 1;
+						_unit setVariable ["bleedoutTime", -1, true];
+					}
+					// case 2: revived before deadline
+					else {
+						if !([_unit] call ETCS_fnc_isInjured) then {
+							[_unit, false] call ETCS_fnc_setReviveProcess;
+							_unit setVariable ["bleedoutTime", -1, true];
+						};
+					};
+				};
+			} else {
+				// case 3: unit dead → clear bleedoutTime
+				if (!alive _unit) then {
+					_unit setVariable ["bleedoutTime", -1, true];
+					[_unit, false] call ETCS_fnc_setReviveProcess;
+				};
+			};
+		} forEach allUnits;
+		sleep 1;
+	};
+};
+
+// ===============================
 // FUNCTION: Bleedout Timer
 // ===============================
 ETCS_fnc_bleedoutTimer = {
@@ -264,8 +303,9 @@ ETCS_fnc_makeUnconscious = {
 	// animate injury
 	_unit playMoveNow "AinjPpneMstpSnonWrflDnon";
 
-	// Bleeding out timer
-	[_unit] spawn ETCS_fnc_bleedoutTimer;
+	// Instead of spawning multiple threads, we keep 1 thread for the manager
+	// and just set bleedoutTime for injured units
+	_unit setVariable ["bleedoutTime", time + BLEEDOUT_TIME, true];
 
 	// AI revive logic
 	[_unit] spawn {
@@ -815,5 +855,10 @@ ETCS_fnc_draw3DText = {
 };
 
 // Main triggers
+if (isNil "ETCS_bleedoutManagerStarted") then {
+	ETCS_bleedoutManagerStarted = true;
+	[] spawn ETCS_fnc_bleedoutManager;
+};
+
 [_group] call ETCS_fnc_registerReviveSystem;
 [] call ETCS_fnc_draw3DText;
