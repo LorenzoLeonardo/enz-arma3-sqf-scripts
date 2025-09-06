@@ -806,7 +806,7 @@ ETCS_fnc_draw3DText = {
 
 		private _incap = allUnits select {
 			lifeState _x == "INCAPACITATED" &&
-			side (group _x) == side player
+			side (group _x) == side (group player)
 		};
 		{
 			[_x] call ETCS_fnc_drawBleedOutTime;
