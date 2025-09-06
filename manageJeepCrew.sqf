@@ -23,20 +23,9 @@
 // Usage:
 //   [myVehicle] execVM "manageJeepCrew.sqf";
 // ==============================================================================================================
+#include "common.sqf"
 
 params ["_vehicle"];
-
-// =============================
-// Helper: Check if unit is valid
-// =============================
-ETCS_fnc_isUnitGood = {
-	params ["_unit"];
-	!(isNull _unit) && {
-		alive _unit
-	} && {
-		lifeState _unit != "INCAPACITATED"
-	}
-};
 
 // =============================
 // Helper: get nearest available AI from same group
