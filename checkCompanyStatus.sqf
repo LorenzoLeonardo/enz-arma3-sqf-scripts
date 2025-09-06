@@ -201,7 +201,7 @@ ETCS_fnc_isGroupAlive = {
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
 		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call ETCS_fnc_createGroupFromTemplate;
 		// Add reviving characteristic of the newly created group.
-		[_groupToBeDropped] execVM "reviveSystem.sqf";
+		[_groupToBeDropped] call ETCS_fnc_registerReviveSystem;
 		// Start executing the paradrop system.
 		[_radioUnit, _plane, _planeAltitude, _yDroppingRadius, _paraDropLocation, _groupToBeDropped] call ETCS_fnc_executeParaDrop;
 		[(driver _plane), "RadioAirbasePackageOnGround", 3] call ETCS_fnc_callSideRadio;
