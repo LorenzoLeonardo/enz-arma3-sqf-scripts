@@ -747,49 +747,9 @@ ETCS_fnc_registerReviveSystem = {
 	} forEach units _group;
 };
 
-ETCS_fnc_drawBleedOutTime = {
-	params ["_injured"];
-	private _wpPos = getPosATL _injured;
-
-	// Read bleedout time
-	private _deadline = _injured getVariable ["bleedoutTime", -1];
-	private _timeLeft = if (_deadline > 0) then {
-		(_deadline - time) max 0
-	} else {
-		-1
-	};
-
-	// format minutes:seconds
-	private _timeText = "";
-	if (_timeLeft >= 0) then {
-		private _mins = floor (_timeLeft / 60);
-		private _secs = floor (_timeLeft % 60);
-		_timeText = format ["%1:%2", _mins, if (_secs < 10) then {
-			format ["0%1", _secs]
-		} else {
-			str _secs
-		}];
-	};
-	// 1 meter above the unit
-	_wpPos set [2, (_wpPos select 2) + 0.5];
-	// Draw (red color)
-	drawIcon3D [
-		"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
-		[1, 0, 0, 1], // <-- RED
-		_wpPos,
-		0.5, 0.5,
-		180,
-		_timeText,
-		2,
-		0.035,
-		"PuristaSemiBold",
-		"center",
-		true,
-		0,
-		-0.04
-	];
-};
-
+// -----------------------
+// Draw handler (every frame, but cheap now)
+// -----------------------
 ETCS_fnc_draw3DText = {
 	addMissionEventHandler ["Draw3D", {
 		// --- case 1: player is reviver
@@ -819,13 +779,9 @@ ETCS_fnc_draw3DText = {
 		private _reviver = player getVariable ["reviverAssigned", objNull];
 		if (!isNull _reviver && alive _reviver) then {
 			private _revPos = getPosATL _reviver;
-			// +2 meters above head
 			_revPos set [2, (_revPos select 2) + 2];
 
-			private _revText = format [
-				"Medic (%1 m)",
-				round (player distance _reviver)
-			];
+			private _revText = format ["Medic (%1 m)", round (player distance _reviver)];
 
 			drawIcon3D [
 				"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
@@ -844,21 +800,93 @@ ETCS_fnc_draw3DText = {
 			];
 		};
 
-		private _incap = allUnits select {
-			([_x] call ETCS_fnc_isInjured) &&
-			side (group _x) == side (group player)
-		};
+		// --- case 3: show bleedout timers for nearby friendlies
 		{
-			[_x] call ETCS_fnc_drawBleedOutTime;
-		} forEach _incap;
+			if (side (group _x) == side (group player)) then {
+				private _wpPos = getPosATL _x;
+				_wpPos set [2, (_wpPos select 2) + 0.5];
+
+				private _text = _x getVariable ["bleedoutText", ""];
+
+				if (_text != "") then {
+					drawIcon3D [
+						"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+						[1, 0, 0, 1],
+						_wpPos,
+						0.5, 0.5,
+						180,
+						_text,
+						2,
+						0.035,
+						"PuristaSemiBold",
+						"center",
+						true,
+						0,
+						-0.04
+					];
+				};
+			};
+		} forEach ETCS_incapUnits;
 	}];
 };
 
-// Main triggers
-if (isNil "ETCS_bleedoutManagerStarted") then {
-	ETCS_bleedoutManagerStarted = true;
-	[] spawn ETCS_fnc_bleedoutManager;
+ETCS_fnc_incapacitatedListManager = {
+	while { true } do {
+		private _nearby = (getPos player) nearEntities ["Man", 500]; // only within 500m
+		ETCS_incapUnits = _nearby select {
+			[_x] call ETCS_fnc_isInjured
+		};
+		sleep 1;
+	};
 };
 
+ETCS_fnc_bleedoutTextCacheManager = {
+	while { true } do {
+		{
+			private _deadline = _x getVariable ["bleedoutTime", -1];
+			private _timeLeft = if (_deadline > 0) then {
+				(_deadline - time) max 0
+			} else {
+				-1
+			};
+
+			private _timeText = "";
+			if (_timeLeft >= 0) then {
+				private _mins = floor (_timeLeft / 60);
+				private _secs = floor (_timeLeft % 60);
+				_timeText = format ["%1:%2", _mins, if (_secs < 10) then {
+					format ["0%1", _secs]
+				} else {
+					str _secs
+				}];
+			};
+
+			_x setVariable ["bleedoutText", _timeText];
+		} forEach ETCS_incapUnits;
+
+		sleep 0.5;
+	};
+};
+
+// ===================================================================
+// Background task jobs, singleton
+// ===================================================================
+if (isNil "ETCS_reviveSystemHasStarted") then {
+	ETCS_incapUnits = [];
+	ETCS_reviveSystemHasStarted = true;
+	[] spawn ETCS_fnc_bleedoutManager;
+
+	// -----------------------
+	// Update incapacitated units list (every 1s)
+	// -----------------------
+	[] spawn ETCS_fnc_incapacitatedListManager;
+
+	// -----------------------
+	// Update bleedout text cache (every 0.5s)
+	// -----------------------
+	[] spawn ETCS_fnc_bleedoutTextCacheManager
+};
+
+// Main triggers
 [_group] call ETCS_fnc_registerReviveSystem;
 [] call ETCS_fnc_draw3DText;
