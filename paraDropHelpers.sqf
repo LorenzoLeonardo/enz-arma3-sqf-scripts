@@ -4,6 +4,7 @@
 // Email: enzotechcomputersolutions@gmail.com
 // date: August 2025
 // Version: 1.0
+#include "common.sqf"
 
 // Define constants for para drop phases
 #define CALLBACK_PARA_DROP_STATUS "Callback_ParaDrop"
@@ -163,47 +164,6 @@ ETCS_fnc_createGroupFromTemplate = {
 	_group
 };
 
-// Create a waypoint for a group with specified parameters
-// This function adds a waypoint to the specified group at the given destination position.
-// The waypoint is configured with the provided speed, type, formation, behaviour, and waypoint number.
-// 
-// Parameters:
-// _group: The group to which the waypoint will be added.
-// _destinationPosition: The position where the waypoint will be set.
-// _wayPointSpeed: The speed setting for the waypoint (e.g., "SLOW", "NORMAL", "FAST", "FULL").
-// _wayPointType: The type of waypoint (e.g., "MOVE", "SAD", "CYCLE", "LOOP").
-// _wayPointFormation: The formation to be used at the waypoint (e.g., "DIAMOND", "LINE", "COLUMN").
-// _wayPointBehaviour: The behaviour of the group at the waypoint (e.g., "AWARE", "SAFE", "CARELESS").
-// _wayPointNumber: The index number for the waypoint (e.g., 0 for the first waypoint).
-// 
-// Returns: The created waypoint object.
-// 
-// Example usage:
-// private _waypoint = [_group, _destinationPosition, _wayPointSpeed, _wayPointType, _wayPointFormation, _wayPointBehaviour, _wayPointNumber] call ETCS_fnc_createWaypoint;
-// 
-// Note: This function is useful for dynamically setting waypoints for groups during missions.
-// 
-// Example of setting a waypoint:
-// private _waypoint = [_group, [1000, 2000, 0], "NORMAL", "MOVE", "DIAMOND", "AWARE", 0] call ETCS_fnc_createWaypoint;
-// 
-// The waypoint can then be modified further if needed using waypoint commands.
-ETCS_fnc_createWaypoint = {
-	private _group = _this select 0;
-	private _destinationPosition = _this select 1;
-	private _wayPointSpeed = _this select 2;
-	private _wayPointType = _this select 3;
-	private _wayPointFormation = _this select 4;
-	private _wayPointBehaviour = _this select 5;
-	private _wayPointNumber = _this select 6;
-	private _teamWP = _group addWaypoint [_destinationPosition, _wayPointNumber];
-	_teamWP setWaypointSpeed _wayPointSpeed;
-	_teamWP setWaypointType _wayPointType;
-	_teamWP setWaypointFormation _wayPointFormation;
-	_teamWP setWaypointBehaviour _wayPointBehaviour;
-
-	_teamWP
-};
-
 // Swap the backpack of each unit in the group to a parachute backpack and return the original backpacks.
 // This function iterates through each unit in the provided group, saves their current loadout (including backpack), and then assigns them a parachute backpack.
 // 
@@ -347,18 +307,18 @@ ETCS_fnc_setPlaneWayPoints = {
 
 	// set plane waypoint yDistance ahead of the dropzone position.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) - _distanceBeforeAndAfterDroplocation, _planeAltitude];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 0] call ETCS_fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 0, "BLUE"] call ETCS_fnc_createWaypoint;
 
 	// set plane waypoint at exact location of the drop zone.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1), _dropPosition select 2];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 1] call ETCS_fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 1, "BLUE"] call ETCS_fnc_createWaypoint;
 
 	// set plane waypoint at beyond the drop location before going RTB.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) + _distanceBeforeAndAfterDroplocation, _dropPosition select 2];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 2] call ETCS_fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 2, "BLUE"] call ETCS_fnc_createWaypoint;
 
 	// Change plane course back to the starting location. RTB
-	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", 3] call ETCS_fnc_createWaypoint;
+	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", 3, "BLUE"] call ETCS_fnc_createWaypoint;
 
 	waitUntil {
 		sleep 1;
