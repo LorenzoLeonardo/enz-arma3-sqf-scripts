@@ -97,29 +97,62 @@ ETCS_fnc_assignReplacement = {
 
 ETCS_fnc_startMonitoringVehicle = {
 	params ["_vehicle"];
-	private _group = (group _vehicle);
+
+	if (isNull _vehicle) exitWith {};
+
+	private _group = group _vehicle;
 	private _groupID = groupId _group;
-	waitUntil {
-		!(alive _vehicle) || !(canMove _vehicle)
+
+	// flag to prevent double execution
+	_vehicle setVariable ["_destroyedHandled", false, true];
+
+	// local function to handle vehicle destruction (crew eject, smoke, marker)
+	fnc_onDestroyed = {
+		params ["_veh"];
+
+		// Check if already handled
+		if (_veh getVariable ["_destroyedHandled", false]) exitWith {};
+		_veh setVariable ["_destroyedHandled", true, true];
+
+		// Eject all crew
+		{
+			if (alive _x) then {
+				unassignVehicle _x;
+				_x action ["Eject", _veh];
+			}
+		} forEach (units (group _veh));
+
+		// Mark vehicle as destroyed
+		_veh setDamage 1;
+
+		// Attach fire/smoke effect
+		private _smoker = "test_EmptyObjectForFireBig" createVehicle (position _veh);
+		_smoker attachTo [_veh, [0, 1.5, 0]];
+
+		// Place marker on map
+		private _markerName = [
+			getPosATL _veh,
+			format ["APC Destroyed Here: %1", groupId (group _veh)],
+			"mil_unknown",
+			"ColorWEST"
+		] call ETCS_fnc_createMarker;
+		_veh setVariable ["assignedUnits", [], true];
 	};
-	{
-		if (alive _x) then {
-			unassignVehicle _x;
-			_x action ["Eject", _vehicle];
-		}
-	} forEach (units _group);
-	_vehicle setDamage 1;
 
-	// Attached unlimited fire
-	private _smoker = "test_EmptyObjectForFireBig" createVehicle (position _vehicle);
-	_smoker attachTo [_vehicle, [0, 1.5, 0]];
+	// Event handler: vehicle killed
+	_vehicle addEventHandler ["Killed", {
+		params ["_veh", "_killer", "_instigator"];
+		[_veh] call fnc_onDestroyed;
+	}];
 
-	private _markerName = [
-		getPosATL _vehicle,
-		format["APC Destroyed Here: %1", _groupID],
-		"mil_unknown",
-		"ColorWEST"
-	] call ETCS_fnc_createMarker;
+	// Event handler: vehicle taking damage (trigger when about to die)
+	_vehicle addEventHandler ["HandleDamage", {
+		params ["_veh", "_selection", "_damage", "_source", "_projectile"];
+
+		if ((damage _veh + _damage) >= 1) then {
+			[_veh] call fnc_onDestroyed;
+		};
+	}];
 };
 
 // =============================
@@ -155,9 +188,4 @@ _vehicle addEventHandler ["GetOut", {
 }];
 
 // Handle vehicle destroyed
-_vehicle addEventHandler ["Killed", {
-	params ["_veh"];
-	_veh setVariable ["assignedUnits", [], true];
-}];
-
 [_vehicle] spawn ETCS_fnc_startMonitoringVehicle;
