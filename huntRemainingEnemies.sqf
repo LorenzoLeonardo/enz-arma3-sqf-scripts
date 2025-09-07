@@ -10,12 +10,13 @@ params ["_squad", ["_tolerance", 0.75]];
 ETCS_fnc_waitUntilTargetDead = {
 	params ["_target", "_squad"];
 	private _timeNow = time;
-	waitUntil {
-		sleep 2;
-		!alive _target ||
-		(lifeState _target == "INCAPACITATED") ||
-		(([_squad] call ETCS_fnc_getEnemyCount) == 0) ||
-		(time > (_timeNow + 60))
+	while {
+		alive _target &&
+		(lifeState _target != "INCAPACITATED") &&
+		(([_squad] call ETCS_fnc_getEnemyCount) > 0) &&
+		(time <= (_timeNow + 60))
+	} do {
+		sleep 0.5;
 	};
 };
 
@@ -28,8 +29,8 @@ ETCS_fnc_mainLogicHuntRemainingEnemies = {
 
 	// Wait until enemy count drops to 75% or less
 	private _threshHoldCount = floor (_initialCount * _tolerance);
-	waitUntil {
-		([_squad] call ETCS_fnc_getEnemyCount) <= _threshHoldCount
+	while { ([_squad] call ETCS_fnc_getEnemyCount) > _threshHoldCount } do {
+		sleep 0.5;
 	};
 
 	// exit early if no enemies left
