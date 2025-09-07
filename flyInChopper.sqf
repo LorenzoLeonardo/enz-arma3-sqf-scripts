@@ -125,8 +125,8 @@ ETCS_fnc_flyInChopper = {
 	private _threshHoldCount = floor (([_chopper] call ETCS_fnc_getEnemyCount) * _percentEnemyLeft);
 
 	// Wait until enemy count drops
-	waitUntil {
-		([_chopper] call ETCS_fnc_getEnemyCount) <= _threshHoldCount && alive _chopper
+	while { ([_chopper] call ETCS_fnc_getEnemyCount) > _threshHoldCount || !alive _chopper } do {
+		sleep 0.5;
 	};
 
 	if (alive _chopper) then {
