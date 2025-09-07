@@ -70,9 +70,12 @@ ETCS_fnc_createMarker = {
 // =======================================================================
 ETCS_fnc_clearWaypoints = {
 	params ["_group"];
-	{
-		deleteWaypoint _x
-	} forEach waypoints _group;
+
+	private _wps = waypoints _group;
+	while { count _wps > 0 } do {
+		deleteWaypoint (_wps select 0);
+		_wps = waypoints _group;
+	};
 };
 
 // =======================================================================
