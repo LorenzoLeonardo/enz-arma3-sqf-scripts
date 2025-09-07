@@ -410,12 +410,42 @@ ETCS_fnc_isClusterDuplicate = {
 // Check if two units are hostile
 // =======================================================================
 ETCS_fnc_isHostile = {
-	params ["_unit1", "_unit2"];
+	params ["_a", "_b"];
 
-	([_unit1] call ETCS_fnc_isUnitGood) &&
-	([_unit2] call ETCS_fnc_isUnitGood) &&
-	(((side _unit1) getFriend (side _unit2)) < 0.6 ||
-	((side _unit2) getFriend (side _unit1)) < 0.6)
+	private _getSide = {
+		params ["_sideObj"];
+
+		switch (typeName _sideObj) do {
+			case "SIDE": {
+				_sideObj
+			};
+			case "OBJECT": {
+				if (_sideObj isKindOf "Man") then {
+					if (alive _sideObj) then {
+						side _sideObj
+					} else {
+						// Dead unit → resolve original side from config
+						private _s = getNumber (configFile >> "CfgVehicles" >> typeOf _sideObj >> "side");
+						[east, west, resistance, civilian] select _s
+					}
+				} else {
+					side _sideObj
+				}
+			};
+			default {
+				sideUnknown
+			};
+		};
+	};
+
+	private _sideA = [_a] call _getSide;
+	private _sideB = [_b] call _getSide;
+
+	if (_sideA == sideUnknown || _sideB == sideUnknown) exitWith {
+		false
+	};
+
+	(_sideA getFriend _sideB < 0.6) || (_sideB getFriend _sideA < 0.6)
 };
 
 // =======================================================================
