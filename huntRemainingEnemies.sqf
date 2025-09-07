@@ -71,31 +71,41 @@ ETCS_fnc_mainLogicHuntRemainingEnemies = {
 };
 
 addMissionEventHandler ["Draw3D", {
-	private _grp = group player;
-	private _wpIndex = currentWaypoint _grp;
-	private _wpPos = waypointPosition [_grp, _wpIndex];
+    private _grp = group player;
+    private _wpIndex = currentWaypoint _grp;
+    private _wpPos = waypointPosition [_grp, _wpIndex];
 
-	// Build label
-	private _wpType = waypointType [_grp, _wpIndex];
-	if (_wpType isEqualTo "") exitWith {};
-	private _wpText = format ["%1 (%2 m)", _wpType, round (player distance _wpPos)];
+    // Build multi-line label
+    private _wpType = waypointType [_grp, _wpIndex];
+    if (_wpType isEqualTo "") exitWith {};
 
-	// Draw icon + text
-	drawIcon3D [
-		"\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
-		[0, 1, 0, 1],
-		_wpPos, // position
-		0.5, 0.5, // icon size
-		180, // icon angle
-		_wpText, // text
-		2, // shadow
-		0.035, // text size
-		"PuristaBold", // font
-		"center", // align
-		true, // drawThrough
-		0, // textShiftX
-		-0.04 // textShiftY (lift text above icon)
-	];
+    private _lines = [
+        format ["Type: %1", _wpType],
+        format ["Distance: %1 m", round (player distance _wpPos)],
+        format ["WP Index: %1", _wpIndex]
+    ];
+
+    private _lineOffset = 0.03; // vertical spacing between lines
+
+    {
+        private _i = _forEachIndex;
+        private _linePos = _wpPos vectorAdd [0, 0, _i * _lineOffset];
+        drawIcon3D [
+            "\A3\ui_f\data\map\markers\military\arrow2_CA.paa",
+            [0, 1, 0, 1],
+            _linePos,
+            0.5, 0.5,
+            180,
+            _x,
+            2,
+            0.035,
+            "PuristaBold",
+            "center",
+            true,
+            0,
+            -0.04
+        ];
+    } forEach _lines;
 }];
 
 [_squad, _tolerance] spawn ETCS_fnc_mainLogicHuntRemainingEnemies;

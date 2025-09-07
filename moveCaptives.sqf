@@ -30,9 +30,8 @@ params ["_prisonLocation", "_rotation"];
 				// keep them moving until they arrive
 				[_x, _seatPos, _rotation] spawn {
 					params ["_unit", "_loc", "_rotation"];
-					waitUntil {
+					while { alive _unit && (_unit distance _loc) >= 4 } do {
 						sleep 3;
-						(_unit distance _loc) < 4 || !alive _unit
 					};
 					if (alive _unit) then {
 						_unit disableAI "PATH";

@@ -277,8 +277,8 @@ ETCS_fnc_fireGun = {
 		[_projectile, _unit] spawn {
 			params ["_proj", "_unit"];
 
-			waitUntil {
-				(isNull _proj) || !(alive _proj)
+			while { !isNull _proj && alive _proj } do {
+				sleep 0.1;
 			};
 			if !(_unit getVariable ["splashed", false]) then {
 				_unit setVariable ["splashed", true, true];
@@ -295,15 +295,14 @@ ETCS_fnc_fireGun = {
 	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (_gun getVariable GUN_FIRE_CALLBACK);
 
 	// call splash after the first shell hits the ground.
-	waitUntil {
-		_gun getVariable ["splashed", false]
+	while { !(_gun getVariable ["splashed", false]) } do {
+		sleep 0.1;
 	};
 	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (_gun getVariable GUN_FIRE_CALLBACK);
 
 	// call rounds complete until all projectiles hit the ground.
-	waitUntil {
-		private _shells = _gun getVariable ["firedShells", []];
-		(count _shells == _rounds)
+	while { (count (_gun getVariable ["firedShells", []])) < _rounds } do {
+		sleep 0.1;
 	};
 	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (_gun getVariable GUN_FIRE_CALLBACK);
 

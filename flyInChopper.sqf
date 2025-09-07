@@ -317,10 +317,12 @@ ETCS_fnc_startMonitoringHeliStatus = {
 	private _group = (group _chopper);
 	private _heliUnits = units _group;
 	private _groupID = groupId _group;
-	waitUntil {
-		({
+	while {
+		(({
 			alive _x
-		} count _heliUnits == 0) || !(alive _chopper) || !(canMove _chopper)
+		} count _heliUnits) > 0) && alive _chopper && canMove _chopper
+	} do {
+		sleep 0.5;
 	};
 	_chopper setDamage 1;
 	// Attached unlimited fire

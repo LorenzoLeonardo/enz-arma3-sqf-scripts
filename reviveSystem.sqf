@@ -169,11 +169,12 @@ ETCS_fnc_bleedoutTimer = {
 	private _startTime = time;
 	_injured setVariable ["bleedoutTime", time + BLEEDOUT_TIME, true];
 	// Wait until unit dies, is revived, or bleedout time expires
-	waitUntil {
+	while {
+		alive _injured &&
+		([_injured] call ETCS_fnc_isInjured) &&
+		((time - _startTime) < BLEEDOUT_TIME)
+	} do {
 		sleep 1;
-		!alive _injured
-		|| !([_injured] call ETCS_fnc_isInjured)
-		|| ((time - _startTime) >= BLEEDOUT_TIME);
 	};
 
 	// Determine what happened
@@ -265,14 +266,15 @@ ETCS_fnc_waitForMedicArrival = {
 
 	// Wait for medic to arrive within range or timeout
 	private _timeout = [_medic, _injured] call ETCS_fnc_getDynamicTimeout;
-	waitUntil {
+	while {
+		alive _injured &&
+		!([_injured] call ETCS_fnc_isRevived) &&
+		(_medic distance _injured >= REVIVE_RANGE) &&
+		alive _medic &&
+		!([_medic] call ETCS_fnc_isInjured) &&
+		(time <= _timeout)
+	} do {
 		sleep 1;
-		(!alive _injured)
-		|| ([_injured] call ETCS_fnc_isRevived)
-		|| (_medic distance _injured < REVIVE_RANGE)
-		|| (!alive _medic)
-		|| ([_medic] call ETCS_fnc_isInjured)
-		|| (time > _timeout)
 	};
 
 	(_medic distance _injured) < REVIVE_RANGE
@@ -613,18 +615,20 @@ ETCS_fnc_reviveLoop = {
 
 			// Wait until anim starts or timeout
 			private _animStartTime = time;
-			waitUntil {
-				sleep 0.1;
-				(animationState _medic == "AinvPknlMstpSnonWnonDnon_medic1")
-				|| ((time - _animStartTime) > 3)
+			while {
+				(animationState _medic != "AinvPknlMstpSnonWnonDnon_medic1") &&
+				((time - _animStartTime) <= 3)
+			} do {
+				sleep 0.1; // check every 0.1 seconds for responsiveness
 			};
 
 			private _animTime = time + 5;
-			waitUntil {
+			while {
+				alive _medic &&
+				!([_medic] call ETCS_fnc_isInjured) &&
+				(time <= _animTime)
+			} do {
 				sleep 0.5;
-				(!alive _medic)
-				|| ([_medic] call ETCS_fnc_isInjured)
-				|| (time > _animTime)
 			};
 			if (!([_medic] call ETCS_fnc_isUnitGood)) then {
 				[_medic, _injured] call ETCS_fnc_unlockReviveState;
