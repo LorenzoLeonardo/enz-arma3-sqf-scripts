@@ -306,25 +306,39 @@ ETCS_fnc_setPlaneWayPoints = {
 	_plane flyInHeightASL [(_initLocation select 2), (_initLocation select 2), (_initLocation select 2)];
 	_plane setVelocity [(sin (direction _plane) * _planeSpeed), ( cos (direction _plane) * _planeSpeed), 0];
 
+	// waypoints
+	private _wpIndex = 0;
+
 	// set plane waypoint yDistance ahead of the dropzone position.
-	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) - _distanceBeforeAndAfterDroplocation, _planeAltitude];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 0, "BLUE"] call ETCS_fnc_createWaypoint;
+	private _planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) - _distanceBeforeAndAfterDroplocation, _planeAltitude];
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", _wpIndex, "BLUE"] call ETCS_fnc_createWaypoint;
+	_wpIndex = _wpIndex + 1;
 
 	// set plane waypoint at exact location of the drop zone.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1), _dropPosition select 2];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 1, "BLUE"] call ETCS_fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", _wpIndex, "BLUE"] call ETCS_fnc_createWaypoint;
+	_wpIndex = _wpIndex + 1;
 
 	// set plane waypoint at beyond the drop location before going RTB.
 	_planeWPPos = [ _dropPosition select 0, (_dropPosition select 1) + _distanceBeforeAndAfterDroplocation, _dropPosition select 2];
-	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", 2, "BLUE"] call ETCS_fnc_createWaypoint;
+	[_group, _planeWPPos, "LIMITED", "MOVE", "DIAMOND", "CARELESS", _wpIndex, "BLUE"] call ETCS_fnc_createWaypoint;
+	_wpIndex = _wpIndex + 1;
 
 	// Change plane course back to the starting location. RTB
-	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", 3, "BLUE"] call ETCS_fnc_createWaypoint;
+	_planeWPPos = [_group, _initLocation, "FULL", "MOVE", "DIAMOND", "CARELESS", _wpIndex, "BLUE"] call ETCS_fnc_createWaypoint;
 
-	waitUntil {
+	// Make sure the plane traversed all waypoints before deletion
+	private _lastWP = _wpIndex;
+	while { alive _plane && (currentWaypoint _group < _lastWP) } do {
 		sleep 1;
-		(_initLocation distance2D (getPos _plane)) <= 100
 	};
+
+	// We make sure the plane is going back to the original location
+	while { (_initLocation distance2D (getPos _plane)) > 100 } do {
+		sleep 1;
+	};
+
+	// Uninitialize plane
 	[_plane] call ETCS_fnc_uninitializePlane;
 };
 
@@ -347,9 +361,8 @@ ETCS_fnc_waitUntilReachDropzone = {
 	private _dropPosition = _this select 1;
 	private _droppingRadius = _this select 2;
 
-	waitUntil {
-		sleep 0.01;
-		(_dropPosition distance2D (getPos _plane)) <= _droppingRadius
+	while { (_dropPosition distance2D (getPos _plane)) > _droppingRadius } do {
+		sleep 0.1;
 	};
 };
 
@@ -369,9 +382,8 @@ ETCS_fnc_reloadInventoryWhenHitGround = {
 	private _paraPlayer = _this select 0;
 	private _backPack = _this select 1;
 
-	waitUntil {
-		sleep 1;
-		isTouchingGround _paraPlayer
+	while { !(isTouchingGround _paraPlayer) } do {
+		sleep 0.5;
 	};
 	unassignVehicle _paraPlayer;
 	[_paraPlayer, _backPack] call ETCS_fnc_getOriginalBackPack;
@@ -424,12 +436,15 @@ ETCS_fnc_ejectFromPlane = {
 // The function considers a unit to be on the ground if its altitude is less than 3 meters above sea level.
 ETCS_fnc_waitUntilGroupOnGround = {
 	params ["_grp"];
-	waitUntil {
+	private _totalUnits = count units _grp;
+	private _threshold = ceil(_totalUnits * 0.7); // 70% threshold
+
+	while {
+		({
+			alive _x && ((getPosATL _x select 2) < 3)
+		} count units _grp) < _threshold
+	} do {
 		sleep 1;
-		private _onGround = {
-			alive _x && (getPosATL _x select 2) < 3
-		} count units _grp;
-		_onGround >= (count units _grp * 0.7)
 	};
 };
 
