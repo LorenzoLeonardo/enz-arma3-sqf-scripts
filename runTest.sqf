@@ -48,6 +48,9 @@ fnc_runTests = {
 		[_westUnit, _eastUnit, true, "West unit vs East unit hostile"],
 		[_veh, east, true, "West vehicle vs East side hostile"],
 		[_deadUnit, west, true, "Dead East vs West still hostile (side check only)"],
+		[_westGrp, east, true, "West group vs East side hostile"],
+		[_eastGrp, west, true, "East group vs West side hostile"],
+		[_westGrp, _eastUnit, true, "West group vs East unit hostile"],
 
 		// --- Expected false
 		[west, west, false, "West vs West not hostile"],
@@ -57,7 +60,9 @@ fnc_runTests = {
 		[player, player, false, "Player vs self not hostile"],
 		[_veh, west, false, "West vehicle vs West side not hostile"],
 		[objNull, east, false, "objNull vs East safe"],
-		[objNull, objNull, false, "objNull vs objNull safe"]
+		[objNull, objNull, false, "objNull vs objNull safe"],
+		[_civGrp, west, false, "Civilian group vs West not hostile"],
+		[_westGrp, _civGrp, false, "West group vs Civilian group not hostile"]
 	];
 
 	// --- Evaluate all

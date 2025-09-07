@@ -432,6 +432,22 @@ ETCS_fnc_isHostile = {
 					side _sideObj
 				}
 			};
+			case "GROUP": {
+				if (isNull _sideObj) exitWith {
+					sideUnknown
+				};
+				private _ldr = leader _sideObj;
+				if (isNull _ldr) exitWith {
+					sideUnknown
+				};
+
+				// if leader is in a vehicle, resolve via effectiveCommander
+				if (vehicle _ldr != _ldr) then {
+					side (effectiveCommander (vehicle _ldr))
+				} else {
+					side _ldr
+				}
+			};
 			default {
 				sideUnknown
 			};
