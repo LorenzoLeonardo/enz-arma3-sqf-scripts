@@ -64,9 +64,8 @@ fnc_assignGunner = {
 
 		[_candidate, _gun] spawn {
 			params ["_candidate", "_gun"];
-			waitUntil {
+			while { ([_candidate] call ETCS_fnc_isUnitGood) && (gunner _gun != _candidate) } do {
 				sleep 0.5;
-				!([_candidate] call ETCS_fnc_isUnitGood) || (gunner _gun == _candidate)
 			};
 		};
 	};
