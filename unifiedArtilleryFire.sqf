@@ -29,9 +29,8 @@
 //   _minUnitsPerCluster    - Minimum number of units in a cluster before engaging (default: 8).
 //   _coolDownForEffect     - Delay (in seconds) between volleys (default: 60).
 //   _unlimitedAmmo         - Boolean; true to allow infinite resupply (default: false).
-//   _accuracyRadius        - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
 //   _claimRadius           - distance to avoid firing if target is claimed by another gun (default: 50).
-
+//   _accuracyRadius        - Scatter radius (in meters) for shot inaccuracy (default: 0 = perfect aim).
 // 
 // Usage Example:
 // [this, 10000, 8, 50, 8, 60, true, 50, 25] execVM "unifiedArtilleryFire.sqf"; (AUTO mode with specified accuracy radius)
@@ -242,7 +241,7 @@ ETCS_fnc_fireGun = {
 
 	private _finalPos = _targetPos;
 	// Create temporary "X" marker
-	private _marker = [_caller, _finalPos] call (_gun getVariable GUN_MARKER_CALLBACK);
+	private _marker = [_caller, _finalPos] call (missionNamespace getVariable GUN_MARKER_CALLBACK);
 
 	if (_accuracyRadius > 0) then {
 		private _angle = random 360;
@@ -254,12 +253,12 @@ ETCS_fnc_fireGun = {
 	private _grid = mapGridPosition _finalPos;
 
 	// --- 1. Standby call ---
-	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (_gun getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_REQUEST, _grid] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// --- 2. fire the artillery ---
 	private _canReach = _finalPos inRangeOfArtillery [[_gun], _ammoType];
 	if (!_canReach) exitWith {
-		[_caller, _base, GUN_BARRAGE_PHASE_INVALID_RANGE] call (_gun getVariable GUN_FIRE_CALLBACK);
+		[_caller, _base, GUN_BARRAGE_PHASE_INVALID_RANGE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 		deleteMarker _marker;
 		false
 	};
@@ -292,19 +291,19 @@ ETCS_fnc_fireGun = {
 	_gun doArtilleryFire [_finalPos, _ammoType, _rounds];
 
 	// --- 3. Shot call ---
-	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (_gun getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_SHOT] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// call splash after the first shell hits the ground.
 	while { !(_gun getVariable ["splashed", false]) } do {
 		sleep 0.1;
 	};
-	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (_gun getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_SPLASH] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	// call rounds complete until all projectiles hit the ground.
 	while { (count (_gun getVariable ["firedShells", []])) < _rounds } do {
 		sleep 0.1;
 	};
-	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (_gun getVariable GUN_FIRE_CALLBACK);
+	[_caller, _base, GUN_BARRAGE_PHASE_DONE] call (missionNamespace getVariable GUN_FIRE_CALLBACK);
 
 	deleteMarker _marker;
 
@@ -555,10 +554,9 @@ ETCS_fnc_handleMapMode = {
 // Callbacks
 // =========================
 ETCS_fnc_registerArtilleryCallBacks = {
-	params ["_unit"];
 	// if this callback is not defined, there will be no radio sounds.
 	// The artillery/mortar will continue to do its job
-	_unit setVariable [GUN_FIRE_CALLBACK, {
+	missionNamespace setVariable [GUN_FIRE_CALLBACK, {
 		params ["_requestor", "_responder", "_phase", "_grid"];
 		private _index = [group _requestor] call ETCS_fnc_getIndexOfGroup;
 
@@ -593,9 +591,9 @@ ETCS_fnc_registerArtilleryCallBacks = {
 				systemChat format ["Invalid artillery call phase: %1", _phase];
 			};
 		};
-	}];
+	}, true];
 
-	_unit setVariable [GUN_MARKER_CALLBACK, {
+	missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 		params ["_requestor", "_targetPos"];
 
 		private _markerId = format ["artilleryMarker_%1", diag_tickTime];
@@ -627,7 +625,13 @@ ETCS_fnc_registerArtilleryCallBacks = {
 		["SmokeShellOrange", _targetPos, 50, 3] call ETCS_fnc_spawnSmoke;
 
 		_marker
-	}];
+	}, true];
+};
+
+if (isNil {
+	missionNamespace getVariable "GUN_FIRE_CALLBACK"
+}) then {
+	[] call ETCS_fnc_registerArtilleryCallBacks;
 };
 
 // =========================
@@ -636,7 +640,6 @@ ETCS_fnc_registerArtilleryCallBacks = {
 switch (_mode) do {
 	case MODE_AUTO;
 	case MODE_SCOUT: {
-		[_gun] call ETCS_fnc_registerArtilleryCallBacks;
 		[
 			_mode,
 			_gun,
@@ -653,7 +656,6 @@ switch (_mode) do {
 	};
 
 	case MODE_MAP: {
-		[_gun] call ETCS_fnc_registerArtilleryCallBacks;
 		[
 			_gun,
 			_rounds,
