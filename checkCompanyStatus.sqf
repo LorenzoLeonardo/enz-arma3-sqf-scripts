@@ -173,8 +173,10 @@ ETCS_fnc_isGroupAlive = {
 		};
 
 		if (!([_group] call ETCS_fnc_isGroupAlive)) exitWith {
-			hint format ["Lost contact with %1 team!", _groupCallerID];
+			["TaskFailed", ["Team Wipedout", ["Lost contact with %1 team!", _groupCallerID]]] call BIS_fnc_showNotification;
 		};
+
+		["TaskAssigned", ["Request Reinforcements", format ["Requesting reinforcements for %1", _groupCallerID]]] call BIS_fnc_showNotification;
 
 		private _radioUnit = [_group] call ETCS_fnc_getQuietUnit;
 		// Signal: Flare & Smoke
@@ -210,7 +212,8 @@ ETCS_fnc_isGroupAlive = {
 		_group = [_group, _groupCallerID, _groupToBeDropped] call ETCS_fnc_joinReinforcementToGroup;
 
 		_groupCallerID = groupId (_group);
-		hint format ["Reinforcements has arrived for %1.", _groupCallerID];
+
+		["TaskSucceeded", ["Task Completed", format ["Reinforcements has arrived for %1.", _groupCallerID]]] call BIS_fnc_showNotification;
 		deleteMarkerLocal _paraDropMarkerName;
 	};
 };
