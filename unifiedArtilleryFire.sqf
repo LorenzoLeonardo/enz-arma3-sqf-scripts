@@ -101,28 +101,38 @@ private _detectionRange = 800;
 // _scoutGroup = group doing the spotting. Applicable in SCOUT mode only.
 private _scoutGroup = objNull;
 
-switch (typeName _genericParam) do {
-	case "SCALAR": {
+switch (true) do {
+	case (typeName _genericParam == "SCALAR"): {
 		_mode = MODE_AUTO;
 		_detectionRange = _genericParam;
-		_scoutGroup = objNull; // No scout group in AUTO mode
+		_scoutGroup = objNull;
 		hint format ["Artillery AUTO mode activated with detection range: %1 meters", _detectionRange];
 	};
-	case "GROUP": {
+
+	case (typeName _genericParam == "GROUP"): {
 		_mode = MODE_SCOUT;
-		_detectionRange = 0; // No detection range in SCOUT mode
-		_scoutGroup = _genericParam; // Use the provided object as the scout group
+		_detectionRange = 0;
+		_scoutGroup = _genericParam;
 		hint format ["Artillery SCOUT mode activated with scout group: %1", groupId _scoutGroup];
 	};
-	case "OBJECT": {
+
+	case (typeName _genericParam == "OBJECT" && {
+		isPlayer _genericParam
+	}): {
 		_mode = MODE_MAP;
-		_detectionRange = 0; // No detection range in SCOUT mode
-		_scoutGroup = objNull; // Use the provided object as the scout group
+		_detectionRange = 0;
+		_scoutGroup = objNull;
 		hint "Artillery MAP mode activated";
 	};
+
 	default {
 		// Unsupported type
-		hint format ["Unsupported cluster type: %1", typeName _genericParam];
+		hint format [
+			"Artillery Unsupported Mode type: %1",
+			typeName _genericParam
+		];
+		sleep 3;
+		endMission "END1";
 	};
 };
 
