@@ -203,6 +203,8 @@ ETCS_fnc_isGroupAlive = {
 		_plane disableAI "LIGHTS";
 		// Create group to be drop from Template or original group. This can be an arbitrary group too.
 		private _groupToBeDropped = [west, _initLocation, _plane, _originalGroupTemplate] call ETCS_fnc_createGroupFromTemplate;
+		private _groupToBeDroppedID = [_groupCallerID] call ETCS_fnc_assignUniqueGroupId;
+		_groupToBeDropped setGroupId [_groupToBeDroppedID];
 		// Add reviving characteristic of the newly created group.
 		[_groupToBeDropped] call ETCS_fnc_registerReviveSystem;
 		// Start executing the paradrop system.
