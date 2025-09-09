@@ -107,69 +107,6 @@ if (isNil {
 };
 
 // ============================================================================================
-// Start Main Script Entry
-// ============================================================================================
-switch (true) do {
-	case (typeName _genericParam == "SCALAR"): {
-		_mode = MODE_AUTO;
-		_detectionRange = _genericParam;
-		_scoutGroup = objNull;
-	};
-
-	case (typeName _genericParam == "GROUP"): {
-		_mode = MODE_SCOUT;
-		_detectionRange = 0;
-		_scoutGroup = _genericParam;
-	};
-
-	case (typeName _genericParam == "OBJECT" && {
-		isPlayer _genericParam
-	}): {
-		_mode = MODE_MAP;
-		_detectionRange = 0;
-		_scoutGroup = objNull;
-	};
-
-	default {
-		// Unsupported type
-		endMission "END1";
-	};
-};
-
-switch (_mode) do {
-	case MODE_AUTO;
-	case MODE_SCOUT: {
-		[
-			_mode,
-			_gun,
-			_detectionRange,
-			_scoutGroup,
-			_rounds,
-			_clusterRadius,
-			_minUnitsPerCluster,
-			_coolDownForEffect,
-			_unlimitedAmmo,
-			_accuracyRadius,
-			_claimRadius
-		] call ETCS_fnc_handleAutoOrScoutMode;
-	};
-
-	case MODE_MAP: {
-		[
-			_gun,
-			_rounds,
-			_unlimitedAmmo,
-			_accuracyRadius
-		] call ETCS_fnc_handleMapMode;
-	};
-
-	default {
-		// Unsupported type
-		endMission "END1";
-	};
-};
-
-// ============================================================================================
 // Functions
 // ============================================================================================
 
@@ -634,32 +571,31 @@ ETCS_fnc_registerArtilleryCallBacks = {
 	missionNamespace setVariable [GUN_MARKER_CALLBACK, {
 		params ["_requestor", "_targetPos"];
 
-		private _markerId = format ["artilleryMarker_%1", diag_tickTime];
-		private _marker = createMarker [_markerId, _targetPos];
-		_marker setMarkerShape "ICON";
-		_marker setMarkerType "mil_warning";
-
-		switch (toLower groupId (group _requestor)) do {
+		private _groupID = groupId (group _requestor);
+		private _markerText = format["Fire Mission %1 [%2]", _groupID, mapGridPosition _targetPos];
+		private _markerType = "mil_warning";
+		private _markerColor = switch (toLower _groupID) do {
 			case "alpha": {
-				_marker setMarkerColor "ColorBlue";
+				"ColorBlue"
 			};
 			case "bravo": {
-				_marker setMarkerColor "ColorRed";
+				"ColorRed"
 			};
 			case "charlie": {
-				_marker setMarkerColor "ColorGreen";
+				"ColorGreen"
 			};
 			case "delta": {
-				_marker setMarkerColor "ColorYellow";
+				"ColorYellow"
 			};
 			case "echo": {
-				_marker setMarkerColor "ColorOrange";
+				"ColorOrange"
 			};
 			default {
-				_marker setMarkerColor "ColorWhite";
+				"ColorWhite"
 			};
 		};
-		_marker setMarkerText format["Fire Mission %1 [%2]", groupId (group _requestor), mapGridPosition _targetPos];
+		private _marker = [_targetPos, _markerText, _markerType, _markerColor] call ETCS_fnc_createMarker;
+
 		["SmokeShellOrange", _targetPos, 50, 3] call ETCS_fnc_spawnSmoke;
 
 		_marker
@@ -670,4 +606,67 @@ if (isNil {
 	missionNamespace getVariable "GUN_FIRE_CALLBACK"
 }) then {
 	[] call ETCS_fnc_registerArtilleryCallBacks;
+};
+
+// ============================================================================================
+// Start Main Script Entry
+// ============================================================================================
+switch (true) do {
+	case (typeName _genericParam == "SCALAR"): {
+		_mode = MODE_AUTO;
+		_detectionRange = _genericParam;
+		_scoutGroup = objNull;
+	};
+
+	case (typeName _genericParam == "GROUP"): {
+		_mode = MODE_SCOUT;
+		_detectionRange = 0;
+		_scoutGroup = _genericParam;
+	};
+
+	case (typeName _genericParam == "OBJECT" && {
+		isPlayer _genericParam
+	}): {
+		_mode = MODE_MAP;
+		_detectionRange = 0;
+		_scoutGroup = objNull;
+	};
+
+	default {
+		// Unsupported type
+		endMission "END1";
+	};
+};
+
+switch (_mode) do {
+	case MODE_AUTO;
+	case MODE_SCOUT: {
+		[
+			_mode,
+			_gun,
+			_detectionRange,
+			_scoutGroup,
+			_rounds,
+			_clusterRadius,
+			_minUnitsPerCluster,
+			_coolDownForEffect,
+			_unlimitedAmmo,
+			_accuracyRadius,
+			_claimRadius
+		] call ETCS_fnc_handleAutoOrScoutMode;
+	};
+
+	case MODE_MAP: {
+		[
+			_gun,
+			_rounds,
+			_unlimitedAmmo,
+			_accuracyRadius
+		] call ETCS_fnc_handleMapMode;
+	};
+
+	default {
+		// Unsupported type
+		endMission "END1";
+	};
 };
