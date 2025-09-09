@@ -45,6 +45,8 @@ fnc_assignGunner = {
 
 	private _candidate = [_group, _gun] call fnc_findReplacementGunner;
 
+	if (count crew _gun > 0) exitWith {};
+
 	if (!isNull _candidate) then {
 		_candidate assignAsGunner _gun;
 		[_candidate] orderGetIn true;
