@@ -142,7 +142,7 @@ switch (true) do {
 if (isNil {
 	missionNamespace getVariable "GVAR_activeTargets"
 }) then {
-	missionNamespace setVariable ["GVAR_activeTargets", []];
+	missionNamespace setVariable ["GVAR_activeTargets", [], true];
 };
 
 // =========================
