@@ -43,10 +43,9 @@
 // ==============================================================================================================
 #include "common.sqf"
 
-// =====================
+// ============================================================================================
 // Definitions
-// =====================
-
+// ============================================================================================
 // Callback name for artillery fire radio routines
 #define GUN_FIRE_CALLBACK "Callback_gunFireRadio"
 // Artillery Request Phase
@@ -59,19 +58,16 @@
 #define GUN_BARRAGE_PHASE_DONE 4
 // Artillery Invalid Range
 #define GUN_BARRAGE_PHASE_INVALID_RANGE 5
-
 // Callback name for artillery fire marker
 #define GUN_MARKER_CALLBACK "Callback_gunFireMarker"
-
 // Artillery Mode
 #define MODE_AUTO 0
 #define MODE_SCOUT 1
 #define MODE_MAP 2
 
-// =====================
+// ============================================================================================
 // Parameters
-// =====================
-
+// ============================================================================================
 // _gun = the artillery or mortar gun object
 private _gun = _this param [0];
 // _genericParam = either a number for AUTO mode or an object for SCOUT mode or player for MAP mode
@@ -91,9 +87,9 @@ private _claimRadius = _this param [7, 50];
 // _accuracyRadius = Optional accuracy radius for mortar fire, if not specified, defaults to 0 (Rely on gunner's skill)
 private _accuracyRadius = _this param [8, 0];
 
-// =====================
+// ============================================================================================
 // Initialization either AUTO Mode or SCOUT Mode
-// =====================
+// ============================================================================================
 // _mode = MODE_AUTO, MODE_SCOUT or MODE_MAP
 private _mode = MODE_AUTO;
 // _detectionRange = Radial distance from the gun used to detect enemy units in AUTO mode (default: 800 meters). Applicable in AUTO mode only.
@@ -101,19 +97,29 @@ private _detectionRange = 800;
 // _scoutGroup = group doing the spotting. Applicable in SCOUT mode only.
 private _scoutGroup = objNull;
 
+// ============================================================================================
+// Global Target Registry
+// ============================================================================================
+if (isNil {
+	missionNamespace getVariable "GVAR_activeTargets"
+}) then {
+	missionNamespace setVariable ["GVAR_activeTargets", [], true];
+};
+
+// ============================================================================================
+// Start Main Script Entry
+// ============================================================================================
 switch (true) do {
 	case (typeName _genericParam == "SCALAR"): {
 		_mode = MODE_AUTO;
 		_detectionRange = _genericParam;
 		_scoutGroup = objNull;
-		hint format ["Artillery AUTO mode activated with detection range: %1 meters", _detectionRange];
 	};
 
 	case (typeName _genericParam == "GROUP"): {
 		_mode = MODE_SCOUT;
 		_detectionRange = 0;
 		_scoutGroup = _genericParam;
-		hint format ["Artillery SCOUT mode activated with scout group: %1", groupId _scoutGroup];
 	};
 
 	case (typeName _genericParam == "OBJECT" && {
@@ -122,28 +128,50 @@ switch (true) do {
 		_mode = MODE_MAP;
 		_detectionRange = 0;
 		_scoutGroup = objNull;
-		hint "Artillery MAP mode activated";
 	};
 
 	default {
 		// Unsupported type
-		hint format [
-			"Artillery Unsupported Mode type: %1",
-			typeName _genericParam
-		];
-		sleep 3;
 		endMission "END1";
 	};
 };
 
-// =========================
-// Global Target Registry
-// =========================
-if (isNil {
-	missionNamespace getVariable "GVAR_activeTargets"
-}) then {
-	missionNamespace setVariable ["GVAR_activeTargets", [], true];
+switch (_mode) do {
+	case MODE_AUTO;
+	case MODE_SCOUT: {
+		[
+			_mode,
+			_gun,
+			_detectionRange,
+			_scoutGroup,
+			_rounds,
+			_clusterRadius,
+			_minUnitsPerCluster,
+			_coolDownForEffect,
+			_unlimitedAmmo,
+			_accuracyRadius,
+			_claimRadius
+		] call ETCS_fnc_handleAutoOrScoutMode;
+	};
+
+	case MODE_MAP: {
+		[
+			_gun,
+			_rounds,
+			_unlimitedAmmo,
+			_accuracyRadius
+		] call ETCS_fnc_handleMapMode;
+	};
+
+	default {
+		// Unsupported type
+		endMission "END1";
+	};
 };
+
+// ============================================================================================
+// Functions
+// ============================================================================================
 
 // =========================
 // Claim a target position for the gun
@@ -642,39 +670,4 @@ if (isNil {
 	missionNamespace getVariable "GUN_FIRE_CALLBACK"
 }) then {
 	[] call ETCS_fnc_registerArtilleryCallBacks;
-};
-
-// =========================
-// Main Script Entry
-// =========================
-switch (_mode) do {
-	case MODE_AUTO;
-	case MODE_SCOUT: {
-		[
-			_mode,
-			_gun,
-			_detectionRange,
-			_scoutGroup,
-			_rounds,
-			_clusterRadius,
-			_minUnitsPerCluster,
-			_coolDownForEffect,
-			_unlimitedAmmo,
-			_accuracyRadius,
-			_claimRadius
-		] call ETCS_fnc_handleAutoOrScoutMode;
-	};
-
-	case MODE_MAP: {
-		[
-			_gun,
-			_rounds,
-			_unlimitedAmmo,
-			_accuracyRadius
-		] call ETCS_fnc_handleMapMode;
-	};
-
-	default {
-		hint format ["Invalid Mode used: %1", _mode];
-	};
 };
