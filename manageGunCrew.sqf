@@ -19,21 +19,8 @@ fnc_findReplacementGunner = {
 		isNull assignedVehicle _x
 	};
 
-	// Injured but alive candidates
-	private _candidatesInjured = (units _group) select {
-		_x != player &&
-		_x != _leader &&
-		!([ _x ] call ETCS_fnc_isUnitGood) &&
-		isNull objectParent _x &&
-		isNull assignedVehicle _x
-	};
-
 	if (!(_candidatesHealthy isEqualTo [])) exitWith {
 		[_gun, _candidatesHealthy] call ETCS_fnc_findNearestUnit
-	};
-
-	if (!(_candidatesInjured isEqualTo [])) exitWith {
-		[_gun, _candidatesInjured] call ETCS_fnc_findNearestUnit
 	};
 
 	objNull
