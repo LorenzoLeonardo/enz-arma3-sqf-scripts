@@ -197,8 +197,8 @@ ETCS_fnc_getDynamicTimeout = {
 
 	private _pathDist = _medic distance _injured;
 
-	// 10 sec base + (distance / 3 m/s), capped at 90 sec
-	time + ((10 max (_pathDist / 3)) min 90)
+	// 10 sec base + (distance / 3 m/s), capped at 30 sec
+	time + ((10 max (_pathDist / 3)) min 30)
 };
 
 // ===============================
