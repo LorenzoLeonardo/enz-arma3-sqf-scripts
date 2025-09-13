@@ -183,6 +183,14 @@ ETCS_fnc_setParachuteBackpack = {
 	private _oldbackPack = [];
 	{
 		_oldbackPack pushBack [_x, getUnitLoadout _x];
+		// get backpack object (on the unit)
+		private _bp = unitBackpack _x;
+
+		// remove & delete if it exists
+		if (!isNull _bp) then {
+			removeBackpack _x;
+			deleteVehicle _bp;
+		};
 		_x addBackpack "B_parachute";
 	} forEach units _groupPlatoon;
 
